@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="mainTextColor">#EAEAEA</color>
+    <color name="backgroundColor">#121212</color>
+    <color name="accentColor">#FFA600</color>
+    <color name="mainColor">#1E1E1E</color>
+    <color name="iconsColor">#C7C7C7</color>
+    <color name="buttonsColor">#3D3D3D</color>
+    <color name="inputColor">#323232</color>
+
 </resources>
