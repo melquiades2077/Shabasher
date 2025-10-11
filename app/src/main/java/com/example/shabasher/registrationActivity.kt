@@ -1,37 +1,28 @@
 package com.example.shabasher
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class MainActivity : AppCompatActivity() {
+class registrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_registration)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        val regButton = findViewById<Button>(R.id.button_register)
+        val backButton = findViewById<ImageButton>(R.id.back_button)
 
-        regButton.setOnClickListener {
-            val intent = Intent(this, registrationActivity::class.java)
-            startActivity(intent)
+        backButton.setOnClickListener {
+            finish()
         }
-
-        val loginButton = findViewById<Button>(R.id.button_login)
-
-        loginButton.setOnClickListener {
-            val intent = Intent(this, loginActivity::class.java)
-            startActivity(intent)
-        }
-
     }
 }

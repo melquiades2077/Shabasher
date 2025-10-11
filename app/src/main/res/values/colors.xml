@@ -10,5 +10,6 @@
     <color name="iconsColor">#C7C7C7</color>
     <color name="buttonsColor">#3D3D3D</color>
     <color name="inputColor">#323232</color>
+    <color name="secondTextColor">#AFAFAF</color>
 
 </resources>

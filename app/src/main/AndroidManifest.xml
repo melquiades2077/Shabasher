@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Shabasher">
         <activity
+            android:name=".loginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".registrationActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
