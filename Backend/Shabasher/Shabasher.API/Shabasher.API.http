@@ -1,0 +1,6 @@
+@Shabasher.API_HostAddress = http://localhost:5053
+
+GET {{Shabasher.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
