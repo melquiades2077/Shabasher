@@ -18,6 +18,6 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers(); // Маршрутизация
+app.MapControllers();
 
 app.Run();
