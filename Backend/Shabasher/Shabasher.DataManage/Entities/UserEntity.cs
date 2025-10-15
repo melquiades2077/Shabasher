@@ -10,6 +10,6 @@
 
         public DateTime CreatedAt { get; set; }
 
-        public string PasswordHash {  get; private set; }
+        public string PasswordHash { get; private set; }
     }
 }

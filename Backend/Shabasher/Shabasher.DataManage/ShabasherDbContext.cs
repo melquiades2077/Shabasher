@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Shabasher.DataManage.Entities;
 
 namespace Shabasher.DataManage
 {
@@ -8,5 +9,7 @@ namespace Shabasher.DataManage
         {
             
         }
+
+        public DbSet<UserEntity> Users { get; set; }
     }
 }
