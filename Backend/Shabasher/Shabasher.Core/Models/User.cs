@@ -13,6 +13,8 @@ namespace Shabasher.Core.Models
 
         public DateTime CreatedAt { get; }
 
+        public List<Shabash> Shabashes { get; }
+
         private string _password;
 
         private User(string id, string name, string email, string password)
@@ -22,6 +24,7 @@ namespace Shabasher.Core.Models
             Email = email;
             _password = password;
             CreatedAt = DateTime.UtcNow;
+            Shabashes = [];
         }
 
         public static Result<User> Create(string name, string email, string password)

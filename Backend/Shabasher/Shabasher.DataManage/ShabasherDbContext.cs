@@ -11,5 +11,6 @@ namespace Shabasher.DataManage
         }
 
         public DbSet<UserEntity> Users { get; set; }
+        public DbSet<ShabashEntity> Shabashes { get; set; }
     }
 }

@@ -1,0 +1,17 @@
+﻿using Shabasher.Core.Models;
+
+namespace Shabasher.DataManage.Entities
+{
+    public class ShabashEntity
+    {
+        public string Id { get; set; }
+
+        public string Name { get; set; }
+
+        public string Description { get; set; } = "";
+
+        public List<User> Participants { get; set; } = [];
+
+        public DateTime CreatedAt { get; set; }
+    }
+}
