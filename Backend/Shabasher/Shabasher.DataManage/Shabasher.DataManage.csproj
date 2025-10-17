@@ -15,8 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Configurations\" />
-    <Folder Include="Repositories\" />
+    <ProjectReference Include="..\Shabasher.Core\Shabasher.Core.csproj" />
   </ItemGroup>
 
 </Project>
