@@ -8,7 +8,8 @@ namespace Shabasher.DataManage.Configurations
     {
         public void Configure(EntityTypeBuilder<ShabashEntity> builder)
         {
-
+            builder.HasKey(e => e.Id);
+            builder.HasMany(e => e.Participants).WithMany(p => p.Shabashes);
         }
     }
 }

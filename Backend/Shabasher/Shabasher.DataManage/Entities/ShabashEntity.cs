@@ -10,7 +10,7 @@ namespace Shabasher.DataManage.Entities
 
         public string Description { get; set; } = "";
 
-        public List<User> Participants { get; set; } = [];
+        public List<UserEntity> Participants { get; set; } = [];
 
         public DateTime CreatedAt { get; set; }
     }

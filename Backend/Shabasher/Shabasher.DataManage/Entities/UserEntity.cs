@@ -14,6 +14,6 @@ namespace Shabasher.DataManage.Entities
 
         public string PasswordHash { get; private set; }
 
-        public List<Shabash> Shabashes { get; set; }
+        public List<ShabashEntity> Shabashes { get; set; }
     }
 }
