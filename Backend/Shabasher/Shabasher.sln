@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shabasher.Core", "Shabasher
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shabasher.DataManage", "Shabasher.DataManage\Shabasher.DataManage.csproj", "{52AC15E6-F841-4181-AD61-B32FE07FDBD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shabasher.BusinessLogic", "Shabasher.BusinessLogic\Shabasher.BusinessLogic.csproj", "{818917F1-E601-403B-83F3-139471FD03A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{52AC15E6-F841-4181-AD61-B32FE07FDBD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52AC15E6-F841-4181-AD61-B32FE07FDBD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52AC15E6-F841-4181-AD61-B32FE07FDBD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{818917F1-E601-403B-83F3-139471FD03A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{818917F1-E601-403B-83F3-139471FD03A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{818917F1-E601-403B-83F3-139471FD03A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{818917F1-E601-403B-83F3-139471FD03A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

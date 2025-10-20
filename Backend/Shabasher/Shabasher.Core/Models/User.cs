@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Shabasher.Core.Interfaces;
 using Shabasher.Core.Validators;
 
 namespace Shabasher.Core.Models
@@ -15,19 +16,19 @@ namespace Shabasher.Core.Models
 
         public List<Shabash> Shabashes { get; }
 
-        private string _password;
+        public string PasswordHash { get; }
 
-        private User(string id, string name, string email, string password)
+        private User(string id, string name, string email, string passwordHash)
         {
             Id = id;
             Name = name;
             Email = email;
-            _password = password;
+            PasswordHash = passwordHash;
             CreatedAt = DateTime.UtcNow;
             Shabashes = [];
         }
 
-        public static Result<User> Create(string name, string email, string password)
+        public static Result<User> Create(string name, string email, string passwordHash)
         {
             var validationResult = UserValidator.ValidateUserCreation(name, email);
             if (validationResult.IsFailure)
@@ -35,7 +36,7 @@ namespace Shabasher.Core.Models
 
             string id = Guid.NewGuid().ToString();
 
-            return Result.Success<User>(new User(id, name, email, password));
+            return Result.Success<User>(new User(id, name, email, passwordHash));
         }
     }
 
