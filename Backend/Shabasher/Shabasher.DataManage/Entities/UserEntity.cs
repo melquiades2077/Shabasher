@@ -1,6 +1,4 @@
-﻿using Shabasher.Core.Models;
-
-namespace Shabasher.DataManage.Entities
+﻿namespace Shabasher.DataManage.Entities
 {
     public class UserEntity
     {
@@ -12,7 +10,7 @@ namespace Shabasher.DataManage.Entities
 
         public DateTime CreatedAt { get; set; }
 
-        public string PasswordHash { get; private set; }
+        public string PasswordHash { get; set; }
 
         public List<ShabashEntity> Shabashes { get; set; }
     }

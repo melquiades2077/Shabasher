@@ -1,6 +1,6 @@
 ﻿namespace Shabasher.Core.Interfaces
 {
-    public interface IShabashesService
+    public interface IShabashesManageService
     {
 
     }

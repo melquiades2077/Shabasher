@@ -3,11 +3,11 @@ using Shabasher.Core.Interfaces;
 
 namespace Shabasher.BusinessLogic.Services
 {
-    public class ShabashesService : IShabashesService
+    public class ShabashesManageService : IShabashesManageService
     {
         private readonly ShabasherDbContext _dbcontext;
 
-        public ShabashesService(ShabasherDbContext dbContext)
+        public ShabashesManageService(ShabasherDbContext dbContext)
         {
             _dbcontext = dbContext;
         }

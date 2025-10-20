@@ -1,6 +1,4 @@
-﻿using Shabasher.Core.Models;
-
-namespace Shabasher.DataManage.Entities
+﻿namespace Shabasher.DataManage.Entities
 {
     public class ShabashEntity
     {

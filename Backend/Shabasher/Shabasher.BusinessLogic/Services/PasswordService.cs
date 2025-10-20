@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CSharpFunctionalExtensions;
+using Shabasher.Core.Interfaces;
 
 namespace Shabasher.BusinessLogic.Services
 {
-    internal class PasswordService
+    public class PasswordService : IPasswordService
     {
+
     }
 }

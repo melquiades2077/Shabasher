@@ -28,9 +28,10 @@ namespace Shabasher.Core.Models
             Shabashes = [];
         }
 
-        public static Result<User> Create(string name, string email, string passwordHash)
+        public static Result<User> Create(string name, string email, string password, IPasswordHasher passwordHasher)
         {
-            var validationResult = UserValidator.ValidateUserCreation(name, email);
+            var validationResult = UserValidator.ValidateUserCreation(name, email, password);
+            var passwordHash = passwordHasher.HashPassword(password);
             if (validationResult.IsFailure)
                 return Result.Failure<User>(validationResult.Error);
 
