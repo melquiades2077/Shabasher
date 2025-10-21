@@ -1,4 +1,4 @@
-﻿namespace Shabasher.API.DTOs
+﻿namespace Shabasher.Core.DTOs
 {
     public record UserShortResponse(
         string id,

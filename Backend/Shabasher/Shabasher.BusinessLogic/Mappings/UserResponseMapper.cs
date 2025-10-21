@@ -1,4 +1,4 @@
-﻿using Shabasher.API.DTOs;
+﻿using Shabasher.Core.DTOs;
 using Shabasher.Core.Models;
 using Shabasher.DataManage.Entities;
 

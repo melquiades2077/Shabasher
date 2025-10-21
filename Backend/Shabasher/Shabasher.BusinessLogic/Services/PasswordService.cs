@@ -1,5 +1,4 @@
-﻿using CSharpFunctionalExtensions;
-using Shabasher.Core.Interfaces;
+﻿using Shabasher.Core.Interfaces;
 
 namespace Shabasher.BusinessLogic.Services
 {

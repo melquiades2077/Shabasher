@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shabasher.API\Shabasher.API.csproj" />
     <ProjectReference Include="..\Shabasher.Core\Shabasher.Core.csproj" />
     <ProjectReference Include="..\Shabasher.DataManage\Shabasher.DataManage.csproj" />
   </ItemGroup>
