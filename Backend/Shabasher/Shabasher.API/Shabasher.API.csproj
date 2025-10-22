@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ShabasherDbContext.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Docker.DotNet" Version="3.125.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shabasher.BusinessLogic\Shabasher.BusinessLogic.csproj" />
     <ProjectReference Include="..\Shabasher.DataManage\Shabasher.DataManage.csproj" />
   </ItemGroup>
 

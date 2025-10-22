@@ -1,8 +1,10 @@
-﻿namespace Shabasher.Core.Interfaces
+﻿using CSharpFunctionalExtensions;
+
+namespace Shabasher.Core.Interfaces
 {
     public interface IPasswordHasher
     {
         string HashPassword(string password);
-        bool VerifyPassword(string password, string hash);
+        Result VerifyPassword(string password, string hash);
     }
 }

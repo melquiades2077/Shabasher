@@ -8,7 +8,7 @@ namespace Shabasher.Core.Validators
         {
             var errors = new List<string>();
 
-            var nameResult = UserNameValidator.IsValidUserName(name);
+            var nameResult = NameValidator.IsValidName(name);
             if (nameResult.IsFailure)
                 errors.Add(nameResult.Error);
 

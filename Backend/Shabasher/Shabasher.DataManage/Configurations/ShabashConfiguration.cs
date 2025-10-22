@@ -8,8 +8,23 @@ namespace Shabasher.DataManage.Configurations
     {
         public void Configure(EntityTypeBuilder<ShabashEntity> builder)
         {
-            builder.HasKey(e => e.Id);
-            builder.HasMany(e => e.Participants).WithMany(p => p.Shabashes);
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Id)
+                   .IsRequired();
+
+            builder.Property(x => x.Name)
+                   .IsRequired();
+
+            builder.Property(x => x.Description)
+                   .HasDefaultValue("");
+
+            builder.Property(x => x.CreatedAt)
+                   .IsRequired()
+                   .HasDefaultValueSql("NOW()");
+
+            builder.HasMany(p => p.Participants)
+                   .WithMany(sh => sh.Shabashes);
         }
     }
 }

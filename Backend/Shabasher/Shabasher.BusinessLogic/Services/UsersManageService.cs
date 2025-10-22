@@ -25,7 +25,7 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<UserResponse>> CreateUserAsync(string name, string email, string password)
         {
-            if (await _dbcontext.Users.AnyAsync(u => u.Email == email.ToLower()))
+            if (await _dbcontext.Users.AnyAsync(x => x.Email == email.ToLower()))
                 return Result.Failure<UserResponse>("Пользователь с этим email уже существует");
 
             var user = User.Create(name, email, password, _passwordHasher);
@@ -43,7 +43,7 @@ namespace Shabasher.BusinessLogic.Services
         {
             if (string.IsNullOrWhiteSpace(id))
                 return Result.Failure<UserResponse>("Необходимо ввести ID пользователя");
-            
+
             var userEntity = await _dbcontext.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == id);
@@ -86,7 +86,7 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result> UpdateUserNameAsync(string userId, string newName)
         {
-            var newNameResult = UserNameValidator.IsValidUserName(newName);
+            var newNameResult = NameValidator.IsValidName(newName);
             if (newNameResult.IsFailure)
                 return Result.Failure(newNameResult.Error);
             

@@ -1,14 +1,11 @@
 ﻿using CSharpFunctionalExtensions;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-
 namespace Shabasher.Core.Validators
 {
-    public static class UserNameValidator
+    public static class NameValidator
     {
         private const int MAX_NAME_LEN = 100;
 
-        public static Result IsValidUserName(string userName)
+        public static Result IsValidName(string userName)
         {
             var errors = new List<string>();
 
