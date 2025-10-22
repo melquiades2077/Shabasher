@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
+using Shabasher.Core.Models;
 
 namespace Shabasher.API.Controllers
 {
@@ -15,7 +16,7 @@ namespace Shabasher.API.Controllers
             _usersManageService = usersManageService;
         }
 
-        [HttpGet]
+        [HttpGet("by-id")]
         public async Task<ActionResult<UserResponse>> GetUserById([FromQuery] string id)
         {
             var user = await _usersManageService.GetUserByIdAsync(id);
@@ -23,7 +24,18 @@ namespace Shabasher.API.Controllers
             if (user.IsFailure)
                 return NotFound(user.Error);
 
-            return Ok(user);
+            return Ok(user.Value);
+        }
+
+        [HttpGet("by-email")]
+        public async Task<ActionResult<UserResponse>> GetUserByEmail([FromQuery] string email)
+        {
+            var user = await _usersManageService.GetUserByEmailAsync(email);
+
+            if (user.IsFailure)
+                return NotFound(user.Error);
+
+            return Ok(user.Value);
         }
 
         [HttpPost]
@@ -38,7 +50,29 @@ namespace Shabasher.API.Controllers
             if (user.IsFailure)
                 return BadRequest(user.Error);
 
-            return Ok(user);
+            return Ok(user.Value);
+        }
+
+        [HttpPatch]
+        public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
+        {
+            var updateResult = await _usersManageService.UpdateUserNameAsync(updateUserNameRequest.Id, updateUserNameRequest.Name);
+
+            if (updateResult.IsFailure)
+                return BadRequest(updateResult.Error);
+
+            return Ok(updateUserNameRequest.Name);
+        }
+
+        [HttpDelete]
+        public async Task<ActionResult> DeleteUser([FromQuery] string userId)
+        {
+            var deleteResult = await _usersManageService.DeleteUserAsync(userId);
+
+            if (deleteResult.IsFailure)
+                return BadRequest(deleteResult.Error);
+
+            return Ok(userId);
         }
     }
 }

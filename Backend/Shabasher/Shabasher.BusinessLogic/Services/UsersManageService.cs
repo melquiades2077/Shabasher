@@ -73,13 +73,13 @@ namespace Shabasher.BusinessLogic.Services
         {
             //дублирование, потому что хочу чтобы Get возвращал Response. Хочу и делаю
             var userEntity = await _dbcontext.Users
-                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (userEntity == null)
                 return Result.Failure<UserResponse>("Пользователь с данным ID не найден");
 
             _dbcontext.Users.Remove(userEntity);
+            await _dbcontext.SaveChangesAsync();
 
             return Result.Success(userEntity.Id);
         }
@@ -91,10 +91,11 @@ namespace Shabasher.BusinessLogic.Services
                 return Result.Failure(newNameResult.Error);
             
             var user = await _dbcontext.Users
-                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             user.Name = newName;
+            
+            await _dbcontext.SaveChangesAsync();
 
             return Result.Success(user.Name);
         }
