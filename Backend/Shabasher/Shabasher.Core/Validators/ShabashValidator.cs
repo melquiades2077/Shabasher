@@ -1,5 +1,4 @@
 ﻿using CSharpFunctionalExtensions;
-using Shabasher.Core.Models;
 
 namespace Shabasher.Core.Validators
 {

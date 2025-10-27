@@ -5,13 +5,9 @@ namespace Shabasher.Core
 {
     public class PasswordHasher : IPasswordHasher
     {
-        public string HashPassword(string password)
-        {
-            return password;
-        }
-        public Result VerifyPassword(string password, string hash)
-        {
-            return hash == password ? Result.Success() : Result.Failure("Пароли не совпадают");
-        }
+        public string Generate(string password) =>
+            BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+        public bool VerifyPassword(string password, string hash) =>
+            BCrypt.Net.BCrypt.EnhancedVerify(password, hash);
     }
 }

@@ -4,7 +4,7 @@ namespace Shabasher.Core.Interfaces
 {
     public interface IPasswordHasher
     {
-        string HashPassword(string password);
-        Result VerifyPassword(string password, string hash);
+        string Generate(string password);
+        bool VerifyPassword(string password, string hash);
     }
 }
