@@ -5,7 +5,8 @@ using Shabasher.DataManage;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
@@ -18,6 +19,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 app.UseRouting();
 app.UseHttpsRedirection();

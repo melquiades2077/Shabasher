@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
-using Shabasher.Core.Models;
 
 namespace Shabasher.API.Controllers
 {
