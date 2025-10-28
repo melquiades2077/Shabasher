@@ -44,12 +44,17 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<string>> LoginUserAsync(string email, string password)
         {
-            var user = await GetUserByEmailAsync(email);
+            var user = await _dbcontext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-            if (user.IsFailure)
-                return Result.Failure<string>(user.Error);
+            if (user == null)
+                return Result.Failure<string>("Пользователь с данным email не найден");
 
-            string jwtToken = _jwtProvider.GenerateToken(user.Value);
+            if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
+                return Result.Failure<string>("Неверный пароль");
+
+            string jwtToken = _jwtProvider.GenerateToken(UserResponseMapper.EntityToResponse(user));
 
             return Result.Success<string>(jwtToken);
         }
