@@ -3,11 +3,12 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Shabasher.DataManage.Entities;
+using Shabasher.Core.DTOs;
+using Shabasher.Core.Interfaces;
 
 namespace Shabasher.BusinessLogic.Jwt
 {
-    public class JwtProvider
+    public class JwtProvider : IJwtProvider
     {
         private readonly JwtOptions _jwtOptions;
 
@@ -16,13 +17,13 @@ namespace Shabasher.BusinessLogic.Jwt
             _jwtOptions = jwtOptions.Value;
         }
 
-        public string GenerateToken(UserEntity userEntity)
+        public string GenerateToken(UserResponse user)
         {
-            Claim[] claims = [new("userId", userEntity.Id)];
+            Claim[] claims = [new("userId", user.Id)];
             
             var signingCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
-                SecurityAlgorithms.Sha256
+                SecurityAlgorithms.HmacSha256
                 );
 
             var token = new JwtSecurityToken(

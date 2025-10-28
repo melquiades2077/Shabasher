@@ -28,7 +28,7 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<UserResponse>> RegisterUserAsync(string name, string email, string password)
         {
-            if (await _dbcontext.Users.AnyAsync(x => x.Email == email.ToLower()))
+            if (await _dbcontext.Users.AnyAsync(x => x.Email == email))
                 return Result.Failure<UserResponse>("Пользователь с этим email уже существует");
 
             var user = User.Create(name, email, password, _passwordHasher);
@@ -84,34 +84,37 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success<UserResponse>(UserResponseMapper.EntityToResponse(userEntity));
         }
 
-        public async Task<Result> DeleteUserAsync(string userId)
+        public async Task<Result<string>> DeleteUserAsync(string userId)
         {
             var userEntity = await _dbcontext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (userEntity == null)
-                return Result.Failure<UserResponse>("Пользователь с данным ID не найден");
+                return Result.Failure<string>("Пользователь с данным ID не найден");
 
             _dbcontext.Users.Remove(userEntity);
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(userEntity.Id);
+            return Result.Success<string>(userEntity.Id);
         }
 
-        public async Task<Result> UpdateUserNameAsync(string userId, string newName)
+        public async Task<Result<string>> UpdateUserNameAsync(string userId, string newName)
         {
             var newNameResult = NameValidator.IsValidName(newName);
             if (newNameResult.IsFailure)
-                return Result.Failure(newNameResult.Error);
+                return Result.Failure<string>(newNameResult.Error);
             
             var user = await _dbcontext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return Result.Failure<string>("Пользователь не найден");
 
             user.Name = newName;
             
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(user.Name);
+            return Result.Success<string>(user.Name);
         }
     }
 }

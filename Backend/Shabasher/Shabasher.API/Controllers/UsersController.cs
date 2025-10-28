@@ -37,21 +37,6 @@ namespace Shabasher.API.Controllers
             return Ok(user.Value);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<UserResponse>> RegisterUser([FromBody] RegisterUserRequest userRequest)
-        {
-            var user = await _usersManageService.RegisterUserAsync(
-                userRequest.Name, 
-                userRequest.Email, 
-                userRequest.Password
-                );
-
-            if (user.IsFailure)
-                return BadRequest(user.Error);
-
-            return Ok(user.Value);
-        }
-
         [HttpPatch]
         public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
         {
