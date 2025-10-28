@@ -1,7 +1,6 @@
 ﻿namespace Shabasher.Core.DTOs
 {
-    public record CreateUserRequest(
-        string Name,
+    public record LoginUserRequest(
         string Email,
         string Password
         );

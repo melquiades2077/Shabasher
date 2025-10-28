@@ -1,6 +1,4 @@
-﻿using CSharpFunctionalExtensions;
-
-namespace Shabasher.Core.Interfaces
+﻿namespace Shabasher.Core.Interfaces
 {
     public interface IPasswordHasher
     {

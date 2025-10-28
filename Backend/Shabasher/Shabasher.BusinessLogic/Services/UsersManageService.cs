@@ -7,6 +7,7 @@ using Shabasher.DataManage.Mappings;
 using Shabasher.DataManage;
 using Shabasher.BusinessLogic.Mappings;
 using Shabasher.Core.Validators;
+using Shabasher.BusinessLogic.Jwt;
 
 namespace Shabasher.BusinessLogic.Services
 {
@@ -16,14 +17,16 @@ namespace Shabasher.BusinessLogic.Services
         //работа напрямую с контекстом без репозитория
         private readonly ShabasherDbContext _dbcontext;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IJwtProvider _jwtProvider;
 
-        public UsersManageService(ShabasherDbContext dbContext, IPasswordHasher passwordHasher)
+        public UsersManageService(ShabasherDbContext dbContext, IPasswordHasher passwordHasher, IJwtProvider jwtProvider)
         {
             _dbcontext = dbContext;
             _passwordHasher = passwordHasher;
+            _jwtProvider = jwtProvider;
         }
 
-        public async Task<Result<UserResponse>> CreateUserAsync(string name, string email, string password)
+        public async Task<Result<UserResponse>> RegisterUserAsync(string name, string email, string password)
         {
             if (await _dbcontext.Users.AnyAsync(x => x.Email == email.ToLower()))
                 return Result.Failure<UserResponse>("Пользователь с этим email уже существует");
@@ -37,6 +40,18 @@ namespace Shabasher.BusinessLogic.Services
             await _dbcontext.SaveChangesAsync();
 
             return Result.Success<UserResponse>(UserResponseMapper.DomainToResponse(user.Value));
+        }
+
+        public async Task<Result<string>> LoginUserAsync(string email, string password)
+        {
+            var user = await GetUserByEmailAsync(email);
+
+            if (user.IsFailure)
+                return Result.Failure<string>(user.Error);
+
+            string jwtToken = _jwtProvider.GenerateToken(user.Value);
+
+            return Result.Success<string>(jwtToken);
         }
 
         public async Task<Result<UserResponse>> GetUserByIdAsync(string id)
@@ -71,7 +86,6 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result> DeleteUserAsync(string userId)
         {
-            //дублирование, потому что хочу чтобы Get возвращал Response. Хочу и делаю
             var userEntity = await _dbcontext.Users
                 .FirstOrDefaultAsync(u => u.Id == userId);
 

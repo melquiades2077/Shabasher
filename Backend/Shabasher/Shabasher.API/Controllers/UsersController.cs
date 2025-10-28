@@ -38,9 +38,9 @@ namespace Shabasher.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<UserResponse>> CreateUser([FromBody] CreateUserRequest userRequest)
+        public async Task<ActionResult<UserResponse>> RegisterUser([FromBody] RegisterUserRequest userRequest)
         {
-            var user = await _usersManageService.CreateUserAsync(
+            var user = await _usersManageService.RegisterUserAsync(
                 userRequest.Name, 
                 userRequest.Email, 
                 userRequest.Password
