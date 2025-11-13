@@ -29,7 +29,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.navigation.NavController
+import com.example.shabasher.Model.Routes
 
 @Composable
 fun InputField(
@@ -44,67 +48,37 @@ fun InputField(
     )
 }
 
-@Composable
-fun InputFields() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        InputField("Email")
-        InputField("Пароль")
-        InputField("Повторите пароль")
-    }
-}
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterPage() {
-    Scaffold(modifier = Modifier.fillMaxSize(),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* действие */ }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Добавить"
-                )
-            }
-        }) { innerPadding ->
+fun RegisterPage(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
         ) {
-            IconButton(
-                onClick = { /* Действие при клике */ },
-                modifier = Modifier
-                    .align(Alignment.TopStart)) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Назад"
-                )
-            }
-            Text(text = "Регистрация",
-                modifier = Modifier.align(Alignment.TopCenter).padding(16.dp))
+
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
             ) {
-                InputFields()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    InputField("Email")
+                    InputField("Пароль")
+                    InputField("Повторите пароль")
+                }
             }
 
         }
-    }
+
 }
 
 @Preview
 @Composable
 fun RegisterPagePreview() {
-    RegisterPage()
+    //RegisterPage()
 }
 
-@Preview
-@Composable
-fun InputFieldsPreview() {
-    InputFields()
-}
+

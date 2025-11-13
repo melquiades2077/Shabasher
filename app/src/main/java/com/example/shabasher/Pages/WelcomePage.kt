@@ -24,16 +24,20 @@ import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.shabasher.Greeting
+import com.example.shabasher.Model.Routes
 
 @Composable
 fun WelcomeButton(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    action: () -> Unit
 ) {
     Button(
-        onClick = {},
+        onClick = action,
         modifier = modifier
             .width(300.dp)
             .height(50.dp)
@@ -42,17 +46,6 @@ fun WelcomeButton(
     }
 }
 
-@Composable
-fun WelcomeButtons(
-    modifier: Modifier = Modifier
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        WelcomeButton("Регистрация")
-        WelcomeButton("Вход")
-    }
-}
 
 @Composable
 fun Welcome(
@@ -72,47 +65,35 @@ fun Welcome(
 }
 
 @Composable
-fun WelcomePage() {
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+fun WelcomePage(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
         ) {
             // Центр экрана
             Column(
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(40.dp)
             ) {
                 Welcome()
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    WelcomeButton("Регистрация", action = { navController.navigate(Routes.REGISTER) })
+                    WelcomeButton("Вход", action = { navController.navigate(Routes.LOGIN) })
+                }
             }
 
-            // Центр снизу
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-            ) {
-                WelcomeButtons()
-            }
+
         }
-    }
+
 }
 
-@Preview
+
+@PreviewLightDark
 @Composable
 fun WelcomePagePreview() {
-    WelcomePage()
-}
-
-@Preview
-@Composable
-fun WelcomePreview() {
-    Welcome()
-}
-
-@Preview
-@Composable
-fun WelcomeButtonsPreview() {
-    WelcomeButtons()
+    //WelcomePage()
 }
