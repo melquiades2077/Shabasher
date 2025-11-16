@@ -9,28 +9,40 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = DarkAccent,           // тот же акцент, можно оставить светлым
+    onPrimary = Color.White,
+
+    secondary = DarkButtons,        // кнопки вторичного уровня
+    onSecondary = Color.White,
+
+    background = DarkBackground,    // общий фон
+    onBackground = Color.White,
+
+    surface = DarkPrimary,          // карточки, панели
+    onSurface = Color.White,
+
+    surfaceVariant = DarkInputs,    // инпуты
+    onSurfaceVariant = Color.White
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+private val LightColorScheme = lightColorScheme(primary = LightAccent,          // главный акцент
+    onPrimary = Color.White,        // текст на акцентных кнопках
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = LightButtons,       // вторичные кнопки
+    onSecondary = Color.Black,
+
+    background = LightBackground,   // главный фон
+    onBackground = Color.Black,
+
+    surface = LightPrimary,         // карточки, белые блоки
+    onSurface = Color.Black,
+
+    surfaceVariant = LightInputs,   // инпуты, дополнительные поверхности
+    onSurfaceVariant = Color.Black
 )
 
 @Composable

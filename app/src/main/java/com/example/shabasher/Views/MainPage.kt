@@ -13,9 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.ViewModels.ThemeViewModel
 
 @Composable
-fun MainPage(navController: NavController) {
+fun MainPage(
+    navController: NavController,
+    themeViewModel: ThemeViewModel
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -28,7 +32,8 @@ fun MainPage(navController: NavController) {
 
             Button(
                 onClick = {
-                    navController.navigate(Routes.WELCOME) { popUpTo(0) { inclusive = true }
+                    navController.navigate(Routes.WELCOME) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             ) {
@@ -36,12 +41,11 @@ fun MainPage(navController: NavController) {
             }
 
             Button(
-                onClick = { }
+                onClick = { themeViewModel.toggleTheme() }
             ) {
                 Text(text = "Сменить тему")
             }
-
-
         }
     }
 }
+
