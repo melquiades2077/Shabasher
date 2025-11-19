@@ -22,14 +22,19 @@ private val DarkColorScheme = darkColorScheme(
     background = DarkBackground,    // общий фон
     onBackground = Color.White,
 
-    surface = DarkPrimary,          // карточки, панели
+    surface = DarkSurface,          // карточки, панели
     onSurface = Color.White,
 
     surfaceVariant = DarkInputs,    // инпуты
-    onSurfaceVariant = Color.White
+    onSurfaceVariant = Color.White,
+
+    tertiary = LightTertiary
+
+
 )
 
-private val LightColorScheme = lightColorScheme(primary = LightAccent,          // главный акцент
+private val LightColorScheme = lightColorScheme(
+    primary = LightAccent,          // главный акцент
     onPrimary = Color.White,        // текст на акцентных кнопках
 
     secondary = LightButtons,       // вторичные кнопки
@@ -38,11 +43,14 @@ private val LightColorScheme = lightColorScheme(primary = LightAccent,          
     background = LightBackground,   // главный фон
     onBackground = Color.Black,
 
-    surface = LightPrimary,         // карточки, белые блоки
+    surface = LightSurface,         // карточки, белые блоки
     onSurface = Color.Black,
 
     surfaceVariant = LightInputs,   // инпуты, дополнительные поверхности
-    onSurfaceVariant = Color.Black
+    onSurfaceVariant = Color.Black,
+
+    tertiary = DarkTertiary
+
 )
 
 @Composable
@@ -53,11 +61,6 @@ fun ShabasherTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }

@@ -1,4 +1,4 @@
-package com.example.shabasher.Views
+package com.example.shabasher.Components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions

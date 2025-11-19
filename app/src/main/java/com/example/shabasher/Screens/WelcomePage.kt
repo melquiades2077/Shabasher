@@ -1,15 +1,12 @@
-package com.example.shabasher.Views
+package com.example.shabasher.Screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,24 +16,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.shabasher.Components.ShabasherPrimaryButton
+import com.example.shabasher.Components.ShabasherSecondaryButton
 import com.example.shabasher.Model.Routes
-
-@Composable
-fun WelcomeButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    action: () -> Unit
-) {
-    Button(
-        onClick = action,
-        modifier = modifier
-            .width(300.dp)
-            .height(50.dp)
-    ) {
-        Text(text)
-    }
-}
-
 
 @Composable
 fun Welcome(
@@ -75,8 +57,8 @@ fun WelcomePage(navController: NavController) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter).padding(bottom = 16.dp)
             ) {
-                WelcomeButton("Регистрация", action = { navController.navigate(Routes.REGISTER) })
-                WelcomeButton("Вход", action = { navController.navigate(Routes.LOGIN) })
+                ShabasherSecondaryButton("Регистрация", onClick = { navController.navigate(Routes.REGISTER) })
+                ShabasherPrimaryButton("Вход", onClick = { navController.navigate(Routes.LOGIN) })
             }
 
 
