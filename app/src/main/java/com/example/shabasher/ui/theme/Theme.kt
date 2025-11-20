@@ -14,42 +14,42 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkAccent,           // тот же акцент, можно оставить светлым
-    onPrimary = Color.White,
+    onPrimary = DarkTextPrimary,
 
     secondary = DarkButtons,        // кнопки вторичного уровня
-    onSecondary = Color.White,
+    onSecondary = DarkTextPrimary,
 
     background = DarkBackground,    // общий фон
-    onBackground = Color.White,
+    onBackground = DarkTextSecondary,
 
     surface = DarkSurface,          // карточки, панели
-    onSurface = Color.White,
+    onSurface = DarkTextPrimary,
 
     surfaceVariant = DarkInputs,    // инпуты
-    onSurfaceVariant = Color.White,
+    onSurfaceVariant = DarkTextPrimary,
 
-    tertiary = LightTertiary
+    tertiary = DarkTertiary
 
 
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = LightAccent,          // главный акцент
-    onPrimary = Color.White,        // текст на акцентных кнопках
+    onPrimary = LightTextPrimary,        // текст на акцентных кнопках
 
     secondary = LightButtons,       // вторичные кнопки
-    onSecondary = Color.Black,
+    onSecondary = LightTextPrimary,
 
     background = LightBackground,   // главный фон
-    onBackground = Color.Black,
+    onBackground = LightTextSecondary,
 
     surface = LightSurface,         // карточки, белые блоки
-    onSurface = Color.Black,
+    onSurface = LightTextPrimary,
 
     surfaceVariant = LightInputs,   // инпуты, дополнительные поверхности
-    onSurfaceVariant = Color.Black,
+    onSurfaceVariant = LightTextPrimary,
 
-    tertiary = DarkTertiary
+    tertiary = LightTertiary
 
 )
 

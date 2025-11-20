@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.shabasher.Components.InputField
+import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.RegisterViewModel
 
 
@@ -32,7 +33,8 @@ fun RegisterPage(
 
             Column(
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.TopCenter)
+                    .padding(top = 128.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,

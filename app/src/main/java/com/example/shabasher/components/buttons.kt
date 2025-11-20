@@ -1,4 +1,4 @@
-package com.example.shabasher.Components
+package com.example.shabasher.components
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width

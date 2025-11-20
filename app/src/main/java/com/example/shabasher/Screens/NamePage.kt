@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.shabasher.Components.InputField
+import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.NameViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
