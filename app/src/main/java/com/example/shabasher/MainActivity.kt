@@ -30,6 +30,7 @@ import com.example.shabasher.Model.Routes
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.ProfilePage
 import com.example.shabasher.Screens.RegisterPage
 import com.example.shabasher.Screens.WelcomePage
 import com.example.shabasher.ui.theme.ShabasherTheme
@@ -51,55 +52,59 @@ class MainActivity : ComponentActivity() {
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = Routes.WELCOME
-                    ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.WELCOME
+                ) {
 
-                        composable(Routes.WELCOME) {
-                            WelcomePage(navController)
-                        }
+                    composable(Routes.WELCOME) {
+                        WelcomePage(navController)
+                    }
 
-                        composable(Routes.REGISTER) {
-                            val vm: RegisterViewModel = viewModel()
-                            RegisterPage(
-                                navController = navController,
-                                onRegisterSuccess = { navController.navigate(Routes.NAME) },
-                                viewModel = vm
-                            )
-                        }
+                    composable(Routes.REGISTER) {
+                        val vm: RegisterViewModel = viewModel()
+                        RegisterPage(
+                            navController = navController,
+                            onRegisterSuccess = { navController.navigate(Routes.NAME) },
+                            viewModel = vm
+                        )
+                    }
 
-                        composable(Routes.LOGIN) {
-                            val vm: LoginViewModel = viewModel()
-                            LoginPage(
-                                navController = navController,
-                                onLoginSuccess = {
-                                    navController.navigate(Routes.MAIN) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                },
-                                viewModel = vm
-                            )
-                        }
+                    composable(Routes.LOGIN) {
+                        val vm: LoginViewModel = viewModel()
+                        LoginPage(
+                            navController = navController,
+                            onLoginSuccess = {
+                                navController.navigate(Routes.MAIN) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            viewModel = vm
+                        )
+                    }
 
-                        composable(Routes.MAIN) {
-                            MainPage(navController, themeViewModel)
-                        }
+                    composable(Routes.NAME) {
+                        val vm: NameViewModel = viewModel()
+                        NamePage(
+                            navController = navController,
+                            onNameSuccess = {
+                                navController.navigate(Routes.MAIN) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            viewModel = vm
+                        )
+                    }
 
-                        composable(Routes.NAME) {
-                            val vm: NameViewModel = viewModel()
-                            NamePage(
-                                navController = navController,
-                                onNameSuccess = {
-                                    navController.navigate(Routes.MAIN) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                },
-                                viewModel = vm
-                            )
-                        }
+                    composable(Routes.MAIN) {
+                        MainPage(navController, themeViewModel)
+                    }
+
+                    composable(Routes.PROFILE) {
+                        ProfilePage(navController, themeViewModel)
                     }
                 }
             }
         }
     }
+}

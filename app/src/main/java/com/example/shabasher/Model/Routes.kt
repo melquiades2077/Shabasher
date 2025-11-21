@@ -6,4 +6,5 @@ object Routes {
     const val REGISTER = "register"
     const val MAIN = "main"
     const val NAME = "name"
+    const val PROFILE = "profile"
 }
