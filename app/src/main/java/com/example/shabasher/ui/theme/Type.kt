@@ -18,7 +18,7 @@ val Typography = Typography(
     // Лучше для приветственных экранов, больших секций
     displayMedium = TextStyle(
         fontFamily = ShabasherFont,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.ExtraBold,
         fontSize = 32.sp,
         lineHeight = 38.sp
     ),

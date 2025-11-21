@@ -20,7 +20,7 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = DarkTextPrimary,
 
     background = DarkBackground,    // общий фон
-    onBackground = DarkTextSecondary,
+    onBackground = DarkTextPrimary,
 
     surface = DarkSurface,          // карточки, панели
     onSurface = DarkTextPrimary,
@@ -28,20 +28,21 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = DarkInputs,    // инпуты
     onSurfaceVariant = DarkTextPrimary,
 
-    tertiary = DarkTertiary
+    tertiary = DarkTertiary,
+    error = DarkTextSecondary
 
 
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = LightAccent,          // главный акцент
-    onPrimary = LightTextPrimary,        // текст на акцентных кнопках
+    onPrimary = Color.White,        // текст на акцентных кнопках
 
     secondary = LightButtons,       // вторичные кнопки
     onSecondary = LightTextPrimary,
 
     background = LightBackground,   // главный фон
-    onBackground = LightTextSecondary,
+    onBackground = LightTextPrimary,
 
     surface = LightSurface,         // карточки, белые блоки
     onSurface = LightTextPrimary,
@@ -49,7 +50,8 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = LightInputs,   // инпуты, дополнительные поверхности
     onSurfaceVariant = LightTextPrimary,
 
-    tertiary = LightTertiary
+    tertiary = LightTertiary,
+    error = LightTextSecondary
 
 )
 

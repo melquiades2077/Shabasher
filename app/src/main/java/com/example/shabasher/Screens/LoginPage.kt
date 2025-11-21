@@ -5,17 +5,30 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.shabasher.Model.Routes
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.LoginViewModel
 
@@ -25,19 +38,74 @@ fun LoginPage(
     navController: NavController,
               onLoginSuccess: () -> Unit,
               viewModel: LoginViewModel = viewModel()) {
+    Scaffold(
+        modifier = Modifier.Companion.fillMaxSize(),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                )
+            )
+        },
+        floatingActionButton = {
+
+            FloatingActionButton(
+                onClick = {
+                    if (viewModel.validate()) {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                } },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+            }
+
+        }
+
+    ) { innerPadding ->
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize().padding(innerPadding)
         ) {
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 128.dp)
+                    .padding(top = 48.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                    Text(
+                        "С возвращением!",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    Text(
+                        "Мы так рады видеть вас снова!",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    }
+
                     InputField(
                         label = "Email",
                         value = viewModel.email.value,
@@ -54,7 +122,7 @@ fun LoginPage(
                     )
 
                     viewModel.error.value?.let { error ->
-                        Text(error)
+                        Text(error, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -64,10 +132,5 @@ fun LoginPage(
             }
         }
 
-}
-
-@Preview
-@Composable
-fun LoginPagePreview() {
-    //LoginPage()
+    }
 }

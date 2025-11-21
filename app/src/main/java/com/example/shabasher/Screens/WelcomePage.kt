@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,18 +34,17 @@ fun Welcome(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
                 "Добро пожаловать в",
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.headlineLarge
             )
             Text(
                 "Шабашер",
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -53,22 +53,28 @@ fun Welcome(
             contentDescription = null,
             modifier = Modifier.size(200.dp))
         Text("Управляйте, отдыхайте, играйте\nКоснитесь кнопки, чтобы начать!",
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onPrimary,)
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 @Composable
 fun WelcomePage(navController: NavController) {
+    Scaffold(
+        modifier = Modifier.Companion.fillMaxSize()
+
+    ) { innerPadding ->
+
+
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize().padding(innerPadding)
         ) {
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 128.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(top = 112.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Welcome()
 
@@ -79,13 +85,15 @@ fun WelcomePage(navController: NavController) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter).padding(bottom = 16.dp)
             ) {
-                ShabasherSecondaryButton("Регистрация", onClick = { navController.navigate(Routes.REGISTER) })
+                ShabasherSecondaryButton(
+                    "Регистрация",
+                    onClick = { navController.navigate(Routes.REGISTER) })
                 ShabasherPrimaryButton("Вход", onClick = { navController.navigate(Routes.LOGIN) })
             }
 
 
         }
-
+    }
 }
 
 
