@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.RegisterViewModel
 
@@ -37,8 +38,8 @@ import com.example.shabasher.ViewModels.RegisterViewModel
 @Composable
 fun RegisterPage(
     navController: NavController,
-    onRegisterSuccess: () -> Unit,
     viewModel: RegisterViewModel = viewModel()) {
+
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),
         topBar = {
@@ -47,7 +48,7 @@ fun RegisterPage(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navController.popBackStack()
+                            SafeNavigation.navigate { navController.popBackStack() }
                         }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")

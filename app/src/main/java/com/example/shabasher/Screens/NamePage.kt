@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.NameViewModel
 
@@ -39,8 +40,8 @@ import com.example.shabasher.ViewModels.NameViewModel
 @Composable
 fun NamePage(
     navController: NavController,
-    onNameSuccess: () -> Unit,
     viewModel: NameViewModel = viewModel()) {
+
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),
         topBar = {
@@ -49,7 +50,7 @@ fun NamePage(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navController.popBackStack()
+                            SafeNavigation.navigate { navController.popBackStack() }
                         }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")

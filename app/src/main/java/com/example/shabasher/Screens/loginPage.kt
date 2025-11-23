@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.LoginViewModel
 
@@ -35,8 +36,8 @@ import com.example.shabasher.ViewModels.LoginViewModel
 @Composable
 fun LoginPage(
     navController: NavController,
-              onLoginSuccess: () -> Unit,
               viewModel: LoginViewModel = viewModel()) {
+
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),
         topBar = {
@@ -45,7 +46,7 @@ fun LoginPage(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navController.popBackStack()
+                            SafeNavigation.navigate { navController.popBackStack() }
                         }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")

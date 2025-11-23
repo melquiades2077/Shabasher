@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
                         val vm: RegisterViewModel = viewModel()
                         RegisterPage(
                             navController = navController,
-                            onRegisterSuccess = { navController.navigate(Routes.NAME) },
                             viewModel = vm
                         )
                     }
@@ -74,11 +73,6 @@ class MainActivity : ComponentActivity() {
                         val vm: LoginViewModel = viewModel()
                         LoginPage(
                             navController = navController,
-                            onLoginSuccess = {
-                                navController.navigate(Routes.MAIN) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
                             viewModel = vm
                         )
                     }
@@ -87,11 +81,6 @@ class MainActivity : ComponentActivity() {
                         val vm: NameViewModel = viewModel()
                         NamePage(
                             navController = navController,
-                            onNameSuccess = {
-                                navController.navigate(Routes.MAIN) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
                             viewModel = vm
                         )
                     }

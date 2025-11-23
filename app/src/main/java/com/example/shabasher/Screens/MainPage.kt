@@ -39,8 +39,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,8 +55,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.components.EventCard
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +80,9 @@ fun MainPage(
                 title = { Text("Шабашер") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navController.navigate(Routes.PROFILE) }
+                        onClick = {
+                            SafeNavigation.navigate { navController.navigate(Routes.PROFILE) }
+                        }
                     ) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "В профиль")
                     }
