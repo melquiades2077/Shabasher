@@ -442,3 +442,6 @@ fabric.properties
 /appsettings.Development.json
 **/appsettings.json
 **/appsettings.Development.json
+
+# DotNetEnv
+.env
