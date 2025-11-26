@@ -435,13 +435,5 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
-# ASP.NET.CORE appsettings
-*appsettings.json
-*appsettings.Development.json
-/appsettings.json
-/appsettings.Development.json
-**/appsettings.json
-**/appsettings.Development.json
-
 # DotNetEnv
 .env
