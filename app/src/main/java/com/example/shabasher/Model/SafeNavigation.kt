@@ -6,7 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 object SafeNavigation {
-    private var isNavigating = false
+    public var isNavigating = false
 
     fun navigate(action: () -> Unit) {
         if (!isNavigating) {

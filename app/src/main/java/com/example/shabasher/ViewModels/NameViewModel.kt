@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 
 class NameViewModel: ViewModel() {
     var name = mutableStateOf("")
+
     var error = mutableStateOf<String?>(null)
 
     fun validate(): Boolean {

@@ -27,18 +27,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
-import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.NameViewModel
+import com.example.shabasher.components.InputField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NamePage(
+fun CreateEventPage(
     navController: NavController,
     viewModel: NameViewModel = viewModel()) {
 
@@ -46,7 +45,7 @@ fun NamePage(
         modifier = Modifier.Companion.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("") },
+                title = { Text("Создать события") },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -95,22 +94,6 @@ fun NamePage(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            "Создайте профиль",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-                        Text(
-                            "Познакомимся ближе?",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
                     Box(
                         modifier = Modifier
                             .size(120.dp)
@@ -120,7 +103,7 @@ fun NamePage(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                            // Иконка загрузки
+                        // Иконка загрузки
                         Icon(
                             Icons.Default.AddAPhoto,
                             contentDescription = "Add photo",
@@ -131,10 +114,36 @@ fun NamePage(
                     }
 
                     InputField(
-                        label = "Имя",
+                        label = "Название",
                         value = viewModel.name.value,
                         onValueChange = { viewModel.name.value = it }
                     )
+
+                    InputField(
+                        label = "Описание",
+                        value = viewModel.name.value,
+                        onValueChange = { viewModel.name.value = it }
+                    )
+
+                    InputField(
+                        label = "Адрес",
+                        value = viewModel.name.value,
+                        onValueChange = { viewModel.name.value = it }
+                    )
+
+                    InputField(
+                        label = "Дата",
+                        value = viewModel.name.value,
+                        onValueChange = { viewModel.name.value = it }
+                    )
+
+                    InputField(
+                        label = "Время",
+                        value = viewModel.name.value,
+                        onValueChange = { viewModel.name.value = it }
+                    )
+
+
 
                     viewModel.error.value?.let { error ->
                         Text(error)

@@ -66,8 +66,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(
-    navController: NavController,
-    themeViewModel: ThemeViewModel
+    navController: NavController
 ) {
 
     // Список карточек — держим в состоянии
@@ -98,8 +97,7 @@ fun MainPage(
 
             FloatingActionButton(
                 onClick = {
-                    // Добавляем новую карточку
-                    events.add(events.size)
+                    SafeNavigation.navigate { navController.navigate(Routes.EVENT) }
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
@@ -143,7 +141,7 @@ fun MainPage(
                 )
             }
                 }
-        } else {
+        } /*else {
             // Список событий
             LazyColumn(
                 modifier = Modifier
@@ -160,7 +158,7 @@ fun MainPage(
                     )
                 }
             }
-        }
+        }*/
 
     }
 }

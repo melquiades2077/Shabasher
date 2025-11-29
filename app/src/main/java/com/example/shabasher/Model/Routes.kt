@@ -7,4 +7,5 @@ object Routes {
     const val MAIN = "main"
     const val NAME = "name"
     const val PROFILE = "profile"
+    const val EVENT = "event"
 }

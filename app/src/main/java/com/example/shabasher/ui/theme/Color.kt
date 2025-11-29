@@ -4,9 +4,9 @@ import androidx.compose.ui.graphics.Color
 
 // Светлая тема
 
-val LightSurface = Color(0xFFF0F0F0)
-val LightBackground = Color(0xFFFCFCFC)
-val LightButtons = Color(0xFFE5E5E5)
+val LightSurface = Color(0xFFFCFCFC)
+val LightBackground = Color(0xFFEBEBEB)
+val LightButtons = Color(0xFFD4D4D4)
 val LightAccent = Color(0xFFF09C00)
 val LightInputs = Color(0xFFE3E3E3)
 val LightTertiary = Color(0xFFF09C00)

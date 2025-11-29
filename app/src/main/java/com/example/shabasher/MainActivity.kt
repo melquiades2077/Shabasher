@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
@@ -86,11 +87,15 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.MAIN) {
-                        MainPage(navController, themeViewModel)
+                        MainPage(navController)
                     }
 
                     composable(Routes.PROFILE) {
                         ProfilePage(navController, themeViewModel)
+                    }
+
+                    composable(Routes.EVENT) {
+                        EventPage(navController)
                     }
                 }
             }
