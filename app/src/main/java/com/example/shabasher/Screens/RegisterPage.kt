@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,12 +66,24 @@ fun RegisterPage(
         floatingActionButton = {
 
             FloatingActionButton(
-                onClick = { if (viewModel.validate()) navController.navigate(Routes.NAME) },
+                onClick = {
+                    SafeNavigation.navigate {
+                        viewModel.register()
+                    }
+                },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+                if (viewModel.loading.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+                }
             }
+
 
         }
 
@@ -134,14 +148,12 @@ fun RegisterPage(
                 }
             }
 
-            // пробрасываем callback наверх
-            LaunchedEffect(
-                viewModel.email.value,
-                viewModel.password.value,
-                viewModel.repeatPassword.value
-            ) {
-                // ничего — просто пример, что можно подписывать события
+            LaunchedEffect(viewModel.success.value) {
+                if (viewModel.success.value) {
+                    navController.navigate(Routes.NAME)
+                }
             }
+
 
         }
 

@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -63,16 +65,23 @@ fun LoginPage(
 
             FloatingActionButton(
                 onClick = {
-                    if (viewModel.validate()) {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(0) { inclusive = true }
+                    SafeNavigation.navigate {
+                        viewModel.login()
                     }
-                } },
+                },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+                if (viewModel.loading.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+                }
             }
+
 
         }
 
@@ -126,9 +135,13 @@ fun LoginPage(
                     }
                 }
             }
-            // пробрасываем callback наверх
-            LaunchedEffect(viewModel.email.value, viewModel.password.value) {
-                // ничего — просто пример, что можно подписывать события
+
+            LaunchedEffect(viewModel.success.value) {
+                if (viewModel.success.value) {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             }
         }
 

@@ -66,11 +66,11 @@ fun CreateEventPage(
 
             FloatingActionButton(
                 onClick = {
-                    if (viewModel.validate()) {
+                    
                         navController.navigate(Routes.MAIN) {
                             popUpTo(0) { inclusive = true }
                         }
-                    }
+
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary

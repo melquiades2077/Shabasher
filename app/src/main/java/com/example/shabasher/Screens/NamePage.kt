@@ -40,26 +40,32 @@ import com.example.shabasher.ViewModels.NameViewModel
 @Composable
 fun NamePage(
     navController: NavController,
-    viewModel: NameViewModel = viewModel()) {
+    viewModel: NameViewModel = viewModel()
+) {
+
+    // навигация в ответ на успех
+    LaunchedEffect(viewModel.success.value) {
+        if (viewModel.success.value) {
+            navController.navigate(Routes.MAIN) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
-        modifier = Modifier.Companion.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("") },
                 navigationIcon = {
                     IconButton(
-                        onClick = {
-                            SafeNavigation.navigate { navController.popBackStack() }
-                        }
+                        onClick = { SafeNavigation.navigate { navController.popBackStack() } }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -67,85 +73,82 @@ fun NamePage(
 
             FloatingActionButton(
                 onClick = {
-                    if (viewModel.validate()) {
-                        navController.navigate(Routes.MAIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
+                    viewModel.submitName()
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+                Icon(Icons.Default.ArrowForward, contentDescription = "Continue")
             }
-
         }
-
     ) { innerPadding ->
+
         Box(
             modifier = Modifier
-                .fillMaxSize().padding(innerPadding)
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
+
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 48.dp)
+                    .padding(top = 48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+
+                // Заголовки
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            "Создайте профиль",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-                        Text(
-                            "Познакомимся ближе?",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                            // Иконка загрузки
-                        Icon(
-                            Icons.Default.AddAPhoto,
-                            contentDescription = "Add photo",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        )
-
-                    }
-
-                    InputField(
-                        label = "Имя",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                    Text(
+                        "Создайте профиль",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineLarge
                     )
+                    Text(
+                        "Познакомимся ближе?",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
-                    viewModel.error.value?.let { error ->
-                        Text(error)
-                    }
+                // Фото
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.AddAPhoto,
+                        contentDescription = "Add photo",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                // Поле ввода имени
+                InputField(
+                    label = "Имя",
+                    value = viewModel.name.value,
+                    onValueChange = { viewModel.name.value = it }
+                )
+
+                // Ошибка
+                viewModel.error.value?.let { error ->
+                    Text(error, color = MaterialTheme.colorScheme.error)
+                }
+
+                // Индикатор загрузки (можно заменить на CircularProgressIndicator)
+                if (viewModel.loading.value) {
+                    Text("Сохраняем…", color = MaterialTheme.colorScheme.primary)
                 }
             }
-            // пробрасываем callback наверх
-            LaunchedEffect(viewModel.name.value) {
-                // ничего — просто пример, что можно подписывать события
-            }
         }
-
     }
 }
