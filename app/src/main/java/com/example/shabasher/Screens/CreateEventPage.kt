@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.ViewModels.CreateEventViewModel
 import com.example.shabasher.ViewModels.NameViewModel
 import com.example.shabasher.components.InputField
 
@@ -39,7 +40,7 @@ import com.example.shabasher.components.InputField
 @Composable
 fun CreateEventPage(
     navController: NavController,
-    viewModel: NameViewModel = viewModel()) {
+    viewModel: CreateEventViewModel = viewModel()) {
 
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),

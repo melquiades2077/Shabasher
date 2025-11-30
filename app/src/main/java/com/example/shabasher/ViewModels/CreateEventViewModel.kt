@@ -17,10 +17,6 @@ class CreateEventViewModel: ViewModel() {
 
 
     fun validate(): Boolean {
-        if (title.value.isBlank()) {
-            error.value = "Введите имя"
-            return false
-        }
 
         if (title.value.isBlank() || description.value.isBlank() || event_address.value.isBlank() || date.value.isBlank() || time.value.isBlank()) {
             error.value = "Все поля должны быть заполнены"
