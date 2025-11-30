@@ -6,42 +6,101 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.shabasher.Model.Routes
+import com.example.shabasher.Screens.EventPage
+import com.example.shabasher.Screens.LoginPage
+import com.example.shabasher.Screens.MainPage
+import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.ProfilePage
+import com.example.shabasher.Screens.RegisterPage
+import com.example.shabasher.Screens.WelcomePage
+import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
+import com.example.shabasher.ViewModels.LoginViewModel
+import com.example.shabasher.ViewModels.NameViewModel
+import com.example.shabasher.ViewModels.RegisterViewModel
+import com.example.shabasher.ViewModels.ThemeViewModel
+
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            ShabasherTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            val themeViewModel: ThemeViewModel = viewModel()
+            val navController = rememberNavController()
+
+            ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
+
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.WELCOME
+                ) {
+
+                    composable(Routes.WELCOME) {
+                        WelcomePage(navController)
+                    }
+
+                    composable(Routes.REGISTER) {
+                        val vm: RegisterViewModel = viewModel()
+                        RegisterPage(
+                            navController = navController,
+                            viewModel = vm
+                        )
+                    }
+
+                    composable(Routes.LOGIN) {
+                        val vm: LoginViewModel = viewModel()
+                        LoginPage(
+                            navController = navController,
+                            viewModel = vm
+                        )
+                    }
+
+                    composable(Routes.NAME) {
+                        val vm: NameViewModel = viewModel()
+                        NamePage(
+                            navController = navController,
+                            viewModel = vm
+                        )
+                    }
+
+                    composable(Routes.MAIN) {
+                        MainPage(navController)
+                    }
+
+                    composable(Routes.PROFILE) {
+                        ProfilePage(navController, themeViewModel)
+                    }
+
+                    composable(Routes.EVENT) {
+                        val vm: EventViewModel = viewModel()
+                        EventPage(navController, "1", vm)
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ShabasherTheme {
-        Greeting("Android")
     }
 }
