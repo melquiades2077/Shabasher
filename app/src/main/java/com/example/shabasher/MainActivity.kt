@@ -34,6 +34,7 @@ import com.example.shabasher.Screens.NamePage
 import com.example.shabasher.Screens.ProfilePage
 import com.example.shabasher.Screens.RegisterPage
 import com.example.shabasher.Screens.WelcomePage
+import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
 import com.example.shabasher.ViewModels.LoginViewModel
 import com.example.shabasher.ViewModels.NameViewModel
@@ -95,7 +96,8 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.EVENT) {
-                        EventPage(navController)
+                        val vm: EventViewModel = viewModel()
+                        EventPage(navController, "1", vm)
                     }
                 }
             }

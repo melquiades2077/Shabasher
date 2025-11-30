@@ -20,10 +20,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
+import com.example.shabasher.Model.ParticipationStatus
 import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.ui.theme.ShabasherTheme
 
-enum class ParticipationStatus { GOING, NOT_GOING, MAYBE }
 
 @Composable
 fun ParticipationSelector(

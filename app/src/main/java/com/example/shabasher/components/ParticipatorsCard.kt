@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,10 +27,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.shabasher.Model.Participant
+import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.Screens.EventContent
+import com.example.shabasher.Screens.LoadingScreen
 import com.example.shabasher.ui.theme.ShabasherTheme
 
+
+fun ParticipantToString(status: ParticipationStatus): String {
+    when {
+        status == ParticipationStatus.GOING -> return "Придет"
+        status == ParticipationStatus.NOT_GOING -> return "Не придет"
+        status == ParticipationStatus.INVITED -> return "Приглашен"
+        else -> return "Приглашен"
+    }
+}
+
 @Composable
-fun ParticipatorsCard() {
+fun ParticipatorsCard(
+    participants: List<Participant>
+) {
+    val showList = participants.take(3)
+    val hasMore = participants.size > 3
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -40,36 +60,38 @@ fun ParticipatorsCard() {
             )
             .padding(top = 16.dp, start = 8.dp, end = 8.dp)
             .fillMaxWidth()
-
     ) {
+
         Text(
             "Участники",
             style = MaterialTheme.typography.titleMedium
         )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ParticipatorElem()
-            ParticipatorElem()
-            ParticipatorElem()
 
-            IconButton(
-                onClick = {  }
-            ) {
-                Icon(
-                    Icons.Default.MoreHoriz,
-                    contentDescription = "Ещё"
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            showList.forEach { participant ->
+                ParticipatorElem(
+                    name = participant.name,
+                    status = ParticipantToString(participant.status)
                 )
             }
+
+            if (hasMore) {
+                IconButton(onClick = {  }) {
+                    Icon(
+                        Icons.Default.MoreHoriz,
+                        contentDescription = "Ещё"
+                    )
+                }
+            }
         }
-
-
-
     }
 }
 
 @Composable
-fun ParticipatorElem() {
+fun ParticipatorElem(
+    name: String = "Участник",
+    status: String = "Придет"
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -102,18 +124,10 @@ fun ParticipatorElem() {
             Spacer(Modifier.width(16.dp))
 
             Text(
-                "Улугбег",
+                name,
                 style = MaterialTheme.typography.titleMedium)
         }
 
-        Text("Придет", color = MaterialTheme.colorScheme.error)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ParticipatorsCardPreview() {
-    ShabasherTheme(darkTheme = true) {
-        ParticipatorsCard()
+        Text(status, color = MaterialTheme.colorScheme.error)
     }
 }

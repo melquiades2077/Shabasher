@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun EventInfo(
-    title: String,
-              description: String
+    title: String = "Заголовок",
+    description: String = "Описание Описание ОписаниеОписание ОписаниеОписание ОписаниеОписание Описание Описание Описание ОписаниеОписаниеОписание Описание Описание Описание Описание"
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -76,7 +76,11 @@ fun EventInfo(
 
 
 @Composable
-fun EventMoreInfo() {
+fun EventMoreInfo(
+    date: String = "12 декабря 2026 г.",
+    place: String = "г. Красный Луч, ул. Маяковского 10",
+    time: String = "22:00"
+    ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -94,9 +98,9 @@ fun EventMoreInfo() {
             style = MaterialTheme.typography.titleMedium
         )
         Column() {
-            InfoRow(icon = Icons.Default.CalendarMonth, label = "12 декабря 2026 г.")
-            InfoRow(icon = Icons.Default.LocationOn, label = "г. Красный Луч, ул. Маяковского 10")
-            InfoRow(icon = Icons.Default.AccessTime, label = "22:00")
+            InfoRow(icon = Icons.Default.CalendarMonth, label = date)
+            InfoRow(icon = Icons.Default.LocationOn, label = place)
+            InfoRow(icon = Icons.Default.AccessTime, label = time)
         }
     }
 }
