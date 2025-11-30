@@ -11,14 +11,21 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(JwtOptions)));
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+var jwtHours = Environment.GetEnvironmentVariable("JWT_HOURS");
+
+builder.Services.Configure<JwtOptions>(options =>
+{
+    options.SecretKey = jwtSecret;
+    options.ExpiresHours = Convert.ToInt32(jwtHours);
+});
 builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Shabasher API", Version = "v1" });
 
-    var securityScheme = new OpenApiSecurityScheme //эти опции выдал товарищ инвестор, без них swagger не отправляет токен
+    var securityScheme = new OpenApiSecurityScheme 
     {
         Name = "Authorization",
         Description = "Enter 'Bearer {token}'",
@@ -46,7 +53,7 @@ builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddDbContext<ShabasherDbContext>(options =>
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(ShabasherDbContext)));
+        options.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
     });
 
 var app = builder.Build();

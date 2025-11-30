@@ -10,7 +10,11 @@ namespace Shabasher.API.Extensions
     {
         public static void AddApiAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtOptions = configuration.GetSection(nameof(JwtOptions)).Get<JwtOptions>();
+            var jwtOptions = new JwtOptions
+            {
+                SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET"),
+                ExpiresHours = Convert.ToInt32(Environment.GetEnvironmentVariable("JWT_HOURS"))
+            };
 
             services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
