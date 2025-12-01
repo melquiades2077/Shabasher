@@ -74,14 +74,8 @@ fun RegisterPage(
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                if (viewModel.loading.value) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
-                }
+                Icon(Icons.Default.ArrowForward, contentDescription = "FAB")
+
             }
 
 

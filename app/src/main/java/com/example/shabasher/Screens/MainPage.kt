@@ -97,7 +97,7 @@ fun MainPage(
 
             FloatingActionButton(
                 onClick = {
-                    SafeNavigation.navigate { navController.navigate(Routes.EVENT) }
+                    SafeNavigation.navigate { navController.navigate(Routes.CREATEEVENT) }
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary

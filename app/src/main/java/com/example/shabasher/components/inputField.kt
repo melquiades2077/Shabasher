@@ -27,49 +27,39 @@ fun InputField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
-    modifier: Modifier = Modifier
+    singleLine: Boolean = true,
+    readOnly: Boolean = false,
+    trailing: @Composable (() -> Unit)? = null
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     OutlinedTextField(
         value = value,
-        onValueChange = { newValue ->
-            // ❌ Убираем пробелы
-            if (!newValue.contains(" ")) {
-                onValueChange(newValue)
-            }
-        },
+        onValueChange = { if (!readOnly) onValueChange(it) },
         label = { Text(label) },
-        singleLine = true,
-
-        // 👇 Выбор клавиатуры (email, password, текст)
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType
-        ),
-
-        // 👇 Скрытие пароля, если isPassword = true
+        singleLine = singleLine,
+        readOnly = readOnly,
+        shape = RoundedCornerShape(20.dp),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation =
             if (isPassword && !isPasswordVisible) PasswordVisualTransformation()
             else VisualTransformation.None,
-
-        // 👁 Иконка показа/скрытия пароля
-        trailingIcon = {
-            if (isPassword) {
-                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                    Icon(
-                        imageVector = if (isPasswordVisible)
-                            Icons.Default.Visibility
-                        else Icons.Default.VisibilityOff,
-                        contentDescription = null
-                    )
-                }
-            }
-        },
-        shape = RoundedCornerShape(20.dp),
-
-        modifier = modifier
-            .fillMaxWidth(0.8f) // 👉 Не на всю ширину экрана
+        trailingIcon = trailing ?: (
+                if (isPassword) {
+                    {
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(
+                                if (isPasswordVisible) Icons.Default.Visibility
+                                else Icons.Default.VisibilityOff,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                } else null
+                ),
+        modifier = modifier.fillMaxWidth(0.8f)
     )
 }

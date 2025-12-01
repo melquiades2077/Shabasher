@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.32.0")
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.ui)
     testImplementation(libs.junit)

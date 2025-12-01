@@ -8,4 +8,6 @@ object Routes {
     const val NAME = "name"
     const val PROFILE = "profile"
     const val EVENT = "event"
+    const val CREATEEVENT = "createevent"
+    const val SHAREEVENT = "shareevent"
 }

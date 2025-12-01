@@ -21,17 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.R
+import com.example.shabasher.ViewModels.ShareEventViewModel
 import com.example.shabasher.components.ShabasherSecondaryButton
-import com.example.shabasher.ui.theme.ShabasherTheme
 import com.example.shabasher.ui.theme.Typography
 
 @Composable
-fun EventCreatedPage(
-    //navController: NavController,
-    //themeViewModel: ThemeViewModel
+fun ShareEventPage(
+    navController: NavController,
+    viewModel: ShareEventViewModel = viewModel()
 ) {
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize()
@@ -61,7 +64,7 @@ fun EventCreatedPage(
 
                 ) {
                     Text(
-                        text = "Событие создано!",
+                        text = "Поделитесь событием",
                         style = Typography.headlineMedium
                     )
                     Image(
@@ -82,7 +85,7 @@ fun EventCreatedPage(
                             .fillMaxWidth()
                     ) {
                         Text(
-                            text = "shabasher.app/join/ABC123",
+                            text = viewModel.link.value,
                             style = Typography.bodyLarge
                         )
                         IconButton(
@@ -99,18 +102,17 @@ fun EventCreatedPage(
                 }
                 ShabasherSecondaryButton(
                     text = "Продолжить",
-                    onClick = { },
+                    onClick = {
+                        SafeNavigation.navigate {
+                            navController.navigate(Routes.EVENT) {
+                                popUpTo(Routes.MAIN) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                              },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EventCreatedPreview() {
-    ShabasherTheme(darkTheme = true) {
-        EventCreatedPage()
     }
 }
