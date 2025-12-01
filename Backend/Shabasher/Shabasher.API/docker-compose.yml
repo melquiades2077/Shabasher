@@ -15,11 +15,11 @@
       context: ../..
       dockerfile: Shabasher/Shabasher.API/Dockerfile
     ports:
-      - "5000:5053"
+      - "5000:5000"
     container_name: shabasher
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
-      - ASPNETCORE_URLS=http://+:5053
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
       - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_HOURS=${JWT_HOURS:-12}

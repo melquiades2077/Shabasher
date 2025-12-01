@@ -43,5 +43,11 @@ namespace Shabasher.API.Controllers
 
             return Ok(token.Value);
         }
+
+        [HttpGet]
+        public async Task<string> g([FromQuery] string query)
+        {
+            return query;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
@@ -5,11 +6,13 @@ using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
 using Shabasher.DataManage;
-using DotNetEnv;
+using System.Net;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 var jwtHours = Environment.GetEnvironmentVariable("JWT_HOURS");

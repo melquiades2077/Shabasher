@@ -9,5 +9,5 @@ RUN dotnet publish -c Release -o out Shabasher/Shabasher.API/Shabasher.API.cspro
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/out .
-EXPOSE 5053
+EXPOSE 5000
 ENTRYPOINT ["dotnet", "Shabasher.API.dll"]
