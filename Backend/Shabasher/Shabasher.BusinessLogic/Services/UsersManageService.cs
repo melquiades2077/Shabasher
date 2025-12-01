@@ -7,7 +7,6 @@ using Shabasher.DataManage.Mappings;
 using Shabasher.DataManage;
 using Shabasher.BusinessLogic.Mappings;
 using Shabasher.Core.Validators;
-using Shabasher.BusinessLogic.Jwt;
 
 namespace Shabasher.BusinessLogic.Services
 {
