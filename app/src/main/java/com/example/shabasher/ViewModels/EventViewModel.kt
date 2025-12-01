@@ -9,61 +9,64 @@ import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.EventUiState
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.data.EventsRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class EventViewModel : ViewModel() {
+data class EventUiState(
+    val isLoading: Boolean = true,
+    val event: EventData? = null,
+    val error: String? = null
+)
 
-    var uiState by mutableStateOf(EventUiState())
+class EventViewModel(
+    private val repository: EventsRepository = EventsRepository()
+) : ViewModel() {
+
+    var ui = androidx.compose.runtime.mutableStateOf(EventUiState())
         private set
 
-    /**
-     * Загружаем данные события.
-     * Сейчас — фейковые данные. Позже подменим репозиторием.
-     */
-    fun loadEvent(eventId: String) {
+    private var eventId: String = ""
+
+    /** Вызывается из экрана */
+    fun loadEvent(id: String) {
+        eventId = id
+
+        ui.value = ui.value.copy(isLoading = true)
+
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true)
+            val result = repository.getEventById(id)
 
-            // имитация запроса к серверу
-            delay(400)
+            ui.value = when {
+                result.isSuccess -> EventUiState(
+                    isLoading = false,
+                    event = result.getOrNull()
+                )
 
-            val fakeEvent = EventData(
-                id = eventId,
-                title = "Корпоратив",
-                description = "Описание мероприятия. Веселье, игры, конкурсы и хорошее настроение!",
-                date = "12 декабря 2026",
-                place = "г. Красный Луч, ул. Маяковского 10",
-                time = "22:00",
-                participants = listOf(
-                    Participant("1", "Мария", ParticipationStatus.INVITED),
-                    Participant("2", "Степан", ParticipationStatus.INVITED),
-                    Participant("3", "Алексей", ParticipationStatus.INVITED)
-                ),
-                myStatus = ParticipationStatus.GOING
-            )
-
-            uiState = uiState.copy(
-                isLoading = false,
-                event = fakeEvent
-            )
+                else -> EventUiState(
+                    isLoading = false,
+                    error = result.exceptionOrNull()?.message ?: "Ошибка загрузки события"
+                )
+            } as EventUiState
         }
     }
 
-    /**
-     * Обновление статуса участия.
-     * Сейчас — просто подменяем локально.
-     * С API — отправишь запрос в репозиторий.
-     */
-    fun updateStatus(status: ParticipationStatus) {
-        uiState.event?.let { current ->
+    /** Обновление статуса участия */
+    fun updateParticipation(status: ParticipationStatus) {
+        val current = ui.value.event ?: return
+        val oldStatus = current.userStatus
 
-            uiState = uiState.copy(
-                event = current.copy(myStatus = status)
-            )
+        val newStatus =
+            if (oldStatus == status)
+                ParticipationStatus.INVITED
+            else
+                status
 
-            // если будет API — делаешь:
-            // repository.updateStatus(current.id, status)
-        }
+        val updated = current.copy(userStatus = newStatus)
+
+        ui.value = ui.value.copy(event = updated)
+
+        // TODO: отправить на backend
     }
+
 }

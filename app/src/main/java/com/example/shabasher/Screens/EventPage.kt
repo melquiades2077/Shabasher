@@ -75,12 +75,12 @@ fun EventPage(
     eventId: String,
     viewModel: EventViewModel = viewModel()
 ) {
-    val ui = viewModel.uiState
+    val ui = viewModel.ui.value
 
-    // загружаем событие один раз
     LaunchedEffect(Unit) {
         viewModel.loadEvent(eventId)
     }
+
 
 
     Scaffold(
@@ -126,10 +126,10 @@ fun EventPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp),
+                vm = viewModel
             )
         }
-
     }
 }
 
@@ -144,7 +144,8 @@ fun LoadingScreen() {
 @Composable
 fun EventContent(
     event: EventData,
-    modifier: Modifier
+    modifier: Modifier,
+    vm: EventViewModel
 ) {
     LazyColumn(
         modifier = modifier,
@@ -165,9 +166,10 @@ fun EventContent(
 
         item {
             ParticipationSelector(
-                selected = ParticipationStatus.GOING,
-                onSelect = { }
+                selected = event.userStatus,
+                onSelect = { vm.updateParticipation(it) }
             )
+
         }
 
         item {

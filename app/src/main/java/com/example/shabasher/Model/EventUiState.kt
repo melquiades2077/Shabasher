@@ -14,5 +14,5 @@ data class EventData(
     val place: String,
     val time: String,
     val participants: List<Participant>,
-    val myStatus: ParticipationStatus
+    val userStatus: ParticipationStatus = ParticipationStatus.INVITED
 )

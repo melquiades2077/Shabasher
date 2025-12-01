@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,8 +66,20 @@ fun CreateEventPage(
     navController: NavController,
     viewModel: CreateEventViewModel = viewModel()
 ) {
+    val ui = viewModel.uiState.value
+
     val showDatePicker = remember { mutableStateOf(false) }
     val showTimePicker = remember { mutableStateOf(false) }
+
+    // Когда событие создано → переход
+    LaunchedEffect(ui.successEventId) {
+        ui.successEventId?.let {
+            navController.navigate(Routes.EVENT) {
+                popUpTo(Routes.MAIN) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -73,11 +87,7 @@ fun CreateEventPage(
             CenterAlignedTopAppBar(
                 title = { Text("Создать событие") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            SafeNavigation.navigate { navController.popBackStack() }
-                        }
-                    ) {
+                    IconButton(onClick = { SafeNavigation.navigate { navController.popBackStack() } }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
                 },
@@ -91,15 +101,7 @@ fun CreateEventPage(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (viewModel.validate()) {
-                        // TODO: интеграция c backend
-                        SafeNavigation.navigate {
-                            navController.navigate(Routes.SHAREEVENT) {
-                                popUpTo(Routes.MAIN) { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    }
+                    viewModel.createEvent()
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
@@ -109,6 +111,18 @@ fun CreateEventPage(
         }
     ) { innerPadding ->
 
+        if (ui.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
@@ -117,7 +131,7 @@ fun CreateEventPage(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // Фото заглушка
+            // Фото (пока заглушка)
             item {
                 Box(
                     modifier = Modifier
@@ -142,8 +156,8 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Название события",
-                    value = viewModel.title.value,
-                    onValueChange = { viewModel.title.value = it }
+                    value = ui.title,
+                    onValueChange = { viewModel.updateTitle(it) }
                 )
             }
 
@@ -151,8 +165,8 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Описание",
-                    value = viewModel.description.value,
-                    onValueChange = { viewModel.description.value = it },
+                    value = ui.description,
+                    onValueChange = { viewModel.updateDescription(it) },
                     singleLine = false,
                     keyboardType = KeyboardType.Text,
                     modifier = Modifier.height(150.dp)
@@ -163,8 +177,8 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Адрес",
-                    value = viewModel.address.value,
-                    onValueChange = { viewModel.address.value = it },
+                    value = ui.address,
+                    onValueChange = { viewModel.updateAddress(it) },
                     keyboardType = KeyboardType.Text
                 )
             }
@@ -173,7 +187,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Дата",
-                    value = viewModel.date.value,
+                    value = ui.date,
                     onValueChange = { },
                     readOnly = true,
                     trailing = {
@@ -188,9 +202,9 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Время",
-                    value = viewModel.time.value,
-                    readOnly = true,
+                    value = ui.time,
                     onValueChange = { },
+                    readOnly = true,
                     trailing = {
                         IconButton(onClick = { showTimePicker.value = true }) {
                             Icon(Icons.Default.AccessTime, contentDescription = "Время")
@@ -199,9 +213,13 @@ fun CreateEventPage(
                 )
             }
 
+            // Ошибка
             item {
-                viewModel.error.value?.let {
-                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                ui.error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
 
@@ -210,7 +228,7 @@ fun CreateEventPage(
             }
         }
 
-        // Диалог выбора даты
+        // Date Picker
         if (showDatePicker.value) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker.value = false },
@@ -218,7 +236,7 @@ fun CreateEventPage(
             )
         }
 
-        // Диалог выбора времени
+        // Time Picker
         if (showTimePicker.value) {
             TimePickerDialog(
                 onDismissRequest = { showTimePicker.value = false },
@@ -227,6 +245,8 @@ fun CreateEventPage(
         }
     }
 }
+
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
