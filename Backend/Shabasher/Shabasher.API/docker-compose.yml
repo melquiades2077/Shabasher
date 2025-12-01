@@ -1,5 +1,4 @@
-﻿version: "3.9"
-services:
+﻿services:
   postgres:
     container_name: postgres
     image: postgres:18
@@ -11,5 +10,20 @@ services:
     - "postgres-data:/var/lib/postgresql/data" 
     ports:
     - "${DB_PORT}:5432"
+  shabasher:
+    build:
+      context: ../..
+      dockerfile: Shabasher/Shabasher.API/Dockerfile
+    ports:
+      - "5000:5053"
+    container_name: shabasher
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=http://+:5053
+      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_HOURS=${JWT_HOURS:-12}
+    depends_on:
+    - postgres
 volumes:
   postgres-data:
