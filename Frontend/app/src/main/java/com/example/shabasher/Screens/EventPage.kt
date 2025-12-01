@@ -26,7 +26,10 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,6 +40,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,12 +75,12 @@ fun EventPage(
     eventId: String,
     viewModel: EventViewModel = viewModel()
 ) {
-    val ui = viewModel.uiState
+    val ui = viewModel.ui.value
 
-    // загружаем событие один раз
     LaunchedEffect(Unit) {
         viewModel.loadEvent(eventId)
     }
+
 
 
     Scaffold(
@@ -94,9 +101,21 @@ fun EventPage(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     navigationIconContentColor = MaterialTheme.colorScheme.onBackground
-                )
+                ),
+                actions = {
+                    Box {
+                        IconButton(
+                            onClick = { SafeNavigation.navigate { navController.navigate(Routes.SHAREEVENT) } }
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Поделиться"
+                            )
+                        }
+                    }
+                }
             )
-        }
+        },
     ) { innerPadding ->
 
         when {
@@ -107,22 +126,26 @@ fun EventPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp),
+                vm = viewModel
             )
         }
-
     }
 }
 
 @Composable
 fun LoadingScreen() {
-
+    /*CircularProgressIndicator(
+        modifier = Modifier.size(22.dp),
+        color = MaterialTheme.colorScheme.onPrimary
+    )*/
 }
 
 @Composable
 fun EventContent(
     event: EventData,
-    modifier: Modifier
+    modifier: Modifier,
+    vm: EventViewModel
 ) {
     LazyColumn(
         modifier = modifier,
@@ -143,9 +166,10 @@ fun EventContent(
 
         item {
             ParticipationSelector(
-                selected = ParticipationStatus.GOING,
-                onSelect = { }
+                selected = event.userStatus,
+                onSelect = { vm.updateParticipation(it) }
             )
+
         }
 
         item {

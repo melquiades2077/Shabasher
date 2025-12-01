@@ -53,9 +53,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.ViewModels.LoginViewModel
+import com.example.shabasher.ViewModels.MainPageViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.components.EventCard
 import kotlinx.coroutines.CoroutineScope
@@ -66,7 +69,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(
-    navController: NavController
+    navController: NavController,
+    viewModel: MainPageViewModel = viewModel()
 ) {
 
     // Список карточек — держим в состоянии
@@ -97,7 +101,7 @@ fun MainPage(
 
             FloatingActionButton(
                 onClick = {
-                    SafeNavigation.navigate { navController.navigate(Routes.EVENT) }
+                    SafeNavigation.navigate { navController.navigate(Routes.CREATEEVENT) }
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
