@@ -34,7 +34,7 @@ class AuthRepository {
     }
 
     //URL бека
-    private val baseUrl = "https://10.0.2.2:7132"
+    private val baseUrl = "http://10.0.2.2:5132"
 
     // заглушки, позже интегрируем бэкенд на аспе
     suspend fun login(email: String, password: String): Result<Unit> {
@@ -46,7 +46,7 @@ class AuthRepository {
                 setBody(LoginRequest(email, password))
             }
 
-            println("📡 Статус ответа: ${response.status}")
+            println("Статус ответа: ${response.status}")
 
             if (response.status.isSuccess()) {
                 val token: String = response.body()

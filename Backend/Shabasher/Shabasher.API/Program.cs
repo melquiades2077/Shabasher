@@ -51,12 +51,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:8080",      // Локальный фронтенд
-            "https://localhost:7132",     // Локальный бэкенд
-            "http://10.0.2.2:5132",       // Android эмулятор
-            "http://10.0.2.2:7132",       // Android эмулятор (альтернативный порт)
-            "http://192.168.1.100:5132",  // для телефона
-            "https://192.168.1.100:7132"  // для телефона (HTTPS)
+            "http://localhost:8080",
+            "https://localhost:7132",
+
+            "http://10.0.2.2:5132",
+
+            "http://192.168.1.100:5132"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -82,9 +82,9 @@ if (app.Environment.IsDevelopment())
 }
 app.UseRouting();
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+/*app.UseHttpsRedirection();*/ //Заглушка для теста
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+app.Run(); //Для локального подключения
