@@ -46,6 +46,23 @@ builder.Services.AddSwaggerGen(options =>
         { securityScheme, Array.Empty<string>() }
     });
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:8080",      // Локальный фронтенд
+            "https://localhost:7132",     // Локальный бэкенд
+            "http://10.0.2.2:5132",       // Android эмулятор
+            "http://10.0.2.2:7132",       // Android эмулятор (альтернативный порт)
+            "http://192.168.1.100:5132",  // для телефона
+            "https://192.168.1.100:7132"  // для телефона (HTTPS)
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
@@ -64,6 +81,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

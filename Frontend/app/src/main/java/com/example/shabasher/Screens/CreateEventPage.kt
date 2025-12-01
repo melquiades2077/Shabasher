@@ -114,34 +114,35 @@ fun CreateEventPage(
 
                     }
 
+                    //Исправил тут name на title, с name код не компилился
                     InputField(
                         label = "Название",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                        value = viewModel.title.value,
+                        onValueChange = { viewModel.title.value = it }
                     )
 
                     InputField(
                         label = "Описание",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                        value = viewModel.title.value,
+                        onValueChange = { viewModel.title.value = it }
                     )
 
                     InputField(
                         label = "Адрес",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                        value = viewModel.title.value,
+                        onValueChange = { viewModel.title.value = it }
                     )
 
                     InputField(
                         label = "Дата",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                        value = viewModel.title.value,
+                        onValueChange = { viewModel.title.value = it }
                     )
 
                     InputField(
                         label = "Время",
-                        value = viewModel.name.value,
-                        onValueChange = { viewModel.name.value = it }
+                        value = viewModel.title.value,
+                        onValueChange = { viewModel.title.value = it }
                     )
 
 
@@ -151,8 +152,9 @@ fun CreateEventPage(
                     }
                 }
             }
+            //Тут тоже name na title
             // пробрасываем callback наверх
-            LaunchedEffect(viewModel.name.value) {
+            LaunchedEffect(viewModel.title.value) {
                 // ничего — просто пример, что можно подписывать события
             }
         }
