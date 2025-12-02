@@ -1,4 +1,6 @@
-﻿namespace Shabasher.Core.DTOs
+﻿using Shabasher.Core.Models;
+
+namespace Shabasher.Core.DTOs
 {
     public record ShabashShortResponse(
         string Id,
