@@ -16,7 +16,8 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabash.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.DomainToResponse(p.User),
-                        p.Status))
+                        p.Status,
+                        p.Role))
                     .ToList(),
                 DateOnly.FromDateTime(shabash.StartDate),
                 TimeOnly.FromDateTime(shabash.StartDate),
@@ -39,7 +40,8 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabashEntity.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.EntityToResponse(p.User),
-                        p.Status))
+                        p.Status,
+                        p.Role))
                     .ToList(),
                 DateOnly.FromDateTime(shabashEntity.StartDate),
                 TimeOnly.FromDateTime(shabashEntity.StartDate),

@@ -6,10 +6,13 @@ namespace Shabasher.Core.Models
 
         public UserStatus Status { get; }
 
-        public ShabashParticipant(User user, UserStatus status)
+        public ShabashRole Role { get; }
+
+        public ShabashParticipant(User user, UserStatus status, ShabashRole role)
         {
             User = user;
             Status = status;
+            Role = role;
         }
     }
 }

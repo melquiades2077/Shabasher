@@ -7,6 +7,7 @@ using Shabasher.DataManage.Mappings;
 using Shabasher.DataManage;
 using Shabasher.BusinessLogic.Mappings;
 using Shabasher.Core.Validators;
+using Shabasher.DataManage.Entities;
 
 namespace Shabasher.BusinessLogic.Services
 {
@@ -25,6 +26,23 @@ namespace Shabasher.BusinessLogic.Services
             _jwtProvider = jwtProvider;
         }
 
+        private async Task<UserEntity> GetUserEntityByEmail(string email)
+        {
+            return await _dbcontext.Users
+                .AsNoTracking()
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        private async Task<UserEntity> GetUserEntityById(string id)
+        {
+            return await _dbcontext.Users
+                .AsNoTracking()
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
         public async Task<Result<UserResponse>> RegisterUserAsync(string name, string email, string password)
         {
             if (await _dbcontext.Users.AnyAsync(x => x.Email == email))
@@ -43,19 +61,15 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<string>> LoginUserAsync(string email, string password)
         {
-            var user = await _dbcontext.Users
-                .AsNoTracking()
-                .Include(u => u.Participations)
-                .ThenInclude(p => p.Shabash)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            var userEntity = GetUserEntityByEmail(email).Result;
 
-            if (user == null)
+            if (userEntity == null)
                 return Result.Failure<string>("Пользователь с данным email не найден");
 
-            if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
+            if (!_passwordHasher.VerifyPassword(password, userEntity.PasswordHash))
                 return Result.Failure<string>("Неверный пароль");
 
-            string jwtToken = _jwtProvider.GenerateToken(UserResponseMapper.EntityToResponse(user));
+            string jwtToken = _jwtProvider.GenerateToken(UserResponseMapper.EntityToResponse(userEntity));
 
             return Result.Success<string>(jwtToken);
         }
@@ -65,11 +79,7 @@ namespace Shabasher.BusinessLogic.Services
             if (string.IsNullOrWhiteSpace(id))
                 return Result.Failure<UserResponse>("Необходимо ввести ID пользователя");
 
-            var userEntity = await _dbcontext.Users
-                .AsNoTracking()
-                .Include(u => u.Participations)
-                .ThenInclude(p => p.Shabash)
-                .FirstOrDefaultAsync(u => u.Id == id);
+            var userEntity = GetUserEntityById(id).Result;
 
             if (userEntity == null)
                 return Result.Failure<UserResponse>("Пользователь с данным ID не найден");
@@ -82,11 +92,7 @@ namespace Shabasher.BusinessLogic.Services
             if (string.IsNullOrWhiteSpace(email))
                 return Result.Failure<UserResponse>("Необходимо ввести email пользователя");
 
-            var userEntity = await _dbcontext.Users
-                .AsNoTracking()
-                .Include(u => u.Participations)
-                .ThenInclude(p => p.Shabash)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            var userEntity = GetUserEntityByEmail(email).Result;
 
             if (userEntity == null)
                 return Result.Failure<UserResponse>("Пользователь с данным email не найден");

@@ -4,7 +4,8 @@ namespace Shabasher.Core.DTOs
 {
     public record ShabashParticipantResponse(
         UserResponse User,
-        UserStatus Status
+        UserStatus Status,
+        ShabashRole Role
     );
 }
 

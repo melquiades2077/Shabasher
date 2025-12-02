@@ -19,6 +19,14 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext = dbContext;
         }
 
+        private async Task<ShabashEntity> GetShabashEntity(string shabashId)
+        {
+            return await _dbcontext.Shabashes
+                .Include(s => s.Participants)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(s => s.Id == shabashId);
+        }
+
         public async Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, List<ShabashParticipant> participants)
         {
             var shabash = Shabash.Create(name, description, startDate, participants);
@@ -34,10 +42,7 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<ShabashResponse>> UpdateShabashAsync(string shabashId, UpdateShabashRequest request, string userId)
         {
-            var shabashEntity = await _dbcontext.Shabashes
-                .Include(s => s.Participants)
-                .ThenInclude(p => p.User)
-                .FirstOrDefaultAsync(s => s.Id == shabashId);
+            var shabashEntity = GetShabashEntity(shabashId).Result;
 
             if (shabashEntity == null)
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
@@ -50,11 +55,40 @@ namespace Shabasher.BusinessLogic.Services
                 {
                     ShabashId = shabashEntity.Id,
                     UserId = p.User.Id,
-                    Status = p.Status
+                    Status = p.Status,
+                    Role = p.Role
                 })
                 .ToList();
 
             await _dbcontext.SaveChangesAsync();
+
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+        }
+
+        public async Task<Result<string>> DeleteShabashAsync(string shabashId, string userId)
+        {
+            var shabashEntity = GetShabashEntity(shabashId).Result;
+
+            if (shabashEntity == null)
+                return Result.Failure<string>("Шабаш не найден");
+
+            var user = shabashEntity.Participants.FirstOrDefault(p => p.UserId == userId);
+
+            if (user == null)
+                return Result.Failure<string>("Пользователь не найден");
+
+            if (user.Role != ShabashRole.Admin)
+                return Result.Failure<string>("У пользователя недостаточно прав");
+
+            return Result.Success(shabashId);
+        }
+
+        public async Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId)
+        {
+            var shabashEntity = GetShabashEntity(shabashId).Result;
+
+            if (shabashEntity == null)
+                return Result.Failure<ShabashResponse>("Шабаш не найден");
 
             return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
         }

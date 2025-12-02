@@ -13,6 +13,8 @@ namespace Shabasher.DataManage.Entities
         public UserEntity User { get; set; }
 
         public UserStatus Status { get; set; }
+
+        public ShabashRole Role { get; set; }
     }
 }
 

@@ -8,5 +8,7 @@ namespace Shabasher.Core.Interfaces
     {
         Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, List<ShabashParticipant> participants);
         Task<Result<ShabashResponse>> UpdateShabashAsync(string shabashId, UpdateShabashRequest request, string userId);
+        Task<Result<string>> DeleteShabashAsync(string shabashId, string userId);
+        Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId);
     }
 }

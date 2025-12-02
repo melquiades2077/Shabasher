@@ -12,6 +12,9 @@ namespace Shabasher.DataManage.Configurations
 
             builder.Property(sp => sp.Status)
                    .IsRequired();
+
+            builder.Property(sp => sp.Role)
+                   .IsRequired();
         }
     }
 }
