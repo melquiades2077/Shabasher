@@ -67,12 +67,12 @@ fun ParticipationButton(text: String, active: Boolean, onClick: () -> Unit) {
     val bg = if (active)
         MaterialTheme.colorScheme.primary
     else
-        MaterialTheme.colorScheme.secondary
+        MaterialTheme.colorScheme.surfaceVariant
 
     val fg = if (active)
         MaterialTheme.colorScheme.onPrimary
     else
-        MaterialTheme.colorScheme.onSecondary
+        MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier

@@ -145,6 +145,7 @@ fun RegisterPage(
             LaunchedEffect(viewModel.success.value) {
                 if (viewModel.success.value) {
                     navController.navigate(Routes.NAME)
+                    viewModel.success.value = false
                 }
             }
 

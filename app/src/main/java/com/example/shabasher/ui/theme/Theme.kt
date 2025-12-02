@@ -45,10 +45,10 @@ private val LightColorScheme = lightColorScheme(
     onBackground = LightTextPrimary,
 
     surface = LightSurface,         // карточки, белые блоки
-    onSurface = LightTextPrimary,
+    onSurface = OnLightSurface,
 
     surfaceVariant = LightInputs,   // инпуты, дополнительные поверхности
-    onSurfaceVariant = LightTextPrimary,
+    onSurfaceVariant = onLightSurfaceVariant,
 
     tertiary = LightTertiary,
     error = LightTextSecondary

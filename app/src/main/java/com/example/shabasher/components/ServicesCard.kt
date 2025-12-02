@@ -97,7 +97,7 @@ fun ServiceButton(title: String, icon: ImageVector, onClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(30.dp))
-                .background(MaterialTheme.colorScheme.secondary)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(vertical = 10.dp, horizontal = 16.dp)
                 .width(115.dp)
@@ -105,7 +105,8 @@ fun ServiceButton(title: String, icon: ImageVector, onClick: () -> Unit) {
             Alignment.Center
 
         ) {
-            Icon(icon, contentDescription = null, Modifier.size(60.dp))
+            Icon(icon, contentDescription = null, Modifier.size(60.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(8.dp))
         Text(title, textAlign = TextAlign.Center, )
