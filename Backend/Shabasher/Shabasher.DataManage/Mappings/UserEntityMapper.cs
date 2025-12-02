@@ -17,5 +17,15 @@ namespace Shabasher.DataManage.Mappings
                 PasswordHash = user.PasswordHash
             };
         }
+
+        public static User ToDomain(UserEntity userEntity)
+        {
+            return User.FromEntity(
+                userEntity.Id,
+                userEntity.Name,
+                userEntity.Email,
+                userEntity.PasswordHash,
+                userEntity.CreatedAt);
+        }
     }
 }

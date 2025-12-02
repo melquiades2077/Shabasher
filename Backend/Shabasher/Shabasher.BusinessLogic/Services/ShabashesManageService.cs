@@ -27,14 +27,50 @@ namespace Shabasher.BusinessLogic.Services
                 .FirstOrDefaultAsync(s => s.Id == shabashId);
         }
 
-        public async Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, List<ShabashParticipant> participants)
+        //так делать не надо!!!!!
+        public async Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, string creatorUserId, List<ShabashParticipant> participants)
         {
+            var creatorEntity = await _dbcontext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == creatorUserId);
+
+            if (creatorEntity == null)
+                return Result.Failure<string>("Создатель шабаша не найден");
+
+            var creatorInParticipants = participants.FirstOrDefault(p => p.User.Id == creatorUserId);
+
+            if (creatorInParticipants == null)
+            {
+                var creatorUser = UserEntityMapper.ToDomain(creatorEntity);
+                participants.Add(new ShabashParticipant(creatorUser, UserStatus.Going, ShabashRole.Admin));
+            }
+            else
+            {
+                var index = participants.IndexOf(creatorInParticipants);
+                participants[index] = new ShabashParticipant(creatorInParticipants.User, creatorInParticipants.Status, ShabashRole.Admin);
+            }
+
             var shabash = Shabash.Create(name, description, startDate, participants);
 
             if (shabash.IsFailure)
                 return Result.Failure<string>(shabash.Error);
 
-            _dbcontext.Shabashes.Add(ShabashEntityMapper.ToEntity(shabash.Value));
+            var shabashEntity = ShabashEntityMapper.ToEntity(shabash.Value);
+            _dbcontext.Shabashes.Add(shabashEntity);
+            await _dbcontext.SaveChangesAsync();
+
+            foreach (var participant in shabash.Value.Participants)
+            {
+                var participantEntity = new ShabashParticipantEntity
+                {
+                    ShabashId = shabashEntity.Id,
+                    UserId = participant.User.Id,
+                    Status = participant.Status,
+                    Role = participant.Role
+                };
+                _dbcontext.ShabashParticipants.Add(participantEntity);
+            }
+
             await _dbcontext.SaveChangesAsync();
 
             return Result.Success<string>(shabash.Value.Id);
