@@ -1,4 +1,5 @@
-﻿using Shabasher.DataManage.Entities;
+﻿using System.Linq;
+using Shabasher.DataManage.Entities;
 using Shabasher.Core.Models;
 
 namespace Shabasher.DataManage.Mappings
@@ -13,7 +14,7 @@ namespace Shabasher.DataManage.Mappings
                 Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                PasswordHash = user.PasswordHash,
+                PasswordHash = user.PasswordHash
             };
         }
     }

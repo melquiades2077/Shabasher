@@ -11,11 +11,11 @@ namespace Shabasher.Core.Models
 
         public string Description { get; } = "";
 
-        public List<User> Participants { get; } = [];
+        public List<ShabashParticipant> Participants { get; } = [];
 
         public DateTime CreatedAt { get; }
 
-        private Shabash(string id, string name, string description, List<User> participants)
+        private Shabash(string id, string name, string description, List<ShabashParticipant> participants)
         {
             Id = id;
             Name = name;
@@ -24,7 +24,7 @@ namespace Shabasher.Core.Models
             CreatedAt = DateTime.UtcNow;
         }
 
-        public static Result<Shabash> Create(string name, string description, List<User> participants)
+        public static Result<Shabash> Create(string name, string description, List<ShabashParticipant> participants)
         {
             var validationResult = ShabashValidator.ValidateShabashCreation(name, description);
             if (validationResult.IsFailure)

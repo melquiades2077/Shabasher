@@ -6,7 +6,6 @@ using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
 using Shabasher.DataManage;
-using System.Net;
 
 Env.Load();
 

@@ -15,7 +15,7 @@ namespace Shabasher.BusinessLogic.Mappings
         public static UserResponse EntityToResponse(UserEntity userEntity) => 
             new UserResponse(userEntity.Id, userEntity.Name, userEntity.Email, userEntity.CreatedAt);
 
-        public static UserShortResponse EntityToShortResponse(User userEntity) =>
+        public static UserShortResponse EntityToShortResponse(UserEntity userEntity) =>
             new UserShortResponse(userEntity.Id, userEntity.Name);
     }
 }
