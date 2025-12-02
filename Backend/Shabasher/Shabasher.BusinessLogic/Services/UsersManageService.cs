@@ -45,6 +45,8 @@ namespace Shabasher.BusinessLogic.Services
         {
             var user = await _dbcontext.Users
                 .AsNoTracking()
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
                 .FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null)
@@ -65,6 +67,8 @@ namespace Shabasher.BusinessLogic.Services
 
             var userEntity = await _dbcontext.Users
                 .AsNoTracking()
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (userEntity == null)
@@ -80,6 +84,8 @@ namespace Shabasher.BusinessLogic.Services
 
             var userEntity = await _dbcontext.Users
                 .AsNoTracking()
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
                 .FirstOrDefaultAsync(u => u.Email == email);
 
             if (userEntity == null)

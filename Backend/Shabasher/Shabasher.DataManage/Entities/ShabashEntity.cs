@@ -10,6 +10,8 @@
 
         public List<ShabashParticipantEntity> Participants { get; set; } = [];
 
+        public DateTime StartDate { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }

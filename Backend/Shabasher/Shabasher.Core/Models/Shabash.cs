@@ -13,26 +13,32 @@ namespace Shabasher.Core.Models
 
         public List<ShabashParticipant> Participants { get; } = [];
 
+        public DateTime StartDate { get; }
+
         public DateTime CreatedAt { get; }
 
-        private Shabash(string id, string name, string description, List<ShabashParticipant> participants)
+        public ShabashStatus Status =>
+            DateTime.UtcNow >= StartDate ? ShabashStatus.Finished : ShabashStatus.Active;
+
+        private Shabash(string id, string name, string description, DateTime startDate, List<ShabashParticipant> participants)
         {
             Id = id;
             Name = name;
             Description = description;
             Participants = participants;
+            StartDate = startDate;
             CreatedAt = DateTime.UtcNow;
         }
 
-        public static Result<Shabash> Create(string name, string description, List<ShabashParticipant> participants)
+        public static Result<Shabash> Create(string name, string description, DateTime startDate, List<ShabashParticipant> participants)
         {
-            var validationResult = ShabashValidator.ValidateShabashCreation(name, description);
+            var validationResult = ShabashValidator.ValidateShabashCreation(name, description, startDate);
             if (validationResult.IsFailure)
                 return Result.Failure<Shabash>(validationResult.Error);
 
             string id = Guid.NewGuid().ToString();
 
-            return Result.Success<Shabash>(new Shabash(id, name, description, participants));
+            return Result.Success<Shabash>(new Shabash(id, name, description, startDate, participants));
         }
     }
 }

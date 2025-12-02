@@ -18,10 +18,18 @@ namespace Shabasher.BusinessLogic.Mappings
                         UserResponseMapper.DomainToResponse(p.User),
                         p.Status))
                     .ToList(),
-                shabash.CreatedAt);
+                DateOnly.FromDateTime(shabash.StartDate),
+                TimeOnly.FromDateTime(shabash.StartDate),
+                shabash.CreatedAt,
+                shabash.Status);
 
         public static ShabashShortResponse DomainToShortResponse(Shabash shabash) =>
-            new ShabashShortResponse(shabash.Id, shabash.Name);
+            new ShabashShortResponse(
+                shabash.Id,
+                shabash.Name,
+                DateOnly.FromDateTime(shabash.StartDate),
+                TimeOnly.FromDateTime(shabash.StartDate),
+                shabash.Status);
 
         public static ShabashResponse EntityToResponse(ShabashEntity shabashEntity) =>
             new ShabashResponse(
@@ -33,9 +41,21 @@ namespace Shabasher.BusinessLogic.Mappings
                         UserResponseMapper.EntityToResponse(p.User),
                         p.Status))
                     .ToList(),
-                shabashEntity.CreatedAt);
+                DateOnly.FromDateTime(shabashEntity.StartDate),
+                TimeOnly.FromDateTime(shabashEntity.StartDate),
+                shabashEntity.CreatedAt,
+                DateTime.UtcNow >= shabashEntity.StartDate
+                    ? ShabashStatus.Finished
+                    : ShabashStatus.Active);
 
         public static ShabashShortResponse EntityToShortResponse(ShabashEntity shabashEntity) =>
-            new ShabashShortResponse(shabashEntity.Id, shabashEntity.Name);
+            new ShabashShortResponse(
+                shabashEntity.Id,
+                shabashEntity.Name,
+                DateOnly.FromDateTime(shabashEntity.StartDate),
+                TimeOnly.FromDateTime(shabashEntity.StartDate),
+                DateTime.UtcNow >= shabashEntity.StartDate
+                    ? ShabashStatus.Finished
+                    : ShabashStatus.Active);
     }
 }

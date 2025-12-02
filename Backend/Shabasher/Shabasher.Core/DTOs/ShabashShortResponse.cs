@@ -2,6 +2,9 @@
 {
     public record ShabashShortResponse(
         string Id,
-        string Name
+        string Name,
+        DateOnly StartDate,
+        TimeOnly StartTime,
+        ShabashStatus Status
         );
 }

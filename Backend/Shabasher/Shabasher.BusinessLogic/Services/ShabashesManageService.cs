@@ -19,9 +19,9 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext = dbContext;
         }
 
-        public async Task<Result<string>> CreateShabashAsync(string name, string description, List<ShabashParticipant> participants)
+        public async Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, List<ShabashParticipant> participants)
         {
-            var shabash = Shabash.Create(name, description, participants);
+            var shabash = Shabash.Create(name, description, startDate, participants);
 
             if (shabash.IsFailure)
                 return Result.Failure<string>(shabash.Error);
@@ -44,6 +44,7 @@ namespace Shabasher.BusinessLogic.Services
 
             shabashEntity.Name = request.Name;
             shabashEntity.Description = request.Description;
+            shabashEntity.StartDate = request.StartDate.ToDateTime(request.StartTime);
             shabashEntity.Participants = request.Participants
                 .Select(p => new ShabashParticipantEntity
                 {

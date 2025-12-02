@@ -4,6 +4,7 @@
         string Id,
         string Name,
         string Email,
-        DateTime CreatedAt
+        DateTime CreatedAt,
+        List<UserShabashParticipationResponse> Participations
         );
 }

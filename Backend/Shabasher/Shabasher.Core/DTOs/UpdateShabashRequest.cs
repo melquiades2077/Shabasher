@@ -6,6 +6,8 @@ namespace Shabasher.Core.DTOs
         string Id,
         string Name,
         string Description,
+        DateOnly StartDate,
+        TimeOnly StartTime,
         List<ShabashParticipantResponse> Participants
         );
 }
