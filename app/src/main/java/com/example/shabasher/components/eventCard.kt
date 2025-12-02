@@ -59,7 +59,7 @@ fun EventCard(
                 Icons.Default.Image,
                 contentDescription = "Add photo",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(60.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
 

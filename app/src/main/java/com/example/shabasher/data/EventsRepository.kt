@@ -62,7 +62,7 @@ class EventsRepository {
                 Participant("2", "Катя", ParticipationStatus.NOT_GOING),
                 Participant("3", "Женя", ParticipationStatus.INVITED)
             ),
-            userStatus = ParticipationStatus.GOING
+            userStatus = ParticipationStatus.INVITED
         )
 
         return Result.success(mock)

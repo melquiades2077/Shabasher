@@ -30,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -55,8 +56,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.shabasher.Model.EventShort
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.R
 import com.example.shabasher.ViewModels.LoginViewModel
 import com.example.shabasher.ViewModels.MainPageViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
@@ -72,9 +75,7 @@ fun MainPage(
     navController: NavController,
     viewModel: MainPageViewModel = viewModel()
 ) {
-
-    // Список карточек — держим в состоянии
-    val events = remember { mutableStateListOf<Int>() } // просто индексы как идентификаторы
+    val ui = viewModel.uiState.value
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -98,7 +99,6 @@ fun MainPage(
             )
         },
         floatingActionButton = {
-
             FloatingActionButton(
                 onClick = {
                     SafeNavigation.navigate { navController.navigate(Routes.CREATEEVENT) }
@@ -108,64 +108,128 @@ fun MainPage(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Добавить событие")
             }
-
         }
     ) { innerPadding ->
 
-        if (events.isEmpty()) {
-            // Пустой экран
-            Box(
-                modifier = Modifier
-                    .fillMaxSize().padding(innerPadding)
-            ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 96.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                Text(
-                    text = "Пока нет событий",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
 
-                Image(
-                    painter = painterResource(id = com.example.shabasher.R.drawable.cat2), // твой кот
-                    contentDescription = "No events",
-                    modifier = Modifier.size(200.dp)
-                )
-
-                Text(
-                    text = "Создайте новое или\nприсоединитесь по ссылке",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-            }
+            when {
+                ui.isLoading -> {
+                    MainLoadingScreen()
                 }
-        } /*else {
-            // Список событий
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(events) { eventId ->
-                    EventCard(
-                        title = "Корпоратив",
-                        description = "Дата: 26 февраля 2026 г.",
-                        status = "Событие завершено",
-                        onClick = { /* переход */ }
+
+                ui.error != null -> {
+                    ErrorScreen(
+                        message = ui.error!!,
+                        onRetry = { viewModel.loadEvents() }
+                    )
+                }
+
+                ui.events.isEmpty() -> {
+                    EmptyEventsScreen()
+                }
+
+                else -> {
+                    EventsList(
+                        events = ui.events,
+                        onClick = { eventId ->
+                            SafeNavigation.navigate {
+                                navController.navigate(/*"${Routes.EVENT}/$eventId"*/ Routes.EVENT)
+                            }
+                        }
                     )
                 }
             }
-        }*/
-
+        }
     }
 }
+
+@Composable
+fun EmptyEventsScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Text(
+            text = "Пока нет событий",
+            style = MaterialTheme.typography.headlineMedium,
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.cat2),
+            contentDescription = "No events",
+            modifier = Modifier.size(200.dp)
+        )
+
+        Text(
+            text = "Создайте новое или\nприсоединитесь по ссылке",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun ErrorScreen(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(message, color = MaterialTheme.colorScheme.error)
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onRetry) {
+            Text("Повторить")
+        }
+    }
+}
+
+@Composable
+fun MainLoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun EventsList(
+    events: List<EventShort>,
+    onClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(events) { event ->
+            EventCard(
+                title = event.title,
+                description = event.date,
+                status = event.status,
+                onClick = { onClick(event.id) }
+            )
+        }
+    }
+}
+
+
+
+
+
+
+
 
 
 
