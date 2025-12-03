@@ -42,7 +42,7 @@ namespace Shabasher.BusinessLogic.Services
             if (creatorInParticipants == null)
             {
                 var creatorUser = UserEntityMapper.ToDomain(creatorEntity);
-                participants.Add(new ShabashParticipant(creatorUser, UserStatus.Going, ShabashRole.Admin));
+                participants.Add(new ShabashParticipant(creatorUser, UserStatus.Invited, ShabashRole.Admin));
             }
             else
             {
