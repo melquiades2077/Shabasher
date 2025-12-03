@@ -28,17 +28,16 @@
       - postgres
 
   migrations:
-    image: mcr.microsoft.com/dotnet/sdk:9.0
-    working_dir: /src
-    volumes:
-      - ../..:/src
-    command: >
-      sh -c "dotnet tool restore &&
-             dotnet ef database update --project Shabasher/Shabasher.API/Shabasher.API.csproj"
+    build:
+      context: ../..
+      dockerfile: Shabasher/Shabasher.API/Dockerfile
     depends_on:
-      - postgres
+    - postgres
     environment:
-      DB_CONNECTION_STRING: Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+    - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+    command: >
+      sh -c "until dotnet tool restore; do echo 'Waiting for dotnet tools...'; sleep 2; done &&
+      until dotnet tool run dotnet-ef database update --project Shabasher/Shabasher.API/Shabasher.API.csproj; do echo 'Waiting for Postgres...'; sleep 3; done"
 
 volumes:
   postgres-data:
