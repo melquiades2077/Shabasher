@@ -87,15 +87,6 @@ namespace Shabasher.BusinessLogic.Services
             shabashEntity.Description = request.Description;
             var localStart = request.StartDate.ToDateTime(request.StartTime);
             shabashEntity.StartDate = DateTime.SpecifyKind(localStart, DateTimeKind.Utc);
-            shabashEntity.Participants = request.Participants
-                .Select(p => new ShabashParticipantEntity
-                {
-                    ShabashId = shabashEntity.Id,
-                    UserId = p.User.Id,
-                    Status = p.Status,
-                    Role = p.Role
-                })
-                .ToList();
 
             await _dbcontext.SaveChangesAsync();
 

@@ -2,8 +2,9 @@ namespace Shabasher.Core.Models
 {
     public enum UserStatus
     {
-        NotGoing = 0,
-        Going = 1
+        Invited = 0,
+        Going = 1,
+        NotGoing = 2
     }
 }
 
