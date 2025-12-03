@@ -24,13 +24,21 @@ namespace Shabasher.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<string>> CreateShabash([FromBody] CreateShabashRequest request)
+        public async Task<ActionResult> CreateShabash([FromBody] CreateShabashRequest request)
         {
             var userId = GetUserId();
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("Не удалось определить пользователя");
 
-            var result = await _shabashesManageService.CreateShabashAsync(request, userId);
+            var localStart = request.StartDate.ToDateTime(request.StartTime);
+            var utcStart = DateTime.SpecifyKind(localStart, DateTimeKind.Utc);
+
+            var result = await _shabashesManageService.CreateShabashAsync(
+                request.Name,
+                request.Description,
+                utcStart,
+                userId,
+                []);
 
             if (result.IsFailure)
                 return BadRequest(result.Error);
@@ -39,7 +47,7 @@ namespace Shabasher.API.Controllers
         }
 
         [HttpGet("by-id")]
-        public async Task<ActionResult<ShabashResponse>> GetShabashById([FromQuery] string id)
+        public async Task<ActionResult> GetShabashById([FromQuery] string id)
         {
             var result = await _shabashesManageService.GetShabashByIdAsync(id);
 

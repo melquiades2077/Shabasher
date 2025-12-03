@@ -76,34 +76,6 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success<string>(shabash.Value.Id);
         }
 
-        public async Task<Result<string>> CreateShabashAsync(CreateShabashRequest request, string creatorUserId)
-        {
-            // Преобразуем DTO участников в доменные модели
-            var participants = new List<ShabashParticipant>();
-            
-            if (request.Participants != null && request.Participants.Any())
-            {
-                var userIds = request.Participants.Select(p => p.User.Id).ToList();
-                var userEntities = await _dbcontext.Users
-                    .AsNoTracking()
-                    .Where(u => userIds.Contains(u.Id))
-                    .ToListAsync();
-
-                foreach (var participantDto in request.Participants)
-                {
-                    var userEntity = userEntities.FirstOrDefault(u => u.Id == participantDto.User.Id);
-                    if (userEntity == null)
-                        return Result.Failure<string>($"Пользователь с ID {participantDto.User.Id} не найден");
-
-                    var user = UserEntityMapper.ToDomain(userEntity);
-                    participants.Add(new ShabashParticipant(user, participantDto.Status, participantDto.Role));
-                }
-            }
-
-            var startDate = request.StartDate.ToDateTime(request.StartTime);
-            return await CreateShabashAsync(request.Name, request.Description, startDate, creatorUserId, participants);
-        }
-
         public async Task<Result<ShabashResponse>> UpdateShabashAsync(string shabashId, UpdateShabashRequest request, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);
@@ -113,7 +85,8 @@ namespace Shabasher.BusinessLogic.Services
 
             shabashEntity.Name = request.Name;
             shabashEntity.Description = request.Description;
-            shabashEntity.StartDate = request.StartDate.ToDateTime(request.StartTime);
+            var localStart = request.StartDate.ToDateTime(request.StartTime);
+            shabashEntity.StartDate = DateTime.SpecifyKind(localStart, DateTimeKind.Utc);
             shabashEntity.Participants = request.Participants
                 .Select(p => new ShabashParticipantEntity
                 {

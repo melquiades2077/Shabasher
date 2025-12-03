@@ -51,6 +51,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
+builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddDbContext<ShabasherDbContext>(options =>
