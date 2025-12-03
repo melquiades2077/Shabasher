@@ -1,5 +1,6 @@
 package com.example.shabasher
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -28,11 +29,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -48,14 +52,53 @@ import com.example.shabasher.Screens.ShareEventPage
 import com.example.shabasher.Screens.WelcomePage
 import com.example.shabasher.ViewModels.CreateEventViewModel
 import com.example.shabasher.ViewModels.EventViewModel
-import com.example.shabasher.ui.theme.ShabasherTheme
 import com.example.shabasher.ViewModels.LoginViewModel
 import com.example.shabasher.ViewModels.NameViewModel
+import com.example.shabasher.ViewModels.ProfileViewModel
 import com.example.shabasher.ViewModels.RegisterViewModel
 import com.example.shabasher.ViewModels.ShareEventViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
+import com.example.shabasher.ui.theme.ShabasherTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 
+// ★ ViewModelFactory для создания ViewModel с Context
+class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return when {
+            modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
+                LoginViewModel(context) as T
+            }
+            modelClass.isAssignableFrom(RegisterViewModel::class.java) -> {
+                RegisterViewModel(context) as T
+            }
+            modelClass.isAssignableFrom(NameViewModel::class.java) -> {
+                NameViewModel(context) as T
+            }
+            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
+                ProfileViewModel(context) as T
+            }
+            modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
+                CreateEventViewModel() as T
+            }
+            modelClass.isAssignableFrom(EventViewModel::class.java) -> {
+                EventViewModel() as T
+            }
+            modelClass.isAssignableFrom(ShareEventViewModel::class.java) -> {
+                ShareEventViewModel() as T
+            }
+            else -> {
+                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+            }
+        }
+    }
+}
+
+@Composable
+fun rememberViewModelFactory(context: Context): ViewModelFactory {
+    return remember { ViewModelFactory(context) }
+}
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -67,22 +110,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeViewModel: ThemeViewModel = viewModel()
             val navController = rememberNavController()
+            val context = LocalContext.current
+            val viewModelFactory = rememberViewModelFactory(context)
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
-
                 NavHost(
                     navController = navController,
                     startDestination = Routes.WELCOME
-
-
                 ) {
-
                     composable(Routes.WELCOME) {
                         WelcomePage(navController)
                     }
 
                     composable(Routes.REGISTER) {
-                        val vm: RegisterViewModel = viewModel()
+                        val vm: RegisterViewModel = viewModel(factory = viewModelFactory)
                         RegisterPage(
                             navController = navController,
                             viewModel = vm
@@ -90,7 +131,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.LOGIN) {
-                        val vm: LoginViewModel = viewModel()
+                        val vm: LoginViewModel = viewModel(factory = viewModelFactory)
                         LoginPage(
                             navController = navController,
                             viewModel = vm
@@ -98,7 +139,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.NAME) {
-                        val vm: NameViewModel = viewModel()
+                        val vm: NameViewModel = viewModel(factory = viewModelFactory)
                         NamePage(
                             navController = navController,
                             viewModel = vm

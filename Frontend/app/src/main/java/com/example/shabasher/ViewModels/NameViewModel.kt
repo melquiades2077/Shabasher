@@ -1,15 +1,19 @@
+// ViewModels/NameViewModel.kt
 package com.example.shabasher.ViewModels
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.shabasher.data.ProfileRepository
+import com.example.shabasher.data.network.AuthRepository
 import com.example.shabasher.data.network.NameRepository
 import kotlinx.coroutines.launch
 
 class NameViewModel(
-    private val repo: NameRepository = NameRepository()
+    private val context: Context // ★ Принимаем Context
 ) : ViewModel() {
+    private val nameRepo = NameRepository()
+    private val authRepo = AuthRepository(context) // ★ Создаём AuthRepository для получения токена
 
     var name = mutableStateOf("")
     var error = mutableStateOf<String?>(null)
@@ -26,12 +30,23 @@ class NameViewModel(
         error.value = null
 
         viewModelScope.launch {
-            repo.setUserName(name.value)
-                .onSuccess {
+            // ★ 1. Получаем токен из AuthRepository (после логина)
+            val token = authRepo.getToken()
+
+            if (token == null) {
+                error.value = "Ошибка авторизации"
+                loading.value = false
+                return@launch
+            }
+
+            // ★ 2. Отправляем имя с токеном
+            nameRepo.setUserName(name.value, token)
+                .onSuccess { response ->
                     success.value = true
+                    println("Имя успешно сохранено: ${response.name}")
                 }
-                .onFailure {
-                    error.value = it.message ?: "Ошибка"
+                .onFailure { exception ->
+                    error.value = exception.message ?: "Ошибка сохранения имени"
                 }
 
             loading.value = false

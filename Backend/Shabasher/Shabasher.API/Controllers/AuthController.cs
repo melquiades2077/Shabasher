@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
 
@@ -42,6 +44,24 @@ namespace Shabasher.API.Controllers
                 return BadRequest(token.Error);
 
             return Ok(token.Value);
+        }
+
+        [HttpPost("set-name")]
+        [Authorize]
+        public async Task<IActionResult> SetUserName([FromBody] SetNameRequest request)
+        {
+            // Искать по "userId" вместо ClaimTypes.NameIdentifier
+            var userId = User.FindFirst("userId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _usersManageService.UpdateUserNameAsync(userId, request.Name);
+
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(new { message = "Имя установлено", name = result.Value });
         }
     }
 }

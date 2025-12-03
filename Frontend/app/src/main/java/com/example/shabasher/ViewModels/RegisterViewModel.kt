@@ -1,15 +1,16 @@
 package com.example.shabasher.ViewModels
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.shabasher.Mock.MockUsers
-import com.example.shabasher.data.AuthRepository
+import com.example.shabasher.data.network.AuthRepository // ← ИЗМЕНИТЬ ИМПОРТ
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
-    private val repo: AuthRepository = AuthRepository()
+    private val context: Context // ← ДОБАВИТЬ Context
 ) : ViewModel() {
+    private val repo = AuthRepository(context) // ← СОЗДАТЬ С Context
 
     var email = mutableStateOf("")
     var password = mutableStateOf("")
