@@ -27,19 +27,19 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;melquiades2077&quot;
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "melquiades2077"
   }
 }</component>
   <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/melquiades2077/Shabasher.git&quot;,
-    &quot;accountId&quot;: &quot;51c4ca5d-9f6d-4fda-8550-6863f85ae33c&quot;
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/melquiades2077/Shabasher.git",
+    "accountId": "51c4ca5d-9f6d-4fda-8550-6863f85ae33c"
   }
 }</component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 1
+  "associatedIndex": 1
 }</component>
   <component name="ProjectId" id="36DOKewZc5Clp2kZVnq16UNNSHa" />
   <component name="ProjectViewState">
@@ -56,7 +56,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "develop-env",
+    "git-widget-placeholder": "Profile",
     "last_opened_file_path": "D:/PD/Shabasher/Frontend"
   }
 }]]></component>
