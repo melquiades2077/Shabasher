@@ -4,7 +4,6 @@ WORKDIR /src
 COPY . .
 
 RUN dotnet restore Shabasher/Shabasher.API/Shabasher.API.csproj
-RUN dotnet tool restore
 
 WORKDIR /src/Shabasher/Shabasher.API
 RUN dotnet publish -c Release -o /app/out Shabasher.API.csproj
@@ -17,8 +16,10 @@ ENTRYPOINT ["dotnet", "Shabasher.API.dll"]
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS migrations
 WORKDIR /src
-COPY . .
-RUN dotnet restore Shabasher/Shabasher.API/Shabasher.API.csproj
-RUN dotnet tool restore
 
-ENTRYPOINT ["dotnet", "ef"]
+COPY . .
+
+RUN dotnet tool install --global dotnet-ef --version 9.0.0
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+ENTRYPOINT ["dotnet-ef"]

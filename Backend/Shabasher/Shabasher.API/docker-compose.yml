@@ -1,32 +1,28 @@
 ﻿services:
   postgres:
     image: postgres:18
-    container_name: postgres
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     ports:
       - "${DB_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   shabasher:
-    container_name: shabasher
     build:
       context: ../..
       dockerfile: Shabasher/Shabasher.API/Dockerfile
       target: runtime
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
-      - ASPNETCORE_URLS=http://0.0.0.0:5000
-      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_HOURS=${JWT_HOURS:-12}
-    depends_on:
-      - postgres
     ports:
       - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+    depends_on:
+      - postgres
 
   migrations:
     build:
@@ -34,9 +30,13 @@
       dockerfile: Shabasher/Shabasher.API/Dockerfile
       target: migrations
     working_dir: /src
-    entrypoint: ["dotnet", "ef", "database", "update", "--project", "Shabasher/Shabasher.DataManage", "--startup-project", "Shabasher/Shabasher.API"]
     depends_on:
       - postgres
+    entrypoint: [
+      "dotnet-ef", "database", "update",
+      "--project", "Shabasher/Shabasher.DataManage/Shabasher.DataManage.csproj",
+      "--startup-project", "Shabasher/Shabasher.API/Shabasher.API.csproj"
+    ]
     environment:
       - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
 
