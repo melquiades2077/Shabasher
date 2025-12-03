@@ -25,5 +25,14 @@
       - JWT_HOURS=${JWT_HOURS:-12}
     depends_on:
     - postgres
+  migrations: 
+    build:
+      context: ../..
+      dockerfile: Shabasher/Shabasher.API/Dockerfile
+    command: ["dotnet", "ef", "database", "update"]
+    depends_on:
+    - postgres
+    environment:
+     - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
 volumes:
   postgres-data:
