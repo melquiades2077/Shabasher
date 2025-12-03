@@ -31,6 +31,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel()
+            val themeViewModel: ThemeViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory(application))
             val navController = rememberNavController()
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
