@@ -40,7 +40,8 @@ android {
 }
 
 dependencies {
-
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.zxing:core:3.5.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

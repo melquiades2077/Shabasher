@@ -3,11 +3,12 @@ package com.example.shabasher.ViewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.shabasher.data.NameRepository
 import com.example.shabasher.data.ProfileRepository
 import kotlinx.coroutines.launch
 
 class NameViewModel(
-    private val repo: ProfileRepository = ProfileRepository()
+    private val repo: NameRepository = NameRepository()
 ) : ViewModel() {
 
     var name = mutableStateOf("")
