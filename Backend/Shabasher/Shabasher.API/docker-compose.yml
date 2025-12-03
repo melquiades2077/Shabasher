@@ -3,13 +3,14 @@
     container_name: postgres
     image: postgres:18
     environment:
-        POSTGRES_DB: ${DB_NAME}
-        POSTGRES_USER: ${DB_USER}
-        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-    - "postgres-data:/var/lib/postgresql" 
+      - "postgres-data:/var/lib/postgresql"
     ports:
-    - "${DB_PORT}:5432"
+      - "${DB_PORT}:5432"
+
   shabasher:
     build:
       context: ../..
@@ -24,15 +25,22 @@
       - JWT_SECRET=${JWT_SECRET}
       - JWT_HOURS=${JWT_HOURS:-12}
     depends_on:
-    - postgres
-  migrations: 
-    build:
-      context: ../..
-      dockerfile: Shabasher/Shabasher.API/Dockerfile
-    command: ["dotnet", "ef", "database", "update"]
+      - postgres
+
+  migrations:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    working_dir: /src
+    volumes:
+      - ../..:/src
+    command: >
+      sh -c "dotnet restore Shabasher/Shabasher.API/Shabasher.API.csproj &&
+             dotnet tool install --global dotnet-ef &&
+             export PATH=\"$PATH:/root/.dotnet/tools\" &&
+             dotnet ef database update --project Shabasher/Shabasher.API/Shabasher.API.csproj"
     depends_on:
-    - postgres
+      - postgres
     environment:
-     - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+      DB_CONNECTION_STRING: Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+
 volumes:
   postgres-data:
