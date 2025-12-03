@@ -46,6 +46,7 @@ import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.ParticipantsPage
 import com.example.shabasher.Screens.ProfilePage
 import com.example.shabasher.Screens.RegisterPage
 import com.example.shabasher.Screens.ShareEventPage
@@ -108,7 +109,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel()
+            val themeViewModel: ThemeViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory(application))
             val navController = rememberNavController()
             val context = LocalContext.current
             val viewModelFactory = rememberViewModelFactory(context)
@@ -167,6 +168,10 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.SHAREEVENT) {
                         val vm: ShareEventViewModel = viewModel()
                         ShareEventPage(navController, vm)
+                    }
+
+                    composable(Routes.PARTICIPANTS) {
+                        ParticipantsPage(navController, eventId = "1")
                     }
                 }
             }

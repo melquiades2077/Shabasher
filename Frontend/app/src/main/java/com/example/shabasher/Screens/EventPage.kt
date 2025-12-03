@@ -128,7 +128,8 @@ fun EventPage(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 20.dp),
-                vm = viewModel
+                vm = viewModel,
+                onClick = { navController.navigate(Routes.PARTICIPANTS) }
             )
         }
     }
@@ -146,7 +147,8 @@ fun LoadingScreen() {
 fun EventContent(
     event: EventData,
     modifier: Modifier,
-    vm: EventViewModel
+    vm: EventViewModel,
+    onClick: () -> Unit
 ) {
     LazyColumn(
         modifier = modifier,
@@ -162,7 +164,7 @@ fun EventContent(
         }
 
         item {
-            ParticipatorsCard(event.participants)
+            ParticipatorsCard(event.participants, onClick)
         }
 
         item {

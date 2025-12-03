@@ -1,8 +1,14 @@
 package com.example.shabasher.Screens
 
 
+import QRCode
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,9 +25,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -33,11 +43,18 @@ import com.example.shabasher.ui.theme.Typography
 
 @Composable
 fun ShareEventPage(
-    navController: NavController,
-    viewModel: ShareEventViewModel = viewModel()
+    navController: NavController,           // <- передаём eventId
+    viewModel: ShareEventViewModel = viewModel(),
+    eventId: String = "123"
 ) {
+    LaunchedEffect(eventId) {
+        viewModel.init(eventId)
+    }
+
+    val context = LocalContext.current
+
     Scaffold(
-        modifier = Modifier.Companion.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -51,6 +68,8 @@ fun ShareEventPage(
                     .padding(16.dp)
                     .align(Alignment.Center)
             ) {
+
+                // Карточка
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(40.dp),
@@ -61,45 +80,55 @@ fun ShareEventPage(
                         )
                         .padding(vertical = 32.dp, horizontal = 16.dp)
                         .fillMaxWidth()
-
                 ) {
                     Text(
                         text = "Поделитесь событием",
                         style = Typography.headlineMedium
                     )
-                    Image(
-                        painter = painterResource(R.drawable.qr_code_temp),
-                        contentDescription = "QR код",
-                        modifier = Modifier
-                            .size(200.dp)
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
+
+                    QRCode(viewModel.link.value)
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = viewModel.link.value,
-                            style = Typography.bodyLarge
-                        )
-                        IconButton(
-                            onClick = { },
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(20.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .fillMaxWidth()
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.content_copy),
-                                contentDescription = "Копировать",
-                                modifier = Modifier
-                                    .size(24.dp)
-                            )
+                            Row(
+                                modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState())
+                            ) {
+                                Text(
+                                    text = viewModel.link.value,
+                                    style = Typography.bodyLarge
+                                )
+                            }
+
+                            IconButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("invite", viewModel.link.value))
+                                Toast.makeText(context, "Ссылка скопирована", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.content_copy),
+                                    contentDescription = "copy"
+                                )
+                            }
                         }
+
+
                     }
-                }
+
+
+                // Кнопка "Продолжить"
                 ShabasherSecondaryButton(
                     text = "Продолжить",
                     onClick = {
@@ -109,10 +138,11 @@ fun ShareEventPage(
                                 launchSingleTop = true
                             }
                         }
-                              },
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
-}
+}}
+

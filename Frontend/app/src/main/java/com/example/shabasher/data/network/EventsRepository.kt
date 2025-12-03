@@ -60,7 +60,9 @@ class EventsRepository {
             participants = listOf(
                 Participant("1", "Андрей", ParticipationStatus.GOING),
                 Participant("2", "Катя", ParticipationStatus.NOT_GOING),
-                Participant("3", "Женя", ParticipationStatus.INVITED)
+                Participant("3", "Женя", ParticipationStatus.INVITED),
+                Participant("4", "Равшан", ParticipationStatus.INVITED),
+                Participant("5", "Джамшут", ParticipationStatus.INVITED)
             ),
             userStatus = ParticipationStatus.INVITED
         )

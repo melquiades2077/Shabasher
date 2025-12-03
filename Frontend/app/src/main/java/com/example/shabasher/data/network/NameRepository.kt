@@ -1,4 +1,3 @@
-// data/network/NameRepository.kt
 package com.example.shabasher.data.network
 
 import com.example.shabasher.data.dto.SetNameRequest
@@ -25,9 +24,8 @@ class NameRepository {
 
     private val baseUrl = "http://10.0.2.2:5053"
 
-    // ★ ИЗМЕНЯЕМ: теперь принимает токен
     suspend fun setUserName(name: String, token: String): Result<SetNameResponse> {
-        println("★ USING TOKEN: ${token.take(20)}...") // ← ЛОГ
+        println("★ USING TOKEN: ${token.take(20)}...")
         return try {
             println("Отправка имени '$name' с токеном: ${token.take(10)}...")
 

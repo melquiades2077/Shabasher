@@ -45,7 +45,8 @@ fun ParticipantToString(status: ParticipationStatus): String {
 
 @Composable
 fun ParticipatorsCard(
-    participants: List<Participant>
+    participants: List<Participant>,
+    onClick: () -> Unit
 ) {
     val showList = participants.take(3)
     val hasMore = participants.size > 3
@@ -76,7 +77,7 @@ fun ParticipatorsCard(
             }
 
             if (hasMore) {
-                IconButton(onClick = {  }) {
+                IconButton(onClick = onClick) {
                     Icon(
                         Icons.Default.MoreHoriz,
                         contentDescription = "Ещё"

@@ -10,4 +10,5 @@ object Routes {
     const val EVENT = "event"
     const val CREATEEVENT = "createevent"
     const val SHAREEVENT = "shareevent"
+    const val PARTICIPANTS = "participants"
 }
