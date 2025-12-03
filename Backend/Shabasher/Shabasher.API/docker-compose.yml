@@ -7,7 +7,7 @@
         POSTGRES_USER: ${DB_USER}
         POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-    - "postgres-data:/var/lib/postgresql/data" 
+    - "postgres-data:/var/lib/postgresql" 
     ports:
     - "${DB_PORT}:5432"
   shabasher:
