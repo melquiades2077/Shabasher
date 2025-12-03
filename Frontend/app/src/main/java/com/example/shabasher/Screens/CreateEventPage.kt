@@ -66,14 +66,14 @@ fun CreateEventPage(
     navController: NavController,
     viewModel: CreateEventViewModel = viewModel()
 ) {
-    val userInterface = viewModel.uiState.value
+    val ui = viewModel.uiState.value
 
     val showDatePicker = remember { mutableStateOf(false) }
     val showTimePicker = remember { mutableStateOf(false) }
 
     // Когда событие создано → переход
-    LaunchedEffect(userInterface.successEventId) {
-        userInterface.successEventId?.let {
+    LaunchedEffect(ui.successEventId) {
+        ui.successEventId?.let {
             navController.navigate(Routes.EVENT) {
                 popUpTo(Routes.MAIN) { inclusive = false }
                 launchSingleTop = true
@@ -111,7 +111,7 @@ fun CreateEventPage(
         }
     ) { innerPadding ->
 
-        if (userInterface.isLoading) {
+        if (ui.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -143,69 +143,6 @@ fun CreateEventPage(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Иконка загрузки
-                        Icon(
-                            Icons.Default.AddAPhoto,
-                            contentDescription = "Add photo",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        )
-
-                    }
-
-                    //Исправил тут name на title, с name код не компилился
-                    InputField(
-                        label = "Название",
-                        value = viewModel.title.value,
-                        onValueChange = { viewModel.title.value = it }
-                    )
-
-                    InputField(
-                        label = "Описание",
-                        value = viewModel.title.value,
-                        onValueChange = { viewModel.title.value = it }
-                    )
-
-                    InputField(
-                        label = "Адрес",
-                        value = viewModel.title.value,
-                        onValueChange = { viewModel.title.value = it }
-                    )
-
-                    InputField(
-                        label = "Дата",
-                        value = viewModel.title.value,
-                        onValueChange = { viewModel.title.value = it }
-                    )
-
-                    InputField(
-                        label = "Время",
-                        value = viewModel.title.value,
-                        onValueChange = { viewModel.title.value = it }
-                    )
-
-
-
-                    viewModel.error.value?.let { error ->
-                        Text(error)
-                    }
-                }
-            }
-            //Тут тоже name na title
-            // пробрасываем callback наверх
-            LaunchedEffect(viewModel.title.value) {
-                // ничего — просто пример, что можно подписывать события
-
                     Icon(
                         Icons.Default.Image,
                         contentDescription = "Add photo",
@@ -219,7 +156,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Название события",
-                    value = userInterface.title,
+                    value = ui.title,
                     onValueChange = { viewModel.updateTitle(it) }
                 )
             }
@@ -228,7 +165,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Описание",
-                    value = userInterface.description,
+                    value = ui.description,
                     onValueChange = { viewModel.updateDescription(it) },
                     singleLine = false,
                     keyboardType = KeyboardType.Text,
@@ -240,7 +177,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Адрес",
-                    value = userInterface.address,
+                    value = ui.address,
                     onValueChange = { viewModel.updateAddress(it) },
                     keyboardType = KeyboardType.Text
                 )
@@ -250,7 +187,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Дата",
-                    value = userInterface.date,
+                    value = ui.date,
                     onValueChange = { },
                     readOnly = true,
                     trailing = {
@@ -265,7 +202,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Время",
-                    value = userInterface.time,
+                    value = ui.time,
                     onValueChange = { },
                     readOnly = true,
                     trailing = {
@@ -278,7 +215,7 @@ fun CreateEventPage(
 
             // Ошибка
             item {
-                userInterface.error?.let {
+                ui.error?.let {
                     Text(
                         text = it,
                         color = MaterialTheme.colorScheme.error
@@ -288,12 +225,9 @@ fun CreateEventPage(
 
             item {
                 Spacer(modifier = Modifier.height(50.dp))
-
             }
         }
 
-
-        
         // Date Picker
         if (showDatePicker.value) {
             DatePickerDialog(
