@@ -42,6 +42,7 @@ import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.ParticipantsPage
 import com.example.shabasher.Screens.ProfilePage
 import com.example.shabasher.Screens.RegisterPage
 import com.example.shabasher.Screens.ShareEventPage
@@ -127,6 +128,13 @@ class MainActivity : ComponentActivity() {
                         val vm: ShareEventViewModel = viewModel()
                         ShareEventPage(navController, vm)
                     }
+
+                    // "${Routes.PARTICIPANTS}/{eventId}"
+                    composable(Routes.PARTICIPANTS) { //backStack ->
+                        //val eventId = backStack.arguments?.getString("eventId")!!
+                        ParticipantsPage(navController, eventId = "1")
+                    }
+
                 }
             }
         }

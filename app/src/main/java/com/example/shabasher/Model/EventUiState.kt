@@ -1,10 +1,6 @@
 package com.example.shabasher.Model
 
 
-data class EventUiState(
-    val isLoading: Boolean = false,
-    val event: EventData? = null
-)
 
 data class EventData(
     val id: String,

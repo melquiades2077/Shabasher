@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
-import com.example.shabasher.Model.EventUiState
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
 import com.example.shabasher.data.EventsRepository
