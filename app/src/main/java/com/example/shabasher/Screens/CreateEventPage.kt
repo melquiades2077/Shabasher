@@ -66,14 +66,14 @@ fun CreateEventPage(
     navController: NavController,
     viewModel: CreateEventViewModel = viewModel()
 ) {
-    val ui = viewModel.uiState.value
+    val userInterface = viewModel.uiState.value
 
     val showDatePicker = remember { mutableStateOf(false) }
     val showTimePicker = remember { mutableStateOf(false) }
 
     // Когда событие создано → переход
-    LaunchedEffect(ui.successEventId) {
-        ui.successEventId?.let {
+    LaunchedEffect(userInterface.successEventId) {
+        userInterface.successEventId?.let {
             navController.navigate(Routes.EVENT) {
                 popUpTo(Routes.MAIN) { inclusive = false }
                 launchSingleTop = true
@@ -111,7 +111,7 @@ fun CreateEventPage(
         }
     ) { innerPadding ->
 
-        if (ui.isLoading) {
+        if (userInterface.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -156,7 +156,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Название события",
-                    value = ui.title,
+                    value = userInterface.title,
                     onValueChange = { viewModel.updateTitle(it) }
                 )
             }
@@ -165,7 +165,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Описание",
-                    value = ui.description,
+                    value = userInterface.description,
                     onValueChange = { viewModel.updateDescription(it) },
                     singleLine = false,
                     keyboardType = KeyboardType.Text,
@@ -177,7 +177,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Адрес",
-                    value = ui.address,
+                    value = userInterface.address,
                     onValueChange = { viewModel.updateAddress(it) },
                     keyboardType = KeyboardType.Text
                 )
@@ -187,7 +187,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Дата",
-                    value = ui.date,
+                    value = userInterface.date,
                     onValueChange = { },
                     readOnly = true,
                     trailing = {
@@ -202,7 +202,7 @@ fun CreateEventPage(
             item {
                 InputField(
                     label = "Время",
-                    value = ui.time,
+                    value = userInterface.time,
                     onValueChange = { },
                     readOnly = true,
                     trailing = {
@@ -215,7 +215,7 @@ fun CreateEventPage(
 
             // Ошибка
             item {
-                ui.error?.let {
+                userInterface.error?.let {
                     Text(
                         text = it,
                         color = MaterialTheme.colorScheme.error
@@ -228,6 +228,8 @@ fun CreateEventPage(
             }
         }
 
+
+        
         // Date Picker
         if (showDatePicker.value) {
             DatePickerDialog(
