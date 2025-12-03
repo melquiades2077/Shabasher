@@ -38,7 +38,7 @@
       "--startup-project", "Shabasher/Shabasher.API/Shabasher.API.csproj"
     ]
     environment:
-      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
 
 volumes:
   postgres-data:
