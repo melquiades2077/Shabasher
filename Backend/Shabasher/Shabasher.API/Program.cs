@@ -51,13 +51,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:8080",
-            "https://localhost:7132",
-
-            "http://10.0.2.2:5132",
-
-            "http://192.168.1.100:5132"
+            "http://localhost:8080", //Фронтенд
+            "https://localhost:7132", // HTTPS бекенд
+            "http://localhost:5053", // HTTP бекенд
+            //Для андроид:
+            "http://10.0.2.2:5053",
+            "http://10.0.2.2:7132"
         )
+        //Тут разрешено всё, в будущем нужно разделить на разработчиков и пользователей
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
@@ -82,7 +83,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseRouting();
 app.UseCors("AllowFrontend");
-/*app.UseHttpsRedirection();*/ //Заглушка для теста
+//app.UseHttpsRedirection(); //Заглушка
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

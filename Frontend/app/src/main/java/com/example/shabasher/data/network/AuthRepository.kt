@@ -34,7 +34,7 @@ class AuthRepository {
     }
 
     //URL бека
-    private val baseUrl = "http://10.0.2.2:5132"
+    private val baseUrl = "http://10.0.2.2:5053"
 
     // заглушки, позже интегрируем бэкенд на аспе
     suspend fun login(email: String, password: String): Result<Unit> {
