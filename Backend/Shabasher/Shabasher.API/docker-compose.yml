@@ -15,6 +15,7 @@
     build:
       context: ../..
       dockerfile: Shabasher/Shabasher.API/Dockerfile
+      target: final
     ports:
       - "5000:5000"
     container_name: shabasher
@@ -36,14 +37,8 @@
     - postgres
     environment:
     - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
-    command: >
-      sh -c "dotnet tool restore &&
-      until dotnet tool run dotnet-ef database update \
-        --startup-project Shabasher/Shabasher.API/Shabasher.API.csproj \
-        --project Shabasher/Shabasher.DataManage/Shabasher.DataManage.csproj; do
-          echo 'Waiting for Postgres...';
-          sleep 3;
-      done"
+    entrypoint: ["dotnet", "ef", "database", "update"]
+    working_dir: /src
 
 volumes:
   postgres-data:
