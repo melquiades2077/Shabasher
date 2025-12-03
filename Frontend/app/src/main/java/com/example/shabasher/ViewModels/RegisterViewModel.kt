@@ -8,9 +8,9 @@ import com.example.shabasher.data.network.AuthRepository // ← ИЗМЕНИТЬ
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
-    private val context: Context // ← ДОБАВИТЬ Context
+    private val context: Context
 ) : ViewModel() {
-    private val repo = AuthRepository(context) // ← СОЗДАТЬ С Context
+    private val repo = AuthRepository(context)
 
     var email = mutableStateOf("")
     var password = mutableStateOf("")

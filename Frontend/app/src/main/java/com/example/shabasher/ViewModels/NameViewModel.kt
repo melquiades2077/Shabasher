@@ -1,4 +1,3 @@
-// ViewModels/NameViewModel.kt
 package com.example.shabasher.ViewModels
 
 import android.content.Context
@@ -10,10 +9,10 @@ import com.example.shabasher.data.network.NameRepository
 import kotlinx.coroutines.launch
 
 class NameViewModel(
-    private val context: Context // ★ Принимаем Context
+    private val context: Context
 ) : ViewModel() {
     private val nameRepo = NameRepository()
-    private val authRepo = AuthRepository(context) // ★ Создаём AuthRepository для получения токена
+    private val authRepo = AuthRepository(context)
 
     var name = mutableStateOf("")
     var error = mutableStateOf<String?>(null)
@@ -30,7 +29,6 @@ class NameViewModel(
         error.value = null
 
         viewModelScope.launch {
-            // ★ 1. Получаем токен из AuthRepository (после логина)
             val token = authRepo.getToken()
 
             if (token == null) {

@@ -46,17 +46,18 @@ import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.components.InputField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfilePage(
     navController: NavController,
     themeViewModel: ThemeViewModel,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel
 ) {
-    val ui = viewModel.uiState.value
+    val ui by viewModel.uiState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

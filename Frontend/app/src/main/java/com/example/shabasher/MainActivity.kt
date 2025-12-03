@@ -62,7 +62,6 @@ import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 
-// ★ ViewModelFactory для создания ViewModel с Context
 class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -152,7 +151,12 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.PROFILE) {
-                        ProfilePage(navController, themeViewModel)
+                        val vm: ProfileViewModel = viewModel(factory = viewModelFactory)
+                        ProfilePage(
+                            navController = navController,
+                            themeViewModel = themeViewModel,
+                            viewModel = vm
+                        )
                     }
 
                     composable(Routes.EVENT) {

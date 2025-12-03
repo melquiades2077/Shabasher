@@ -25,7 +25,7 @@ class NameRepository {
     private val baseUrl = "http://10.0.2.2:5053"
 
     suspend fun setUserName(name: String, token: String): Result<SetNameResponse> {
-        println("★ USING TOKEN: ${token.take(20)}...")
+        println("USING TOKEN: ${token.take(20)}...")
         return try {
             println("Отправка имени '$name' с токеном: ${token.take(10)}...")
 

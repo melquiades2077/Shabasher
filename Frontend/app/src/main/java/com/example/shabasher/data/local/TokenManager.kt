@@ -1,4 +1,3 @@
-// data/local/TokenManager.kt
 package com.example.shabasher.data.local
 
 import android.content.Context
@@ -11,13 +10,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.firstOrNull
 
-// Расширение для Context (обязательно на уровне файла!)
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
 class TokenManager(private val context: Context) {
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("jwt_token")
-        private val USER_ID_KEY = stringPreferencesKey("user_id") // Можно сохранять и ID
+        private val USER_ID_KEY = stringPreferencesKey("user_id")
     }
 
     // Сохранить токен
@@ -39,7 +37,7 @@ class TokenManager(private val context: Context) {
     suspend fun getToken(): String? {
         return context.dataStore.data
             .map { preferences -> preferences[TOKEN_KEY] }
-            .firstOrNull() // Нужен import kotlinx.coroutines.flow.firstOrNull
+            .firstOrNull()
     }
 
     // Очистить токен

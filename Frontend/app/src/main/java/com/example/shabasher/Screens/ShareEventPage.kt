@@ -43,7 +43,7 @@ import com.example.shabasher.ui.theme.Typography
 
 @Composable
 fun ShareEventPage(
-    navController: NavController,           // <- передаём eventId
+    navController: NavController,
     viewModel: ShareEventViewModel = viewModel(),
     eventId: String = "123"
 ) {

@@ -1,4 +1,3 @@
-// data/network/AuthRepository.kt
 package com.example.shabasher.data.network
 
 import android.content.Context
@@ -40,7 +39,6 @@ class AuthRepository(context: Context) {
             }
 
             if (response.status.isSuccess()) {
-                // ★ АВТОМАТИЧЕСКИ ЛОГИНИМСЯ ПОСЛЕ РЕГИСТРАЦИИ
                 val loginResult = login(email, password)
 
                 if (loginResult.isSuccess) {
@@ -68,7 +66,6 @@ class AuthRepository(context: Context) {
                 val rawToken: String = response.body()
                 println("RAW TOKEN BODY: '$rawToken'")
 
-                // ★ УДАЛЯЕМ КАВЫЧКИ ★
                 val cleanToken = rawToken.trim().removeSurrounding("\"")
                 println("CLEAN TOKEN: '$cleanToken'")
 
@@ -83,7 +80,6 @@ class AuthRepository(context: Context) {
         }
     }
 
-    // ★ НОВЫЙ МЕТОД: получить сохранённый токен
     suspend fun getToken(): String? {
         return tokenManager.getToken()
     }

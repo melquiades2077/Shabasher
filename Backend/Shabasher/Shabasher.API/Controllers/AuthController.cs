@@ -63,5 +63,22 @@ namespace Shabasher.API.Controllers
 
             return Ok(new { message = "Имя установлено", name = result.Value });
         }
+
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<ActionResult<UserResponse>> GetProfile()
+        {
+            var userId = User.FindFirst("userId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var userResult = await _usersManageService.GetUserByIdAsync(userId);
+
+            if (userResult.IsFailure)
+                return BadRequest(userResult.Error);
+
+            return Ok(userResult.Value);
+        }
     }
 }
