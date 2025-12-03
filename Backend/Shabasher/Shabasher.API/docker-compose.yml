@@ -33,9 +33,7 @@
     volumes:
       - ../..:/src
     command: >
-      sh -c "dotnet restore Shabasher/Shabasher.API/Shabasher.API.csproj &&
-             dotnet tool install --global dotnet-ef &&
-             export PATH=\"$PATH:/root/.dotnet/tools\" &&
+      sh -c "dotnet tool restore &&
              dotnet ef database update --project Shabasher/Shabasher.API/Shabasher.API.csproj"
     depends_on:
       - postgres
