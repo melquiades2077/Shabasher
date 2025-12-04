@@ -15,6 +15,10 @@ class NameViewModel(
     private val password: String
 ) : ViewModel() {
 
+    companion object {
+        private const val MAX_NAME_LEN = 30   // ← лимит длины имени
+    }
+
     var name = mutableStateOf("")
     var error = mutableStateOf<String?>(null)
     var loading = mutableStateOf(false)
@@ -24,8 +28,16 @@ class NameViewModel(
     private val nameRepo = NameRepository(context)
 
     fun submit() {
-        if (name.value.isBlank()) {
+        val value = name.value.trim()
+
+        // --- 1) Проверка имени ---
+        if (value.isBlank()) {
             error.value = "Введите имя"
+            return
+        }
+
+        if (value.length > MAX_NAME_LEN) {
+            error.value = "Длина имени не должна превышать $MAX_NAME_LEN символов"
             return
         }
 
@@ -34,7 +46,7 @@ class NameViewModel(
 
         viewModelScope.launch {
 
-            // --- 1) REGISTER FIRST ---
+            // --- 2) REGISTER FIRST ---
             val register = authRepo.register(email, password)
             if (register.isFailure) {
                 error.value = register.exceptionOrNull()?.message ?: "Ошибка регистрации"
@@ -42,7 +54,7 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 2) LOGIN ---
+            // --- 3) LOGIN ---
             val login = authRepo.login(email, password)
             if (login.isFailure) {
                 error.value = login.exceptionOrNull()?.message ?: "Ошибка входа"
@@ -50,7 +62,7 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 3) GET TOKEN ---
+            // --- 4) GET TOKEN ---
             val token = authRepo.getToken()
             if (token == null) {
                 error.value = "Ошибка: токен не сохранён"
@@ -58,7 +70,7 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 4) PARSE USER ID FROM JWT ---
+            // --- 5) PARSE USER ID ---
             val userId = decodeUserId(token)
             if (userId == null) {
                 error.value = "Ошибка получения userId"
@@ -66,8 +78,8 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 5) SET NAME ---
-            val result = nameRepo.setUserName(userId, name.value, token)
+            // --- 6) SAVE NAME ---
+            val result = nameRepo.setUserName(userId, value, token)
 
             if (result.isSuccess) {
                 success.value = true
@@ -80,8 +92,6 @@ class NameViewModel(
     }
 }
 
-
-
 fun decodeUserId(jwt: String): String? {
     return try {
         val parts = jwt.split(".")
@@ -92,4 +102,3 @@ fun decodeUserId(jwt: String): String? {
         null
     }
 }
-
