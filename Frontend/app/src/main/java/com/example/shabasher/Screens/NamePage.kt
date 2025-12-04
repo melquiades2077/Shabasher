@@ -153,7 +153,7 @@ fun NamePage(
 
                 // Ошибка
                 viewModel.error.value?.let { error ->
-                    Text(error, color = MaterialTheme.colorScheme.error)
+                    Text(error, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                 }
 
                 // Индикатор загрузки (можно заменить на CircularProgressIndicator)

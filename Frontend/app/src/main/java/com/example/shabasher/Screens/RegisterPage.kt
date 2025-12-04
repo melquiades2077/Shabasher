@@ -137,7 +137,7 @@ fun RegisterPage(
                     )
 
                     viewModel.error.value?.let { error ->
-                        Text(error, color = MaterialTheme.colorScheme.error)
+                        Text(error, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                     }
                 }
             }
