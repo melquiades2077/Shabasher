@@ -59,41 +59,10 @@ import com.example.shabasher.ViewModels.ProfileViewModel
 import com.example.shabasher.ViewModels.RegisterViewModel
 import com.example.shabasher.ViewModels.ShareEventViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
+import com.example.shabasher.ViewModels.MainPageViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
-
-class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
-                LoginViewModel(context) as T
-            }
-            modelClass.isAssignableFrom(RegisterViewModel::class.java) -> {
-                RegisterViewModel(context) as T
-            }
-            modelClass.isAssignableFrom(NameViewModel::class.java) -> {
-                NameViewModel(context) as T
-            }
-            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
-                ProfileViewModel(context) as T
-            }
-            modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
-                CreateEventViewModel() as T
-            }
-            modelClass.isAssignableFrom(EventViewModel::class.java) -> {
-                EventViewModel() as T
-            }
-            modelClass.isAssignableFrom(ShareEventViewModel::class.java) -> {
-                ShareEventViewModel() as T
-            }
-            else -> {
-                throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-            }
-        }
-    }
-}
+import com.example.shabasher.ViewModels.ViewModelFactory
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -147,7 +116,8 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.MAIN) {
-                        MainPage(navController)
+                        val vm: MainPageViewModel = viewModel(factory = viewModelFactory)
+                        MainPage(navController = navController, viewModel = vm)
                     }
 
                     composable(Routes.PROFILE) {

@@ -1,15 +1,13 @@
 package com.example.shabasher.ViewModels
 
-import androidx.compose.runtime.getValue
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
-import com.example.shabasher.data.EventsRepository
-import kotlinx.coroutines.delay
+import com.example.shabasher.data.network.EventsRepository
 import kotlinx.coroutines.launch
 
 data class EventUiState(
@@ -19,15 +17,15 @@ data class EventUiState(
 )
 
 class EventViewModel(
-    private val repository: EventsRepository = EventsRepository()
+    context: Context
 ) : ViewModel() {
+    private val repository = EventsRepository(context)
 
-    var ui = androidx.compose.runtime.mutableStateOf(EventUiState())
+    var ui = mutableStateOf(EventUiState())
         private set
 
     private var eventId: String = ""
 
-    /** Вызывается из экрана */
     fun loadEvent(id: String) {
         eventId = id
 
@@ -37,20 +35,22 @@ class EventViewModel(
             val result = repository.getEventById(id)
 
             ui.value = when {
-                result.isSuccess -> EventUiState(
-                    isLoading = false,
-                    event = result.getOrNull()
-                )
-
+                result.isSuccess -> {
+                    val eventDto = result.getOrNull()
+                    val eventData = convertToEventData(eventDto)
+                    EventUiState(
+                        isLoading = false,
+                        event = eventData
+                    )
+                }
                 else -> EventUiState(
                     isLoading = false,
                     error = result.exceptionOrNull()?.message ?: "Ошибка загрузки события"
                 )
-            } as EventUiState
+            }
         }
     }
 
-    /** Обновление статуса участия */
     fun updateParticipation(status: ParticipationStatus) {
         val current = ui.value.event ?: return
         val oldStatus = current.userStatus
@@ -68,4 +68,8 @@ class EventViewModel(
         // TODO: отправить на backend
     }
 
+    private fun convertToEventData(eventDto: Any?): EventData? {
+        // TODO: реализовать конвертацию когда будет DTO для полного события
+        return null // временно возвращаем null
+    }
 }

@@ -27,7 +27,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    private val baseUrl = "http://10.0.2.2:5053"
+    private val baseUrl = Config.BASE_URL
 
     suspend fun register(email: String, password: String): Result<Unit> {
         return try {
