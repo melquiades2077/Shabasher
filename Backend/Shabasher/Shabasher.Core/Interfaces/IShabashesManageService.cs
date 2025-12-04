@@ -11,5 +11,7 @@ namespace Shabasher.Core.Interfaces
         Task<Result<string>> DeleteShabashAsync(string shabashId, string userId);
         Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId);
         Task<Result<string>> CreateInviteAsync(string eventId, string userId);
+        Task<Result<Invite>> GetInviteAsync(string inviteId);
+        Task<Result<UserShabashParticipationResponse>> JoinShabashAsync(string userId, string shabashId);
     }
 }

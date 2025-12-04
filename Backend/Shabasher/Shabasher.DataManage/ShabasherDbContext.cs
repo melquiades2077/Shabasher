@@ -22,7 +22,7 @@ namespace Shabasher.DataManage
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new ShabashConfiguration());
             modelBuilder.ApplyConfiguration(new ShabashParticipantConfiguration());
-            //modelBuilder.ApplyConfiguration(new InviteConfiguration());
+            modelBuilder.ApplyConfiguration(new InviteConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
