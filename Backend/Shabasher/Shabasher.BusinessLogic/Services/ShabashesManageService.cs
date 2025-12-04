@@ -12,6 +12,8 @@ namespace Shabasher.BusinessLogic.Services
 {
     public class ShabashesManageService : IShabashesManageService
     {
+        private const string BASE_URL = "http://http://213.171.27.237:5000"
+
         private readonly ShabasherDbContext _dbcontext;
 
         public ShabashesManageService(ShabasherDbContext dbContext)
@@ -123,6 +125,18 @@ namespace Shabasher.BusinessLogic.Services
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
 
             return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+        }
+
+        public async Task<Result<string>> CreateInviteAsync(string eventId, string userId)
+        {
+            var invite = new Invite(eventId, userId);
+
+            _dbcontext.Invites.Add(InviteEntityMapper.ToEntity(invite));
+            await _dbcontext.SaveChangesAsync();
+
+            var link = $"{BASE_URL}/invites/{invite.Id}";
+
+            return Result.Success(link);
         }
     }
 }
