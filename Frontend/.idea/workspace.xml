@@ -12,16 +12,12 @@
     <list default="true" id="ed262617-0aaa-4ae5-b0c1-8ab5a31fec7b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/ViewModelFactory.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/ViewModelFactory.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/CreateEventRequest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/CreateEventRequest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/CreateEventResponse.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/CreateEventResponse.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/UserResponse.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/UserResponse.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/AuthRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/AuthRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/EventsRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/EventsRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/NamePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/NamePage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/RegisterPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/RegisterPage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/loginPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/loginPage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/LoginViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/LoginViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/CreateEventPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/CreateEventPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/MainPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/MainPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/CreateEventViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/CreateEventViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/MainPageViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/MainPageViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/EventParticipantDto.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/EventParticipantDto.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/GetEventResponse.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/GetEventResponse.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +27,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=D:\Andro\.android\avd\pixel_3a_-_api_34.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\User\.android\avd\Pixel_6.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -101,13 +97,14 @@
     &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Register__with__backend&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Shabash&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;D:/PD/Shabasher/Frontend&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="com.example.shabasher.Screens" />
       <recent name="com.example.shabasher.ViewModels" />
       <recent name="com.example.shabasher.data.local" />
     </key>

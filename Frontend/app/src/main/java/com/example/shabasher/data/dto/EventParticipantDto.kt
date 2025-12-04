@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class EventParticipantDto(
-    val userId: String,
-    val userName: String,
-    val status: String
+    val user: UserResponse,
+    val status: String,
+    val role: String? = null
 )

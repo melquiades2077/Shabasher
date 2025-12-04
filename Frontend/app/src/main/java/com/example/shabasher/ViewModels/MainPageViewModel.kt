@@ -49,6 +49,11 @@ class MainPageViewModel(
         }
     }
 
+    fun refreshEvents() {
+        println("[MainPageViewModel] Принудительное обновление событий")
+        loadEvents()
+    }
+
     private fun formatDate(dateTime: String): String {
         // TODO: реализовать парсинг даты
         return dateTime

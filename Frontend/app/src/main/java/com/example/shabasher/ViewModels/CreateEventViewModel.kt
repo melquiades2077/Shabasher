@@ -22,9 +22,12 @@ class CreateEventViewModel(
     context: Context
 ) : ViewModel() {
     private val repository = EventsRepository(context)
+    private val sharedContext = context
 
     var uiState = mutableStateOf(CreateEventUiState())
         private set
+
+    var onEventCreated: (() -> Unit)? = null
 
     fun updateTitle(value: String) {
         uiState.value = uiState.value.copy(title = value)
@@ -75,6 +78,10 @@ class CreateEventViewModel(
                     isLoading = false,
                     successEventId = result.getOrNull()
                 )
+
+                onEventCreated?.invoke()
+
+                saveLastCreatedEventId(result.getOrNull() ?: "")
             } else {
                 uiState.value = s.copy(
                     isLoading = false,
@@ -82,5 +89,12 @@ class CreateEventViewModel(
                 )
             }
         }
+    }
+
+    private fun saveLastCreatedEventId(eventId: String) {
+        val sharedPrefs = sharedContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        sharedPrefs.edit()
+            .putString("last_created_event_id", eventId)
+            .apply()
     }
 }

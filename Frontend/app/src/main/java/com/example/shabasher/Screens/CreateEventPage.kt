@@ -65,6 +65,8 @@ import java.time.ZoneId
 fun CreateEventPage(
     navController: NavController,
     viewModel: CreateEventViewModel = viewModel()
+
+
 ) {
     val ui = viewModel.uiState.value
 

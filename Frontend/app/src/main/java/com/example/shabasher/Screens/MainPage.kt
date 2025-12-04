@@ -68,6 +68,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +77,10 @@ fun MainPage(
     viewModel: MainPageViewModel
 ) {
     val ui = viewModel.uiState.value
+
+    LaunchedEffect(Unit) {
+        viewModel.loadEvents()
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
