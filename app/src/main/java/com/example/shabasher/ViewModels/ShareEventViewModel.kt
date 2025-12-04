@@ -3,17 +3,19 @@ package com.example.shabasher.ViewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
-class ShareEventViewModel : ViewModel() {
+class ShareEventViewModel(
+    private val repo: EventInvitesRepository = EventInvitesRepository()
+) : ViewModel() {
 
-    // ссылка, которую отдаёт backend
     var link = mutableStateOf("")
 
-    // eventId должен приходить извне, через SavedStateHandle
     fun init(eventId: String) {
-        if (link.value.isNotEmpty()) return // чтобы не пересоздавать
+        if (link.value.isNotEmpty()) return
 
-        // В будущем здесь будет результат запроса backend
-        // например backend отдаст short link
-        link.value = "https://shabasher.app/join?eventId=$eventId"
+        viewModelScope.launch {
+            // В будущем это будет запрос к бекенду
+            val shortLink = repo.getInviteLink(eventId)
+            link.value = shortLink
+        }
     }
 }
