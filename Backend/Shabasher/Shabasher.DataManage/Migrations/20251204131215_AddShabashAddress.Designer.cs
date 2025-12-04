@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shabasher.DataManage;
@@ -11,9 +12,11 @@ using Shabasher.DataManage;
 namespace Shabasher.DataManage.Migrations
 {
     [DbContext(typeof(ShabasherDbContext))]
-    partial class ShabasherDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204131215_AddShabashAddress")]
+    partial class AddShabashAddress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,27 +24,6 @@ namespace Shabasher.DataManage.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Shabasher.Core.Models.InviteEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InviterUserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ShabashId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Invites");
-                });
 
             modelBuilder.Entity("Shabasher.DataManage.Entities.ShabashEntity", b =>
                 {

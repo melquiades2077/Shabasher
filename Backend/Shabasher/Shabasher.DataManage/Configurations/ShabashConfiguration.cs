@@ -19,6 +19,9 @@ namespace Shabasher.DataManage.Configurations
             builder.Property(x => x.Description)
                    .HasDefaultValue("");
 
+            builder.Property(x => x.Address)
+                   .HasDefaultValue("");
+
             builder.Property(x => x.StartDate)
                    .IsRequired();
 
