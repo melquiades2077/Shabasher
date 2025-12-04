@@ -30,19 +30,7 @@ class RegisterViewModel(
             return
         }
 
-        loading.value = true
-        error.value = null
-
-        viewModelScope.launch {
-            repo.register(email.value, password.value)
-                .onSuccess {
-                    success.value = true
-                }
-                .onFailure {
-                    error.value = it.message
-                }
-
-            loading.value = false
-        }
+        success.value = true
     }
+
 }

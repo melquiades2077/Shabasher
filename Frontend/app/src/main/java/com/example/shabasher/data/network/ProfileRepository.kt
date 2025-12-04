@@ -1,6 +1,7 @@
 package com.example.shabasher.data.network
 
 import android.content.Context
+import com.example.shabasher.ViewModels.decodeUserId
 import com.example.shabasher.data.dto.ProfileResponse
 import com.example.shabasher.data.local.TokenManager
 import io.ktor.client.*
@@ -12,69 +13,49 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+class ProfileRepository(private val tokenManager: TokenManager) {
 
-class ProfileRepository(context: Context) {
-    private val tokenManager = TokenManager(context)
     private val client = HttpClient {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
+            json(Json { ignoreUnknownKeys = true; isLenient = true })
         }
-        //хз без этого не работало
         install(HttpTimeout) {
-            requestTimeoutMillis = 10000
-            connectTimeoutMillis = 10000
-            socketTimeoutMillis = 10000
+            connectTimeoutMillis = 10_000
+            socketTimeoutMillis = 15_000
+            requestTimeoutMillis = 20_000
         }
     }
-
 
     private val baseUrl = Config.BASE_URL
 
     suspend fun getProfile(): Result<ProfileResponse> {
         return try {
-            println("[ProfileRepository] Начинаем загрузку профиля...")
+            val rawToken = tokenManager.getToken()
+                ?: return Result.failure(Exception("Не авторизован"))
 
-            val token = tokenManager.getToken()
-            if (token == null) {
-                println("[ProfileRepository] Токен не найден!")
-                return Result.failure(Exception("Не авторизован"))
-            }
+            val cleanToken = rawToken.trim().removeSurrounding("\"")
+            val userId = decodeUserId(cleanToken)
+                ?: return Result.failure(Exception("Не удалось извлечь userId из токена"))
 
-            val cleanToken = token.trim().removeSurrounding("\"")
-            println("[ProfileRepository] Используем токен: ${cleanToken.take(20)}...")
-
-            val url = "$baseUrl/api/auth/profile"
-            println("[ProfileRepository] Запрос к: $url")
+            // GET /api/Users/by-id?id=<userId>
+            val url = "$baseUrl/api/Users/by-id?id=$userId"
 
             val response: HttpResponse = client.get(url) {
                 header("Authorization", "Bearer $cleanToken")
-                timeout {
-                    requestTimeoutMillis = 5000
-                }
             }
-
-            println("[ProfileRepository] Ответ сервера: ${response.status}")
-            println("[ProfileRepository] Headers: ${response.headers}")
 
             if (response.status.isSuccess()) {
-                val bodyText = response.body<String>()
-                println("[ProfileRepository] Тело ответа: $bodyText")
-
-                val profile: ProfileResponse = response.body()
-                println("[ProfileRepository] Профиль успешно получен: ${profile.name}, ${profile.email}")
-                Result.success(profile)
+                val body: ProfileResponse = response.body()
+                Result.success(body)
             } else {
-                val errorText = response.body<String>()
-                println("[ProfileRepository] Ошибка сервера: $errorText")
-                Result.failure(Exception(errorText))
+                val errorText = response.bodyAsText()
+                Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
             }
         } catch (e: Exception) {
-            println("[ProfileRepository] Исключение: ${e.message}")
             e.printStackTrace()
             Result.failure(e)
         }
     }
 }
+
+

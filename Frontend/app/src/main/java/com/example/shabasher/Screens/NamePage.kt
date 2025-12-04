@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,15 +36,25 @@ import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.NameViewModel
+import com.example.shabasher.ViewModels.NameViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NamePage(
     navController: NavController,
-    viewModel: NameViewModel = viewModel()
+    email: String,
+    password: String
 ) {
+    val context = LocalContext.current
+    val viewModel: NameViewModel = viewModel(
+        factory = NameViewModelFactory(
+            context = context,
+            email = email,
+            password = password
+        )
+    )
 
-    // навигация в ответ на успех
+
     LaunchedEffect(viewModel.success.value) {
         if (viewModel.success.value) {
             navController.navigate(Routes.MAIN) {
@@ -74,8 +85,8 @@ fun NamePage(
 
             FloatingActionButton(
                 onClick = {
-                    viewModel.submitName()
-                },
+                    viewModel.submit()
+                          },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {

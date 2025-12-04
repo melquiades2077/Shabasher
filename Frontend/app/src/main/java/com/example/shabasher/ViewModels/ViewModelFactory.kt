@@ -15,9 +15,6 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             modelClass.isAssignableFrom(RegisterViewModel::class.java) -> {
                 RegisterViewModel(context) as T
             }
-            modelClass.isAssignableFrom(NameViewModel::class.java) -> {
-                NameViewModel(context) as T
-            }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
                 ProfileViewModel(context) as T
             }
@@ -28,5 +25,20 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
+    }
+}
+
+class NameViewModelFactory(
+    private val context: Context,
+    private val email: String,
+    private val password: String
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(NameViewModel::class.java)) {
+            return NameViewModel(context, email, password) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
