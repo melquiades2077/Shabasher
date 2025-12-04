@@ -12,9 +12,11 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import com.example.shabasher.data.dto.*
+import android.content.SharedPreferences
 
 class AuthRepository(context: Context) {
     private val tokenManager = TokenManager(context)
+    private val sharedPrefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
@@ -64,10 +66,16 @@ class AuthRepository(context: Context) {
 
             if (response.status.isSuccess()) {
                 val rawToken: String = response.body()
-                println("RAW TOKEN BODY: '$rawToken'")
+                println("[AuthRepository] RAW TOKEN BODY: '$rawToken'")
 
                 val cleanToken = rawToken.trim().removeSurrounding("\"")
-                println("CLEAN TOKEN: '$cleanToken'")
+                println("[AuthRepository] CLEAN TOKEN: '$cleanToken'")
+
+                // Сохраняем email для дальнейшего использования
+                sharedPrefs.edit()
+                    .putString("user_email", email)
+                    .apply()
+                println("[AuthRepository] Email сохранен: $email")
 
                 tokenManager.saveToken(cleanToken)
                 Result.success(Unit)
@@ -82,5 +90,9 @@ class AuthRepository(context: Context) {
 
     suspend fun getToken(): String? {
         return tokenManager.getToken()
+    }
+    //Сохраненный email
+    fun getSavedEmail(): String? {
+        return sharedPrefs.getString("user_email", null)
     }
 }

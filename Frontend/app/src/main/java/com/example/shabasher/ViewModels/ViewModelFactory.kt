@@ -24,6 +24,12 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             modelClass.isAssignableFrom(MainPageViewModel::class.java) -> {
                 MainPageViewModel(context) as T
             }
+            modelClass.isAssignableFrom(CreateEventViewModel::class.java) -> {
+                CreateEventViewModel(context) as T
+            }
+            modelClass.isAssignableFrom(EventViewModel::class.java) -> {
+                EventViewModel(context) as T
+            }
             else -> {
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

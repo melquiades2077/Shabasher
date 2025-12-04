@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateEventRequest(
-    val title: String,
+    val name: String,
     val description: String,
     val address: String,
-    val dateTime: String,
-    val userIds: List<String>? = null
+    val startDate: String,
+    val startTime: String
 )

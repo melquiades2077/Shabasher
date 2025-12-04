@@ -130,12 +130,12 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.EVENT) {
-                        val vm: EventViewModel = viewModel()
+                        val vm: EventViewModel = viewModel(factory = viewModelFactory)
                         EventPage(navController, "1", vm)
                     }
 
                     composable(Routes.CREATEEVENT) {
-                        val vm: CreateEventViewModel = viewModel()
+                        val vm: CreateEventViewModel = viewModel(factory = viewModelFactory)
                         CreateEventPage(navController, vm)
                     }
 
