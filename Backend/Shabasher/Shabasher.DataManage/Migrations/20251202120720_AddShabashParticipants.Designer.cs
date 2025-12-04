@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shabasher.DataManage;
@@ -11,9 +12,11 @@ using Shabasher.DataManage;
 namespace Shabasher.DataManage.Migrations
 {
     [DbContext(typeof(ShabasherDbContext))]
-    partial class ShabasherDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202120720_AddShabashParticipants")]
+    partial class AddShabashParticipants
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace Shabasher.DataManage.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.HasKey("Id");
 
                     b.ToTable("Shabashes");
@@ -57,9 +57,6 @@ namespace Shabasher.DataManage.Migrations
 
                     b.Property<string>("UserId")
                         .HasColumnType("text");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");

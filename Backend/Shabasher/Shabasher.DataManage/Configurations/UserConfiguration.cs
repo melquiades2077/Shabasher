@@ -29,8 +29,9 @@ namespace Shabasher.DataManage.Configurations
                    .IsRequired()
                    .HasDefaultValueSql("NOW()");
 
-            builder.HasMany(sh => sh.Shabashes)
-                   .WithMany(p => p.Participants);
+            builder.HasMany(u => u.Participations)
+                   .WithOne(sp => sp.User)
+                   .HasForeignKey(sp => sp.UserId);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Shabasher.DataManage.Mappings
                 Id = shabash.Id,
                 Name = shabash.Name,
                 Description = shabash.Description,
+                StartDate = shabash.StartDate,
                 CreatedAt = shabash.CreatedAt
             };
         }

@@ -28,6 +28,16 @@ namespace Shabasher.Core.Models
             Shabashes = [];
         }
 
+        private User(string id, string name, string email, string passwordHash, DateTime createdAt)
+        {
+            Id = id;
+            Name = name;
+            Email = email;
+            PasswordHash = passwordHash;
+            CreatedAt = createdAt;
+            Shabashes = [];
+        }
+
         public static Result<User> Create(string name, string email, string password, IPasswordHasher passwordHasher)
         {
             var validationResult = UserValidator.ValidateUserCreation(name, email, password);
@@ -39,6 +49,11 @@ namespace Shabasher.Core.Models
 
             return Result.Success<User>(new User(id, name, email, passwordHash));
         }
-    }
 
+        public static User FromEntity(string id,
+                string name,
+                string email,
+                string passwordHash,
+                DateTime createdAt) => new User(id, name, email, passwordHash, createdAt);
+    }
 }

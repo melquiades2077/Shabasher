@@ -8,7 +8,9 @@
 
         public string Description { get; set; } = "";
 
-        public List<UserEntity> Participants { get; set; } = [];
+        public List<ShabashParticipantEntity> Participants { get; set; } = [];
+
+        public DateTime StartDate { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

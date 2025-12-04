@@ -1,3 +1,4 @@
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
@@ -5,11 +6,12 @@ using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
 using Shabasher.DataManage;
-using DotNetEnv;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 var jwtHours = Environment.GetEnvironmentVariable("JWT_HOURS");
@@ -46,27 +48,10 @@ builder.Services.AddSwaggerGen(options =>
         { securityScheme, Array.Empty<string>() }
     });
 });
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins(
-            "http://localhost:8080", //Фронтенд
-            "https://localhost:7132", // HTTPS бекенд
-            "http://localhost:5053", // HTTP бекенд
-            //Для андроид:
-            "http://10.0.2.2:5053",
-            "http://10.0.2.2:7132"
-        )
-        //Тут разрешено всё, в будущем нужно разделить на разработчиков и пользователей
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
-    });
-});
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
+builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddDbContext<ShabasherDbContext>(options =>
@@ -82,10 +67,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseRouting();
-app.UseCors("AllowFrontend");
-//app.UseHttpsRedirection(); //Заглушка
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run(); //Для локального подключения
+app.Run();

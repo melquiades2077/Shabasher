@@ -12,6 +12,6 @@
 
         public string PasswordHash { get; set; }
 
-        public List<ShabashEntity> Shabashes { get; set; }
+        public List<ShabashParticipantEntity> Participations { get; set; } = [];
     }
 }

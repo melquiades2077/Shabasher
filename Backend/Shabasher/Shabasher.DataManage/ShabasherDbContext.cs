@@ -13,11 +13,13 @@ namespace Shabasher.DataManage
 
         public DbSet<UserEntity> Users { get; set; }
         public DbSet<ShabashEntity> Shabashes { get; set; }
+        public DbSet<ShabashParticipantEntity> ShabashParticipants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new ShabashConfiguration());
+            modelBuilder.ApplyConfiguration(new ShabashParticipantConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }

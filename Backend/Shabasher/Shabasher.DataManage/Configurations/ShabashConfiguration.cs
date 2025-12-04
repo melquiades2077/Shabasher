@@ -19,12 +19,16 @@ namespace Shabasher.DataManage.Configurations
             builder.Property(x => x.Description)
                    .HasDefaultValue("");
 
+            builder.Property(x => x.StartDate)
+                   .IsRequired();
+
             builder.Property(x => x.CreatedAt)
                    .IsRequired()
                    .HasDefaultValueSql("NOW()");
 
             builder.HasMany(p => p.Participants)
-                   .WithMany(sh => sh.Shabashes);
+                   .WithOne(sp => sp.Shabash)
+                   .HasForeignKey(sp => sp.ShabashId);
         }
     }
 }

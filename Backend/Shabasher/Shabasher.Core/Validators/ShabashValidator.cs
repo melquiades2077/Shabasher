@@ -6,7 +6,7 @@ namespace Shabasher.Core.Validators
     {
         private const int MAX_DESCRIPTION_LEN = 600;
 
-        public static Result ValidateShabashCreation(string name, string description)
+        public static Result ValidateShabashCreation(string name, string description, DateTime startDate)
         {
             var errors = new List<string>();
 
@@ -16,6 +16,9 @@ namespace Shabasher.Core.Validators
 
             if (description.Length > MAX_DESCRIPTION_LEN)
                 errors.Add($"Длина описания события не должна превышать {MAX_DESCRIPTION_LEN}");
+
+            if (startDate <= DateTime.UtcNow)
+                errors.Add("Дата начала события должна быть в будущем");
 
             return errors.Any()
                 ? Result.Failure(string.Join("; ", errors))
