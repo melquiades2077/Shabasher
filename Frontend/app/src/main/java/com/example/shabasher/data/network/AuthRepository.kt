@@ -33,21 +33,13 @@ class AuthRepository(context: Context) {
 
     suspend fun register(email: String, password: String): Result<Unit> {
         return try {
-            val name = email.substringBefore("@")
-
-            val response: HttpResponse = client.post("$baseUrl/api/auth/register") {
+            val response = client.post("$baseUrl/api/auth/register") {
                 contentType(ContentType.Application.Json)
-                setBody(RegisterRequest(name, email, password))
+                setBody(RegisterRequest(email.substringBefore("@"), email, password))
             }
 
             if (response.status.isSuccess()) {
-                val loginResult = login(email, password)
-
-                if (loginResult.isSuccess) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(Exception("Регистрация успешна, но вход не удался"))
-                }
+                Result.success(Unit)
             } else {
                 val errorText = response.body<String>()
                 Result.failure(Exception(errorText))
@@ -56,6 +48,7 @@ class AuthRepository(context: Context) {
             Result.failure(e)
         }
     }
+
 
     suspend fun login(email: String, password: String): Result<Unit> {
         return try {

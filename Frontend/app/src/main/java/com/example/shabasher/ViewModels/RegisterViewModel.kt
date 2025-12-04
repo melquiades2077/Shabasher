@@ -6,10 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.data.network.AuthRepository // ← ИЗМЕНИТЬ ИМПОРТ
 import kotlinx.coroutines.launch
+import java.util.regex.Pattern
 
 class RegisterViewModel(
     private val context: Context
 ) : ViewModel() {
+
     private val repo = AuthRepository(context)
 
     var email = mutableStateOf("")
@@ -20,29 +22,73 @@ class RegisterViewModel(
     var success = mutableStateOf(false)
 
     fun register() {
-        if (email.value.isBlank() || password.value.isBlank() || repeatPassword.value.isBlank()) {
-            error.value = "Все поля должны быть заполнены"
+
+        // 1. Проверка email
+        EmailValidator.validate(email.value)?.let {
+            error.value = it
             return
         }
 
+        // 2. Проверка пароля
+        PasswordValidator.validate(password.value)?.let {
+            error.value = it
+            return
+        }
+
+        // 3. Пароли совпадают?
         if (password.value != repeatPassword.value) {
             error.value = "Пароли не совпадают"
             return
         }
 
-        loading.value = true
-        error.value = null
+        // 4. Успех (или отправка на сервер)
+        success.value = true
+    }
+}
 
-        viewModelScope.launch {
-            repo.register(email.value, password.value)
-                .onSuccess {
-                    success.value = true
-                }
-                .onFailure {
-                    error.value = it.message
-                }
+object EmailValidator {
 
-            loading.value = false
+    private const val MAX_EMAIL_LEN = 254
+
+    private val regex = Pattern.compile(
+        "(?<Login>[a-zA-Z0-9._%+-]+)@(?<Domain>[a-zA-Z0-9.-]+)\\.(?<HLDomain>[a-zA-Z]{2,})\\b",
+        Pattern.CASE_INSENSITIVE
+    )
+
+    fun validate(email: String): String? {
+        val errors = mutableListOf<String>()
+
+        if (email.isBlank())
+            errors.add("Электронная почта обязательна для заполнения")
+
+        if (email.length > MAX_EMAIL_LEN)
+            errors.add("Длина электронной почты не должна превышать $MAX_EMAIL_LEN")
+
+        try {
+            if (!regex.matcher(email).find())
+                errors.add("Неверный формат электронной почты")
+        } catch (e: Exception) {
+            errors.add("Неверный формат электронной почты")
         }
+
+        return if (errors.isEmpty()) null else errors.joinToString("; ")
+    }
+}
+
+object PasswordValidator {
+
+    private const val MAX_PASSWORD_LEN = 64
+    private const val MIN_PASSWORD_LEN = 8
+
+    fun validate(password: String): String? {
+        val errors = mutableListOf<String>()
+
+        if (password.isBlank() || password.length < MIN_PASSWORD_LEN)
+            errors.add("Пароль должен содержать минимум $MIN_PASSWORD_LEN символов")
+
+        if (password.length > MAX_PASSWORD_LEN)
+            errors.add("Длина пароля не должна превышать $MAX_PASSWORD_LEN")
+
+        return if (errors.isEmpty()) null else errors.joinToString("; ")
     }
 }

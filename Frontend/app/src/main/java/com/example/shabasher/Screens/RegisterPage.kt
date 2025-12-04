@@ -137,14 +137,14 @@ fun RegisterPage(
                     )
 
                     viewModel.error.value?.let { error ->
-                        Text(error, color = MaterialTheme.colorScheme.error)
+                        Text(error, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                     }
                 }
             }
 
             LaunchedEffect(viewModel.success.value) {
                 if (viewModel.success.value) {
-                    navController.navigate(Routes.NAME)
+                    navController.navigate("namePage?email=${viewModel.email.value}&password=${viewModel.password.value}")
                     viewModel.success.value = false
                 }
             }

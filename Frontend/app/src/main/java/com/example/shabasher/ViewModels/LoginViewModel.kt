@@ -33,7 +33,16 @@ class LoginViewModel(
                     success.value = true
                 }
                 .onFailure {
-                    error.value = it.message
+                    error.value = when (it.message) {
+                        "\"Пользователь с данным email не найден\"" ->
+                            "Такого email не существует"
+
+                        "\"Неверный пароль\"" ->
+                            "Неверный пароль"
+
+                        else ->
+                            it.message ?: "Ошибка входа"
+                    }
                 }
 
             loading.value = false

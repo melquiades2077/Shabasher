@@ -20,65 +20,45 @@ data class ProfileUiState(
 )
 
 class ProfileViewModel(
-    private val context: Context
+    private val context: Context,
+    private val tokenManager: TokenManager = TokenManager(context)
 ) : ViewModel() {
-    private val repo = ProfileRepository(context)
-    private val tokenManager = TokenManager(context)
 
-    var userName = mutableStateOf("Загрузка...")
-    var userEmail = mutableStateOf("")
-    var loading = mutableStateOf(false)
-    var error = mutableStateOf<String?>(null)
+    private val repo = ProfileRepository(tokenManager)
 
     private val _uiState = MutableStateFlow(ProfileUiState(isLoading = true))
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
-
-    init {
-        loadProfile()
-    }
+    val uiState: StateFlow<ProfileUiState> = _uiState
 
     fun loadProfile() {
-        println("[ProfileViewModel] loadProfile() вызван")
-        loading.value = true
-        error.value = null
-        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        // избегаем повторных параллельных вызовов
+        if (_uiState.value.isLoading) {
+            // но позволим первый запрос выполниться — всё ок
+        }
 
         viewModelScope.launch {
-            println("[ProfileViewModel] Запускаем загрузку...")
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            repo.getProfile()
-                .onSuccess { profile ->
-                    println("[ProfileViewModel] УСПЕХ: Получен профиль: ${profile.name}")
-
-                    userName.value = profile.name
-                    userEmail.value = profile.email
-
-                    _uiState.value = ProfileUiState(
-                        isLoading = false,
-                        name = profile.name,
-                        email = profile.email,
-                        avatarUrl = null
-                    )
-                    println("[ProfileViewModel] uiState обновлен: name=${profile.name}")
-                }
-                .onFailure { e ->
-                    println("[ProfileViewModel] ОШИБКА: ${e.message}")
-
-                    _uiState.value = ProfileUiState(
-                        isLoading = false,
-                        error = e.message ?: "Ошибка загрузки",
-                        name = "Ошибка"
-                    )
-                }
-
-            loading.value = false
-            println("[ProfileViewModel] Загрузка завершена")
+            val res = repo.getProfile()
+            if (res.isSuccess) {
+                val p = res.getOrNull()!!
+                _uiState.value = ProfileUiState(
+                    isLoading = false,
+                    name = p.name,
+                    email = p.email,
+                    avatarUrl = null,
+                    error = null
+                )
+            } else {
+                val err = res.exceptionOrNull()?.message ?: "Ошибка загрузки профиля"
+                _uiState.value = ProfileUiState(isLoading = false, error = err, name = "")
+            }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
             tokenManager.clearToken()
+            _uiState.value = ProfileUiState(isLoading = false)
         }
     }
 }

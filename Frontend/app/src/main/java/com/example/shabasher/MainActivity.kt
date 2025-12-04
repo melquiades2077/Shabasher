@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Screens.CreateEventPage
 import com.example.shabasher.Screens.EventPage
@@ -63,6 +64,7 @@ import com.example.shabasher.ViewModels.MainPageViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.example.shabasher.ViewModels.ViewModelFactory
+import com.example.shabasher.data.local.TokenManager
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -82,10 +84,18 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val viewModelFactory = rememberViewModelFactory(context)
 
+            // Проверка токена перед запуском
+            val tokenManager = remember { TokenManager(context) }
+            val startDestination = if (tokenManager.getToken() != null) {
+                Routes.MAIN
+            } else {
+                Routes.WELCOME
+            }
+
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.WELCOME
+                    startDestination = startDestination
                 ) {
                     composable(Routes.WELCOME) {
                         WelcomePage(navController)
@@ -93,40 +103,36 @@ class MainActivity : ComponentActivity() {
 
                     composable(Routes.REGISTER) {
                         val vm: RegisterViewModel = viewModel(factory = viewModelFactory)
-                        RegisterPage(
-                            navController = navController,
-                            viewModel = vm
-                        )
+                        RegisterPage(navController, vm)
                     }
 
                     composable(Routes.LOGIN) {
                         val vm: LoginViewModel = viewModel(factory = viewModelFactory)
-                        LoginPage(
-                            navController = navController,
-                            viewModel = vm
-                        )
+                        LoginPage(navController, vm)
                     }
 
-                    composable(Routes.NAME) {
-                        val vm: NameViewModel = viewModel(factory = viewModelFactory)
+                    composable(
+                        route = "namePage?email={email}&password={password}",
+                        arguments = listOf(
+                            navArgument("email") { defaultValue = "" },
+                            navArgument("password") { defaultValue = "" }
+                        )
+                    ) { backStackEntry ->
                         NamePage(
-                            navController = navController,
-                            viewModel = vm
+                            navController,
+                            email = backStackEntry.arguments?.getString("email") ?: "",
+                            password = backStackEntry.arguments?.getString("password") ?: ""
                         )
                     }
 
                     composable(Routes.MAIN) {
                         val vm: MainPageViewModel = viewModel(factory = viewModelFactory)
-                        MainPage(navController = navController, viewModel = vm)
+                        MainPage(navController, vm)
                     }
 
                     composable(Routes.PROFILE) {
                         val vm: ProfileViewModel = viewModel(factory = viewModelFactory)
-                        ProfilePage(
-                            navController = navController,
-                            themeViewModel = themeViewModel,
-                            viewModel = vm
-                        )
+                        ProfilePage(navController, themeViewModel, vm)
                     }
 
                     composable(Routes.EVENT) {
@@ -149,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
         }
     }
 }

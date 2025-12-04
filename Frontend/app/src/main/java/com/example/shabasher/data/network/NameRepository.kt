@@ -1,5 +1,6 @@
 package com.example.shabasher.data.network
 
+import android.content.Context
 import com.example.shabasher.data.dto.SetNameRequest
 import com.example.shabasher.data.dto.SetNameResponse
 import io.ktor.client.*
@@ -10,9 +11,11 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class NameRepository {
+class NameRepository(private val context: Context) {
+
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
@@ -24,31 +27,30 @@ class NameRepository {
 
     private val baseUrl = Config.BASE_URL
 
-    suspend fun setUserName(name: String, token: String): Result<SetNameResponse> {
-        println("USING TOKEN: ${token.take(20)}...")
+    suspend fun setUserName(userId: String, name: String, token: String): Result<Unit> {
         return try {
-            println("Отправка имени '$name' с токеном: ${token.take(10)}...")
+            val body = UpdateUserNameRequest(id = userId, name = name)
 
-            val response: HttpResponse = client.post("$baseUrl/api/Auth/set-name") {
+            val response: HttpResponse = client.patch("$baseUrl/api/Users") {
                 contentType(ContentType.Application.Json)
                 header("Authorization", "Bearer $token")
-                setBody(SetNameRequest(name))
+                setBody(body)
             }
-
-            println("Ответ сервера: ${response.status}")
 
             if (response.status.isSuccess()) {
-                val result: SetNameResponse = response.body()
-                println("Имя сохранено: $result")
-                Result.success(result)
+                Result.success(Unit)
             } else {
-                val errorText = response.body<String>()
-                println("Ошибка сервера: $errorText")
-                Result.failure(Exception(errorText))
+                val message = response.body<String>()
+                Result.failure(Exception(message))
             }
         } catch (e: Exception) {
-            println("Ошибка сети: ${e.message}")
             Result.failure(e)
         }
     }
 }
+
+@Serializable
+data class UpdateUserNameRequest(
+    val id: String,
+    val name: String
+)
