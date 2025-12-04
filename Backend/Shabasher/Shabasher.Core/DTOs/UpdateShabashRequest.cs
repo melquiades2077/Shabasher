@@ -6,6 +6,7 @@ namespace Shabasher.Core.DTOs
         string Id,
         string Name,
         string Description,
+        string Address,
         DateOnly StartDate,
         TimeOnly StartTime
         );

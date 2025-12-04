@@ -8,6 +8,8 @@
 
         public string Description { get; set; } = "";
 
+        public string Address { get; set; } = "";
+
         public List<ShabashParticipantEntity> Participants { get; set; } = [];
 
         public DateTime StartDate { get; set; }

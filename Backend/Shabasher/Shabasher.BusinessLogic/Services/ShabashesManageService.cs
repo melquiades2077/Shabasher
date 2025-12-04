@@ -28,7 +28,7 @@ namespace Shabasher.BusinessLogic.Services
         }
 
         //так делать не надо!!!!!
-        public async Task<Result<string>> CreateShabashAsync(string name, string description, DateTime startDate, string creatorUserId, List<ShabashParticipant> participants)
+        public async Task<Result<string>> CreateShabashAsync(string name, string description, string address, DateTime startDate, string creatorUserId, List<ShabashParticipant> participants)
         {
             var creatorEntity = await _dbcontext.Users
                 .AsNoTracking()
@@ -50,7 +50,7 @@ namespace Shabasher.BusinessLogic.Services
                 participants[index] = new ShabashParticipant(creatorInParticipants.User, creatorInParticipants.Status, ShabashRole.Admin);
             }
 
-            var shabash = Shabash.Create(name, description, startDate, participants);
+            var shabash = Shabash.Create(name, description, address, startDate, participants);
 
             if (shabash.IsFailure)
                 return Result.Failure<string>(shabash.Error);
@@ -85,6 +85,7 @@ namespace Shabasher.BusinessLogic.Services
 
             shabashEntity.Name = request.Name;
             shabashEntity.Description = request.Description;
+            shabashEntity.Address = request.Address;
             var localStart = request.StartDate.ToDateTime(request.StartTime);
             shabashEntity.StartDate = DateTime.SpecifyKind(localStart, DateTimeKind.Utc);
 

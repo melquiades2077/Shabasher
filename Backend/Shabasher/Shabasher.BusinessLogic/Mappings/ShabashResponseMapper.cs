@@ -13,6 +13,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabash.Id,
                 shabash.Name,
                 shabash.Description,
+                shabash.Address,
                 shabash.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.DomainToResponse(p.User),
@@ -37,6 +38,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabashEntity.Id,
                 shabashEntity.Name,
                 shabashEntity.Description,
+                shabashEntity.Address,
                 shabashEntity.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.EntityToResponse(p.User),

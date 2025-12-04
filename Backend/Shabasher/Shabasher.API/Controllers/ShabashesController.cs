@@ -36,6 +36,7 @@ namespace Shabasher.API.Controllers
             var result = await _shabashesManageService.CreateShabashAsync(
                 request.Name,
                 request.Description,
+                request.Address,
                 utcStart,
                 userId,
                 []);
