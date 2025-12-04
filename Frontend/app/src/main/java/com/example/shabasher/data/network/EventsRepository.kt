@@ -1,75 +1,148 @@
-package com.example.shabasher.data
+// data/network/EventsRepository.kt
+package com.example.shabasher.data.network
 
-import com.example.shabasher.Model.EventData
-import com.example.shabasher.Model.EventShort
-import com.example.shabasher.Model.EventFull
-import com.example.shabasher.Model.Participant
-import com.example.shabasher.Model.ParticipationStatus
-import kotlinx.coroutines.delay
-import kotlin.random.Random
+import android.content.Context
+import com.example.shabasher.data.dto.CreateEventRequest
+import com.example.shabasher.data.dto.CreateEventResponse
+import com.example.shabasher.data.dto.GetEventResponse
+import com.example.shabasher.data.dto.GetEventsResponse
+import com.example.shabasher.data.dto.EventShortDto
+import com.example.shabasher.data.local.TokenManager
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
 
-class EventsRepository {
-
-    // TODO: заменить на запрос к backend
-    suspend fun getEvents(): Result<List<EventShort>> {
-        delay(300) // имитация сети
-
-        val mock = listOf(
-            EventShort(
-                id = "1",
-                title = "Корпоратив",
-                date = "26 февраля 2026",
-                status = "Событие завершено"
-            ),
-            EventShort(
-                id = "2",
-                title = "ДР Олега",
-                date = "10 марта 2026",
-                status = "Активно"
-            )
-        )
-
-        return Result.success(mock)
+class EventsRepository(context: Context) {
+    private val tokenManager = TokenManager(context)
+    private val client = HttpClient {
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            })
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 10000
+        }
     }
 
-    // TODO: отправка на backend
+    private val baseUrl = Config.BASE_URL
+
+    // Получить все события пользователя
+    suspend fun getEvents(): Result<List<EventShortDto>> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            // TODO: Проверить точный endpoint для получения списка событий
+            val response: HttpResponse = client.get("$baseUrl/api/Shabashes") {
+                header("Authorization", "Bearer $cleanToken")
+            }
+
+            if (response.status.isSuccess()) {
+                val eventsResponse: GetEventsResponse = response.body()
+                Result.success(eventsResponse.events)
+            } else {
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun createEvent(
         title: String,
         description: String,
         address: String,
         date: String,
-        time: String
+        time: String,
+        invitedUserIds: List<String>? = null
     ): Result<String> {
-        delay(200)
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
 
-        val newId = Random.nextInt(1000, 9999).toString()
-        return Result.success(newId)
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val dateTimeIso = convertToIsoDateTime(date, time)
+
+            val request = CreateEventRequest(
+                title = title,
+                description = description,
+                address = address,
+                dateTime = dateTimeIso,
+                userIds = invitedUserIds
+            )
+
+            println("[EventsRepository] Создание события: $title, дата: $dateTimeIso")
+
+            val response: HttpResponse = client.post("$baseUrl/api/Shabashes") {
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer $cleanToken")
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                val createResponse: CreateEventResponse = response.body()
+                println("[EventsRepository] Событие создано: ${createResponse.id}")
+                Result.success(createResponse.id)
+            } else {
+                val errorText = response.body<String>()
+                println("[EventsRepository] Ошибка создания: $errorText")
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            println("[EventsRepository] Исключение: ${e.message}")
+            Result.failure(e)
+        }
     }
 
-    // TODO: запрос с backend
-    suspend fun getEventById(id: String): Result<EventData> {
-        delay(300)
+    // Получить событие по ID
+    suspend fun getEventById(id: String): Result<GetEventResponse> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
 
-        val mock = EventData(
-            id = id,
-            title = "Корпоратив",
-            description = "Описание события...",
-            date = "26 февраля 2026 г.",
-            place = "г. Ростов-на-Дону, ул. Пушкина 12",
-            time = "22:00",
-            participants = listOf(
-                Participant("1", "Андрей", ParticipationStatus.GOING),
-                Participant("2", "Катя", ParticipationStatus.NOT_GOING),
-                Participant("3", "Женя", ParticipationStatus.INVITED),
-                Participant("4", "Равшан", ParticipationStatus.INVITED),
-                Participant("5", "Джамшут", ParticipationStatus.INVITED)
-            ),
-            userStatus = ParticipationStatus.INVITED
-        )
+            val cleanToken = token.trim().removeSurrounding("\"")
 
-        return Result.success(mock)
+            val response: HttpResponse = client.get("$baseUrl/api/Shabashes/by-id") {
+                header("Authorization", "Bearer $cleanToken")
+                parameter("id", id) // TODO: Проверить параметр
+            }
+
+            if (response.status.isSuccess()) {
+                val event: GetEventResponse = response.body()
+                Result.success(event)
+            } else {
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
+    // Вспомогательная функция для преобразования даты
+    private fun convertToIsoDateTime(date: String, time: String): String {
+        // TODO: Реализовать парсинг даты из "26 февраля 2026" и времени "22:00"
+        // Пока возвращаем текущую дату
+        return java.time.LocalDateTime.now().toString()
+    }
 }
 
 

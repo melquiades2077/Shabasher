@@ -1,9 +1,10 @@
 package com.example.shabasher.ViewModels
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.shabasher.data.EventsRepository
+import com.example.shabasher.data.network.EventsRepository
 import kotlinx.coroutines.launch
 
 data class CreateEventUiState(
@@ -17,10 +18,10 @@ data class CreateEventUiState(
     val successEventId: String? = null
 )
 
-
 class CreateEventViewModel(
-    private val repository: EventsRepository = EventsRepository()
+    context: Context
 ) : ViewModel() {
+    private val repository = EventsRepository(context)
 
     var uiState = mutableStateOf(CreateEventUiState())
         private set
@@ -83,6 +84,3 @@ class CreateEventViewModel(
         }
     }
 }
-
-
-

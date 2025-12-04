@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainPage(
     navController: NavController,
-    viewModel: MainPageViewModel = viewModel()
+    viewModel: MainPageViewModel
 ) {
     val ui = viewModel.uiState.value
 
