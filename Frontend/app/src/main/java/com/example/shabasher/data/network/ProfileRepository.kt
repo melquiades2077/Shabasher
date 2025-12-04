@@ -31,7 +31,7 @@ class ProfileRepository(context: Context) {
     }
 
 
-    private val baseUrl = "http://10.0.2.2:5053"
+    private val baseUrl = Config.BASE_URL
 
     suspend fun getProfile(): Result<ProfileResponse> {
         return try {

@@ -49,6 +49,7 @@ fun NamePage(
             navController.navigate(Routes.MAIN) {
                 popUpTo(0) { inclusive = true }
             }
+            viewModel.success.value = false
         }
     }
 

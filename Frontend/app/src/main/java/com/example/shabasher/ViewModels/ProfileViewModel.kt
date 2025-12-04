@@ -33,9 +33,6 @@ class ProfileViewModel(
     private val _uiState = MutableStateFlow(ProfileUiState(isLoading = true))
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    init {
-        loadProfile()
-    }
 
     fun loadProfile() {
         println("[ProfileViewModel] loadProfile() вызван")
