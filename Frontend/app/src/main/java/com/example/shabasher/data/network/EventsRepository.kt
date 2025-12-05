@@ -66,20 +66,24 @@ class EventsRepository(context: Context) {
 
             val cleanToken = token.trim().removeSurrounding("\"")
 
-            // Формируем запрос
-            val response: HttpResponse = client.put("$baseUrl/api/Shabashes/update-participant-status") {
+            val response: HttpResponse = client.patch("$baseUrl/api/Users/status") {
                 header("Authorization", "Bearer $cleanToken")
                 contentType(ContentType.Application.Json)
-                setBody(UpdateParticipantStatusRequest(eventId, newStatus.name))
+                setBody(StatusUpdateRequest(
+                    shabashId = eventId,
+                    status = newStatus.code
+                ))
             }
 
             if (response.status.isSuccess()) {
-                Result.success(true)  // Успешно обновлено
+                Result.success(true)
             } else {
                 val errorText = response.body<String>()
-                Result.failure(Exception(errorText))
+                println("[DEBUG] Ошибка обновления статуса: $errorText")
+                Result.failure(Exception("Ошибка сервера: $errorText"))
             }
         } catch (e: Exception) {
+            println("[DEBUG] Исключение при обновлении статуса: ${e.message}")
             Result.failure(e)
         }
     }
@@ -187,6 +191,51 @@ class EventsRepository(context: Context) {
         }
 
         return response.body()
+    }
+
+    //Потом можно все, где работаем с id перейти на эту функцию(по идее) но не сейчас
+    suspend fun getCurrentUserId(): String? {
+        return try {
+            val cachedUserId = tokenManager.getUserId()
+            if (cachedUserId != null) {
+                println("[DEBUG] Используем кэшированный userId: $cachedUserId")
+                return cachedUserId
+            }
+
+            val userEmail = sharedPrefs.getString("user_email", null)
+            if (userEmail == null) {
+                println("[DEBUG] Email не найден в SharedPreferences")
+                return null
+            }
+
+            val token = tokenManager.getToken()
+            if (token == null) {
+                println("[DEBUG] Токен не найден")
+                return null
+            }
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.get("$baseUrl/api/Users/by-email") {
+                header("Authorization", "Bearer $cleanToken")
+                parameter("email", userEmail)
+            }
+
+            if (response.status.isSuccess()) {
+                val user: UserResponse = response.body()
+                println("[DEBUG] Получен userId: ${user.id}")
+
+                tokenManager.saveUserId(user.id)
+
+                user.id
+            } else {
+                println("[DEBUG] Ошибка получения userId: ${response.status}")
+                null
+            }
+        } catch (e: Exception) {
+            println("[DEBUG] Исключение при получении userId: ${e.message}")
+            null
+        }
     }
 
     private suspend fun getShabashById(token: String, shabashId: String): GetEventResponse? {
