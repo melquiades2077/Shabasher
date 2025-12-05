@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Приглашение в Шабашер</title>
+
+  <style>
+    body {
+      font-family: Inter, Roboto, sans-serif;
+      background:#F7F7FB;
+      margin:0;
+      padding:20px;
+      color:#111;
+    }
+
+    .card {
+      max-width:720px;
+      margin:32px auto;
+      background:#fff;
+      padding:24px;
+      border-radius:20px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.06);
+    }
+
+    .title {
+      font-size:22px;
+      margin-bottom:6px;
+      font-weight:700;
+    }
+
+    .sub { 
+      color:#666; 
+      margin-bottom:20px;
+      font-size:16px;
+    }
+
+    .qr {
+      display:flex;
+      justify-content:center;
+      margin:22px 0;
+    }
+
+    .btn {
+      padding:14px 18px;
+      border-radius:14px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      font-size:17px;
+    }
+
+    .btn.primary {
+      background:#F09C00;
+      color:#fff;
+      width:100%;
+    }
+
+    .btn.download {
+      background:#EDEDED;
+      color:#111;
+      width:100%;
+      margin-top:12px;
+    }
+
+    .linkbox {
+      margin-top:24px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:12px;
+      border-radius:14px;
+      background:#F1F1F3;
+    }
+
+    .link {
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      width:100%;
+    }
+
+    .copy {
+      border:none;
+      background:none;
+      cursor:pointer;
+      font-size:20px;
+    }
+    
+    /* Добавляем стили для новых элементов */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .error {
+      color: #ff4444;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card" id="card">
+    <!-- Индикатор загрузки -->
+    <div class="loading" id="loading">Загрузка данных события...</div>
+    
+    <!-- Основной контент (изначально скрыт) -->
+    <div id="content" class="hidden">
+      <!-- Здесь будет заголовок события -->
+      <div class="title" id="eventTitle">Вы приглашены в событие 🎉</div>
+      
+      <!-- Здесь будет информация о событии (дата, время, адрес) -->
+      <div class="sub" id="eventInfo"></div>
+
+      <!-- Контейнер для QR-кода -->
+      <div class="qr" id="qrContainer"></div>
+
+      <!-- Кнопки -->
+      <button id="openAppBtn" class="btn primary">Открыть в приложении</button>
+      <button id="downloadBtn" class="btn download">Скачать приложение (APK)</button>
+
+      <!-- Ссылка для копирования -->
+      <div class="linkbox">
+        <div class="link" id="linkText"></div>
+        <button id="copyBtn" class="copy">📋</button>
+      </div>
+
+      <div style="color:#888; font-size:13px; margin-top:8px;">
+        Если приложение не установлено — будет скачан APK-файл.
+      </div>
+    </div>
+    
+    <!-- Блок ошибки (изначально скрыт) -->
+    <div class="error hidden" id="error"></div>
+  </div>
+
+  <!-- QR library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+      // Константы
+      const APK_URL = "http://213.171.27.237:5000/api/invites/download/shabasher-v0.1.apk";
+      const API_BASE_URL = "http://213.171.27.237:5000/api/invites"; // Относительный путь
+
+      // Функция для получения inviteId из URL
+      function getInviteIdFromPath() {
+          // Пример: http://213.171.27.237:5000/invites/abc123
+          // или http://213.171.27.237:5000/api/invites/abc123
+          const pathSegments = window.location.pathname.split('/').filter(seg => seg);
+          
+          // Ищем inviteId (последний сегмент в пути)
+          if (pathSegments.length > 0) {
+              return pathSegments[pathSegments.length - 1];
+          }
+          return null;
+      }
+
+      // Функция форматирования даты
+      function formatDate(dateString) {
+          try {
+              const date = new Date(dateString);
+              return date.toLocaleDateString('ru-RU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+              });
+          } catch (e) {
+              return dateString;
+          }
+      }
+
+      // Функция форматирования времени
+      function formatTime(timeString) {
+          try {
+              // Если timeString в формате "hh:mm:ss"
+              const [hours, minutes] = timeString.split(':');
+              return `${hours}:${minutes}`;
+          } catch (e) {
+              return timeString;
+          }
+      }
+
+      // Основная функция загрузки данных
+      async function loadInviteData() {
+          const inviteId = getInviteIdFromPath();
+          console.log('Invite ID из URL:', inviteId);
+
+          if (!inviteId) {
+              showError("Неверная ссылка приглашения");
+              return;
+          }
+
+          try {
+              // Запрашиваем данные с вашего API
+              console.log('Делаем запрос к:', `${API_BASE_URL}/${inviteId}/details`);
+              const response = await fetch(`${API_BASE_URL}/${inviteId}/details`);
+
+              if (!response.ok) {
+                  if (response.status === 404) {
+                      throw new Error('Приглашение не найдено');
+                  } else if (response.status === 400) {
+                      const errorText = await response.text();
+                      throw new Error(errorText || 'Приглашение недействительно или истекло');
+                  } else {
+                      throw new Error(`Ошибка сервера: ${response.status}`);
+                  }
+              }
+
+              const data = await response.json();
+              console.log('Получены данные:', data);
+
+              // Форматируем дату и время
+              const formattedDate = formatDate(data.startDate);
+              const formattedTime = formatTime(data.startTime);
+
+              // Обновляем UI
+              document.getElementById("eventTitle").textContent = data.name;
+              document.getElementById("eventInfo").textContent = `${formattedDate} в ${formattedTime} • ${data.address}`;
+              document.getElementById("linkText").textContent = window.location.href;
+
+              // Генерируем QR-код (очищаем старый, если есть)
+              document.getElementById("qrContainer").innerHTML = "";
+              new QRCode(document.getElementById("qrContainer"), {
+                  text: window.location.href,
+                  width: 220,
+                  height: 220
+              });
+
+              // Настраиваем кнопку "Открыть в приложении"
+              document.getElementById("openAppBtn").onclick = function() {
+                  openInApp(data.id);
+              };
+
+              // Настраиваем кнопку "Скачать APK"
+              document.getElementById("downloadBtn").onclick = function() {
+                  window.location.href = APK_URL;
+              };
+
+              // Настраиваем кнопку копирования
+              document.getElementById("copyBtn").onclick = async function() {
+                  try {
+                      await navigator.clipboard.writeText(window.location.href);
+                      alert("Ссылка скопирована");
+                  } catch (err) {
+                      console.error('Ошибка копирования:', err);
+                  }
+              };
+
+              // Показываем контент, скрываем загрузку
+              document.getElementById("loading").classList.add("hidden");
+              document.getElementById("content").classList.remove("hidden");
+
+          } catch (error) {
+              console.error('Ошибка загрузки:', error);
+              showError(error.message);
+          }
+      }
+
+      // Функция открытия в приложении
+      function openInApp(eventId) {
+          const deepLink = `shabasher://event?eventId=${eventId}`;
+          const isAndroid = /android/i.test(navigator.userAgent);
+
+          if (isAndroid) {
+              // Попытка открыть приложение
+              window.location = deepLink;
+
+              // Если приложение не установлено → через 1.5 сек скачиваем APK
+              setTimeout(() => {
+                  window.location = APK_URL;
+              }, 1500);
+          } else {
+              // На iOS нет APK → просто показываем QR/ссылку
+              alert("Для iOS приложение доступно в App Store");
+          }
+      }
+
+      // Функция показа ошибки
+      function showError(message) {
+          document.getElementById("loading").classList.add("hidden");
+          document.getElementById("content").classList.add("hidden");
+          document.getElementById("error").textContent = message;
+          document.getElementById("error").classList.remove("hidden");
+      }
+
+      // Запускаем загрузку данных при загрузке страницы
+      document.addEventListener('DOMContentLoaded', loadInviteData);
+      
+      // Для отладки: также запускаем если DOM уже загружен
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          setTimeout(loadInviteData, 1);
+      }
+  </script>
+</body>
+</html>
