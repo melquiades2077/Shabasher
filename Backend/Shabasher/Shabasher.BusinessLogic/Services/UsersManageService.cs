@@ -132,5 +132,18 @@ namespace Shabasher.BusinessLogic.Services
 
             return Result.Success<string>(user.Name);
         }
+
+        public async Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status)
+        {
+            var sp = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+
+            if (sp == null)
+                return Result.Failure<string>("Участник шабаша не найден");
+
+            sp.Status = status;
+            await _dbcontext.SaveChangesAsync();
+
+            return sp.UserId;
+        }
     }
 }

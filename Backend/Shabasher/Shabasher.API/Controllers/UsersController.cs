@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
+using System.Security.Claims;
 
 namespace Shabasher.API.Controllers
 {
@@ -15,6 +16,11 @@ namespace Shabasher.API.Controllers
         public UsersController(IUsersManageService usersManageService)
         {
             _usersManageService = usersManageService;
+        }
+
+        private string GetUserId()
+        {
+            return User.FindFirstValue("userId") ?? string.Empty;
         }
 
         [HttpGet("by-id")]
@@ -39,7 +45,7 @@ namespace Shabasher.API.Controllers
             return Ok(user.Value);
         }
 
-        [HttpPatch]
+        [HttpPatch("username")]
         public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
         {
             var updateResult = await _usersManageService.UpdateUserNameAsync(updateUserNameRequest.Id, updateUserNameRequest.Name);
@@ -59,6 +65,21 @@ namespace Shabasher.API.Controllers
                 return BadRequest(deleteResult.Error);
 
             return Ok(userId);
+        }
+
+        [HttpPatch("status")]
+        public async Task<ActionResult> UpdateUserStatus([FromBody] UpdateUserStatusRequest request)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var updateResult = await _usersManageService.UpdatePastorStatusAsync(userId, request.ShabashId, request.Status);
+
+            if (updateResult.IsFailure)
+                return BadRequest(updateResult.Error);
+
+            return Ok(updateResult.Value);
         }
     }
 }

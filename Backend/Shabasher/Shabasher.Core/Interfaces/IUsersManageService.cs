@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Shabasher.Core.DTOs;
+using Shabasher.Core.Models;
 
 namespace Shabasher.Core.Interfaces
 {
@@ -11,5 +12,6 @@ namespace Shabasher.Core.Interfaces
         Task<Result<UserResponse>> GetUserByEmailAsync(string email);
         Task<Result<string>> UpdateUserNameAsync(string userId, string newName);
         Task<Result<string>> DeleteUserAsync(string userId);
+        Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status);
     }
 }
