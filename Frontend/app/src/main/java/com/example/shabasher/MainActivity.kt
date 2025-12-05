@@ -46,6 +46,8 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.shabasher.ViewModels.ShareEventViewModelFactory
+import com.example.shabasher.data.network.InviteRepository
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -138,9 +140,13 @@ class MainActivity : ComponentActivity() {
                         route = "${Routes.SHAREEVENT}/{eventId}",
                         arguments = listOf(navArgument("eventId") { type = NavType.StringType })
                     ) { backStackEntry ->
-                        val vm: ShareEventViewModel = viewModel()
                         val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
-                        ShareEventPage(navController, vm, eventId)
+                        val inviteRepository = InviteRepository(context = LocalContext.current)
+                        val vm: ShareEventViewModel = viewModel(factory = ShareEventViewModelFactory(
+                            inviteRepository
+                        )
+                        )
+                        ShareEventPage(navController = navController, viewModel = vm, eventId = eventId)
                     }
 
                     composable(

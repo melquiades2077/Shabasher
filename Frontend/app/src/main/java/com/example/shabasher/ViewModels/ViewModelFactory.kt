@@ -3,6 +3,7 @@ package com.example.shabasher.ViewModels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.shabasher.data.network.InviteRepository
 
 class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
 
@@ -46,5 +47,17 @@ class NameViewModelFactory(
             return NameViewModel(context, email, password) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class ShareEventViewModelFactory(
+    private val inviteRepository: InviteRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return if (modelClass.isAssignableFrom(ShareEventViewModel::class.java)) {
+            ShareEventViewModel(inviteRepository) as T
+        } else {
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }

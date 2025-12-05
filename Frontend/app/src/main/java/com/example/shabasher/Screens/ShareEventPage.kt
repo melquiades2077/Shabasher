@@ -38,20 +38,26 @@ import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.R
 import com.example.shabasher.ViewModels.ShareEventViewModel
+import com.example.shabasher.ViewModels.ShareEventViewModelFactory
 import com.example.shabasher.components.ShabasherSecondaryButton
+import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.ui.theme.Typography
 
 @Composable
 fun ShareEventPage(
     navController: NavController,
-    viewModel: ShareEventViewModel = viewModel(),
-    eventId: String
+    eventId: String,
+    viewModel: ShareEventViewModel = viewModel(factory = ShareEventViewModelFactory(
+        InviteRepository(LocalContext.current)
+    ))
 ) {
-    LaunchedEffect(eventId) {
-        viewModel.init(eventId)
-    }
-
+    // Инициализация ViewModel с контекстом
     val context = LocalContext.current
+
+    // Инициализируем данные внутри LaunchedEffect
+    LaunchedEffect(eventId) {
+        viewModel.init(eventId, context) // Передаем контекст прямо в init
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -68,8 +74,7 @@ fun ShareEventPage(
                     .padding(16.dp)
                     .align(Alignment.Center)
             ) {
-
-                // Карточка
+                // Карточка с информацией
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(40.dp),
@@ -86,13 +91,14 @@ fun ShareEventPage(
                         style = Typography.headlineMedium
                     )
 
-                    QRCode(viewModel.link.value)
+                    // QR-код с ссылкой
+                    QRCode(viewModel.link.value.trim('"'))
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
+                        // Отображение ссылки
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -107,14 +113,14 @@ fun ShareEventPage(
                                 modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState())
                             ) {
                                 Text(
-                                    text = viewModel.link.value,
+                                    text = viewModel.link.value.trim('"'),
                                     style = Typography.bodyLarge
                                 )
                             }
 
                             IconButton(onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                clipboard.setPrimaryClip(ClipData.newPlainText("invite", viewModel.link.value))
+                                clipboard.setPrimaryClip(ClipData.newPlainText("invite", viewModel.link.value.trim('"')))
                                 Toast.makeText(context, "Ссылка скопирована", Toast.LENGTH_SHORT).show()
                             }) {
                                 Icon(
@@ -123,26 +129,26 @@ fun ShareEventPage(
                                 )
                             }
                         }
-
-
                     }
-
+                }
 
                 // Кнопка "Продолжить"
-                    ShabasherSecondaryButton(
-                        text = "Продолжить",
-                        onClick = {
-                            SafeNavigation.navigate {
-                                navController.navigate("${Routes.EVENT}/$eventId") {
-                                    popUpTo(Routes.MAIN) { inclusive = false }
-                                    launchSingleTop = true
-                                }
+                ShabasherSecondaryButton(
+                    text = "Продолжить",
+                    onClick = {
+                        SafeNavigation.navigate {
+                            navController.navigate("${Routes.EVENT}/$eventId") {
+                                popUpTo(Routes.MAIN) { inclusive = false }
+                                launchSingleTop = true
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
-}}
+}
+
+
 
