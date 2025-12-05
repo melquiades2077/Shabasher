@@ -134,7 +134,7 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext.Invites.Add(InviteEntityMapper.ToEntity(invite));
             await _dbcontext.SaveChangesAsync();
 
-            var link = $"{BASE_URL}/invites/{invite.Id}";
+            var link = $"{BASE_URL}/api/invites/{invite.Id}";
 
             return Result.Success(link);
         }

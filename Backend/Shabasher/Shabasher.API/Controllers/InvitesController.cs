@@ -12,17 +12,15 @@ namespace Shabasher.API.Controllers
     public class InvitesController : ControllerBase
     {
         private readonly IShabashesManageService _shabashesManageService;
-        private readonly IWebHostEnvironment _env;
 
         private string GetUserId()
         {
             return User.FindFirstValue("userId") ?? string.Empty;
         }
 
-        public InvitesController(IShabashesManageService shabashesManageService, IWebHostEnvironment env)
+        public InvitesController(IShabashesManageService shabashesManageService)
         {
             _shabashesManageService = shabashesManageService;
-            _env = env;
         }
 
         [HttpPost("create")]
@@ -52,8 +50,8 @@ namespace Shabasher.API.Controllers
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");
 
-            var filePath = Path.Combine(_env.ContentRootPath, "Pages", "invite.html");
-            return PhysicalFile(filePath, "text/html");
+            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Pages/invite.html";
+            return PhysicalFile(absolutePath, "text/html");
         }
 
         [HttpGet("{id}/details")]
@@ -98,12 +96,12 @@ namespace Shabasher.API.Controllers
         [HttpGet("download")]
         public async Task<ActionResult> DownloadApk()
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", "shabasher-v0.1.apk");
+            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Files/shabasher-v0.1.apk";
 
-            if (!System.IO.File.Exists(filePath))
+            if (!System.IO.File.Exists(absolutePath))
                 return NotFound();
 
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            var fileBytes = System.IO.File.ReadAllBytes(absolutePath);
             return File(fileBytes, "application/vnd.android.package-archive", "shabasher-v0.1.apk");
         }
     }
