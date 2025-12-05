@@ -2,6 +2,7 @@ package com.example.shabasher.data.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.shabasher.Model.ParticipationStatus
 import com.example.shabasher.data.dto.*
 import com.example.shabasher.data.local.TokenManager
 import io.ktor.client.*
@@ -30,7 +31,37 @@ class EventsRepository(context: Context) {
         }
     }
 
+
     private val baseUrl = Config.BASE_URL
+
+    // Добавим метод для обновления статуса участника
+    suspend fun updateParticipationStatus(eventId: String, newStatus: ParticipationStatus): Result<Boolean> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            // Формируем запрос
+            val response: HttpResponse = client.put("$baseUrl/api/Shabashes/update-participant-status") {
+                header("Authorization", "Bearer $cleanToken")
+                contentType(ContentType.Application.Json)
+                setBody(UpdateParticipantStatusRequest(eventId, newStatus.name))
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(true)  // Успешно обновлено
+            } else {
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     // Получить все события пользователя
     suspend fun getEvents(): Result<List<EventShortDto>> {
@@ -84,14 +115,14 @@ class EventsRepository(context: Context) {
                     val event = getShabashById(cleanToken, participation.shabashId)
 
                     val title = event?.name ?: participation.shabashName ?: "Без названия"
-                    val dateTime = event?.dateTime ?: "Дата неизвестна"
+                    val dateTime = event?.startDate ?: "Дата неизвестна"
 
                     events.add(
                         EventShortDto(
                             id = participation.shabashId,
                             title = title,
                             dateTime = dateTime,
-                            status = participation.status.toString()
+                            status = getEventStatus(participation.status)
                         )
                     )
 
@@ -256,3 +287,10 @@ class EventsRepository(context: Context) {
 }
 
 
+fun getEventStatus(status: String): String {
+    return when (status) {
+        "0" -> "Скоро начнётся" // или "Ожидается", "Впереди"
+        "1" -> "Завершено" // или "Прошло", "Состоялось"
+        else -> "Статус неизвестен"
+    }
+}

@@ -169,7 +169,10 @@ fun EventContent(
         item {
             ParticipationSelector(
                 selected = event.userStatus,
-                onSelect = { vm.updateParticipation(it) }
+                onSelect = { status ->
+                    // Обновляем статус и отправляем на сервер
+                    vm.updateParticipationStatusOnServer(event.id, status)
+                }
             )
         }
 

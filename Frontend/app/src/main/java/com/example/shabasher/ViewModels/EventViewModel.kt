@@ -65,6 +65,24 @@ class EventViewModel(
         }
     }
 
+    // Добавим функцию для обновления статуса участника на сервере
+    fun updateParticipationStatusOnServer(eventId: String, newStatus: ParticipationStatus) {
+        viewModelScope.launch {
+            val result = repository.updateParticipationStatus(eventId, newStatus)
+
+            // Обработка результата
+            if (result.isSuccess) {
+                val updatedEvent = ui.value.event?.copy(userStatus = newStatus)
+                ui.value = ui.value.copy(event = updatedEvent)
+                println("[EventViewModel] Статус обновлен на сервере: $newStatus")
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Ошибка обновления статуса"
+                println("[EventViewModel] Ошибка обновления статуса: $error")
+                ui.value = ui.value.copy(error = error)
+            }
+        }
+    }
+
     fun updateParticipation(status: ParticipationStatus) {
         val current = ui.value.event ?: return
         val oldStatus = current.userStatus

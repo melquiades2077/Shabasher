@@ -62,6 +62,7 @@ fun ParticipationSelector(
 }
 
 
+
 @Composable
 fun ParticipationButton(text: String, active: Boolean, onClick: () -> Unit) {
     val bg = if (active)
