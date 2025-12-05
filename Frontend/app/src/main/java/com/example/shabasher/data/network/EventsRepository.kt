@@ -15,6 +15,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import io.ktor.http.*
 
 class EventsRepository(context: Context) {
     private val tokenManager = TokenManager(context)
@@ -35,23 +36,43 @@ class EventsRepository(context: Context) {
     private val baseUrl = Config.BASE_URL
 
     suspend fun addParticipant(eventId: String): Result<Boolean> {
-        val token = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
+        val token = tokenManager.getToken()
+        if (token == null) {
+            println("[EventsRepository] addParticipant: Токен не найден")
+            return Result.failure(Exception("Не авторизован"))
+        }
 
         val cleanToken = token.trim().removeSurrounding("\"")
 
         try {
-            val response: HttpResponse = client.post("$baseUrl/api/Invites/join") {
+            println("[EventsRepository] addParticipant: Отправка PATCH запроса для eventId: '$eventId'")
+            println("[EventsRepository] addParticipant: URL: $baseUrl/api/Invites/join?shabashId=$eventId")
+            
+            val response: HttpResponse = client.patch("$baseUrl/api/Invites/join?shabashId=$eventId") {
                 header("Authorization", "Bearer $cleanToken")
-                contentType(ContentType.Application.Json)
-                parameter("shabashId", eventId)
             }
 
+            val statusCode = response.status.value
+            println("[EventsRepository] addParticipant: HTTP статус: $statusCode (${response.status.description})")
+
+            val responseBody = try {
+                response.body<String>()
+            } catch (e: Exception) {
+                "[Ошибка чтения тела: ${e.message}]"
+            }
+
+            println("[EventsRepository] addParticipant: Тело ответа: '$responseBody'")
+
             return if (response.status.isSuccess()) {
+                println("[EventsRepository] addParticipant: УСПЕХ - пользователь добавлен в событие")
                 Result.success(true)
             } else {
-                Result.failure(Exception("Не удалось добавить участника"))
+                println("[EventsRepository] addParticipant: ОШИБКА - $statusCode")
+                Result.failure(Exception("Не удалось добавить участника: $responseBody"))
             }
         } catch (e: Exception) {
+            println("[EventsRepository] addParticipant: ИСКЛЮЧЕНИЕ - ${e.message}")
+            e.printStackTrace()
             return Result.failure(e)
         }
     }
