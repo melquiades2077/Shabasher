@@ -50,7 +50,7 @@ namespace Shabasher.API.Controllers
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");
 
-            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Pages/invite.html";
+            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/wwwroot/invite.html";
             return PhysicalFile(absolutePath, "text/html");
         }
 
