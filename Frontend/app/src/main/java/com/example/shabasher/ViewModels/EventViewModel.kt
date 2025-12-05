@@ -191,13 +191,6 @@ class EventViewModel(
         }
     }
 
-    private fun convertStatus(status: String): ParticipationStatus {
-        return when (status.uppercase()) {
-            "GOING" -> ParticipationStatus.GOING
-            "NOT_GOING" -> ParticipationStatus.NOT_GOING
-            else -> ParticipationStatus.INVITED
-        }
-    }
 
     fun addParticipantToEvent(eventId: String) {
         viewModelScope.launch {
