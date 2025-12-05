@@ -49,7 +49,6 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.shabasher.ViewModels.ShareEventViewModelFactory
 import com.example.shabasher.data.network.InviteRepository
-import com.example.shabasher.data.network.EventsRepository
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -87,6 +86,7 @@ class MainActivity : ComponentActivity() {
 fun DeepLinkHandler(navController: NavController) {
     val context = LocalContext.current
 
+    // Handle Deep Link navigation
     LaunchedEffect(context) {
         val intent = (context as? ComponentActivity)?.intent
         val uri = intent?.data
@@ -94,8 +94,7 @@ fun DeepLinkHandler(navController: NavController) {
             if (it.scheme == "shabasher" && it.host == "event") {
                 val eventId = it.getQueryParameter("eventId")
                 eventId?.let { id ->
-                    addParticipantViaDeepLink(context, eventId)
-
+                    // Navigate to the Event Page
                     navController.navigate("${Routes.EVENT}/$id") {
                         popUpTo(Routes.MAIN) { inclusive = false }
                         launchSingleTop = true
@@ -103,24 +102,6 @@ fun DeepLinkHandler(navController: NavController) {
                 }
             }
         }
-    }
-}
-
-// Функция для добавления участника через deep link
-private suspend fun addParticipantViaDeepLink(context: Context, eventId: String) {
-    try {
-        println("[DeepLinkHandler] Добавление пользователя в событие $eventId через deep link")
-
-        val repository = EventsRepository(context)
-        val result = repository.addParticipant(eventId)
-
-        if (result.isSuccess) {
-            println("[DeepLinkHandler] Пользователь успешно добавлен в событие")
-        } else {
-            println("[DeepLinkHandler] Ошибка добавления: ${result.exceptionOrNull()?.message}")
-        }
-    } catch (e: Exception) {
-        println("[DeepLinkHandler] Исключение: ${e.message}")
     }
 }
 
