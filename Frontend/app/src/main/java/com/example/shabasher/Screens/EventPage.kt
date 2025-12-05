@@ -1,8 +1,11 @@
 package com.example.shabasher.Screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -21,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -145,6 +149,8 @@ fun EventContent(
     modifier: Modifier,
     vm: EventViewModel
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -161,7 +167,8 @@ fun EventContent(
             ParticipatorsCard(
                 participants = event.participants,
                 onClick = {
-                    navController.navigate("participants/${event.id}")
+                    //navController.navigate("participants/${event.id}")
+                    Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -182,6 +189,9 @@ fun EventContent(
 
         item {
             GamesCard()
+        }
+        item {
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

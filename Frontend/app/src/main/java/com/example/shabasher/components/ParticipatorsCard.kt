@@ -49,7 +49,7 @@ fun ParticipatorsCard(
     onClick: () -> Unit
 ) {
     val showList = participants.take(3)
-    val hasMore = participants.size > 3
+    val hasMore = participants.size > 0
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

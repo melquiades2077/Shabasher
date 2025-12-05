@@ -1,5 +1,6 @@
 package com.example.shabasher.components
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,8 @@ import com.example.shabasher.ui.theme.ShabasherTheme
 
 @Composable
 fun ServiceCard() {
+    val context = LocalContext.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -54,14 +58,16 @@ fun ServiceCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-                ServiceButton("Предложения", Icons.Default.Lightbulb, { })
-                ServiceButton("Сбор средств", Icons.Default.MonetizationOn, { })
+                ServiceButton("Предложения", Icons.Default.Lightbulb, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
+                ServiceButton("Сбор средств", Icons.Default.MonetizationOn, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
         }
     }
 }
 
 @Composable
 fun GamesCard() {
+    val context = LocalContext.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -82,8 +88,8 @@ fun GamesCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            ServiceButton("Правда или\nдействие", Icons.Default.CheckCircle, { })
-            ServiceButton("Мафия", Icons.Default.Bedtime, { })
+            ServiceButton("Правда или\nдействие", Icons.Default.CheckCircle, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
+            ServiceButton("Мафия", Icons.Default.Bedtime, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
         }
     }
 }
