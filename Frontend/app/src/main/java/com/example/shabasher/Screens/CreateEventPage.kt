@@ -102,7 +102,7 @@ fun CreateEventPage(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    SafeNavigation.navigate { viewModel.createEvent() }
+                    viewModel.createEvent()
                 },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary

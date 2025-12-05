@@ -149,15 +149,4 @@ class EventViewModel(
             else -> ParticipationStatus.INVITED
         }
     }
-
-    fun addParticipantToEvent(eventId: String) {
-        viewModelScope.launch {
-            val result = repository.addParticipant(eventId)
-            if (result.isSuccess) {
-                println("Участник успешно добавлен в событие.")
-            } else {
-                println("Ошибка при добавлении участника: ${result.exceptionOrNull()?.message}")
-            }
-        }
-    }
 }

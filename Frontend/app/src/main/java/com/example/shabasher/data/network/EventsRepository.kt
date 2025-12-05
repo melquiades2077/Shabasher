@@ -34,28 +34,6 @@ class EventsRepository(context: Context) {
 
     private val baseUrl = Config.BASE_URL
 
-    suspend fun addParticipant(eventId: String): Result<Boolean> {
-        val token = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
-
-        val cleanToken = token.trim().removeSurrounding("\"")
-
-        try {
-            val response: HttpResponse = client.post("$baseUrl/api/Invites/join") {
-                header("Authorization", "Bearer $cleanToken")
-                contentType(ContentType.Application.Json)
-                parameter("shabashId", eventId)
-            }
-
-            return if (response.status.isSuccess()) {
-                Result.success(true)
-            } else {
-                Result.failure(Exception("Не удалось добавить участника"))
-            }
-        } catch (e: Exception) {
-            return Result.failure(e)
-        }
-    }
-
     // Добавим метод для обновления статуса участника
     suspend fun updateParticipationStatus(eventId: String, newStatus: ParticipationStatus): Result<Boolean> {
         return try {
@@ -306,8 +284,6 @@ class EventsRepository(context: Context) {
             Result.failure(e)
         }
     }
-
-
 }
 
 
@@ -317,5 +293,4 @@ fun getEventStatus(status: String): String {
         "1" -> "Завершено" // или "Прошло", "Состоялось"
         else -> "Статус неизвестен"
     }
-
 }
