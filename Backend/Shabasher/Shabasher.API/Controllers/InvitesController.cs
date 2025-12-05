@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 
 namespace Shabasher.API.Controllers
 {
@@ -12,15 +14,18 @@ namespace Shabasher.API.Controllers
     public class InvitesController : ControllerBase
     {
         private readonly IShabashesManageService _shabashesManageService;
+        private readonly IWebHostEnvironment _env;
+        private readonly FileExtensionContentTypeProvider _contentTypeProvider = new FileExtensionContentTypeProvider();
 
         private string GetUserId()
         {
             return User.FindFirstValue("userId") ?? string.Empty;
         }
 
-        public InvitesController(IShabashesManageService shabashesManageService)
+        public InvitesController(IShabashesManageService shabashesManageService, IWebHostEnvironment env)
         {
             _shabashesManageService = shabashesManageService;
+            _env = env;
         }
 
         [HttpPost("create")]
@@ -50,8 +55,12 @@ namespace Shabasher.API.Controllers
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");
 
-            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Pages/invite.html";
-            return PhysicalFile(absolutePath, "text/html");
+            var path = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "invite.html");
+
+            if (!System.IO.File.Exists(path))
+                return NotFound($"Invite page not found: {path}");
+
+            return PhysicalFile(path, "text/html");
         }
 
         [HttpGet("{id}/details")]
@@ -96,13 +105,15 @@ namespace Shabasher.API.Controllers
         [HttpGet("download")]
         public async Task<ActionResult> DownloadApk()
         {
-            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Files/shabasher-v0.1.apk";
+            var apkPath = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "shabasher-v0.1.apk");
 
-            if (!System.IO.File.Exists(absolutePath))
+            if (!System.IO.File.Exists(apkPath))
                 return NotFound();
 
-            var fileBytes = System.IO.File.ReadAllBytes(absolutePath);
-            return File(fileBytes, "application/vnd.android.package-archive", "shabasher-v0.1.apk");
+            if (!_contentTypeProvider.TryGetContentType(apkPath, out var contentType))
+                contentType = "application/vnd.android.package-archive";
+
+            return PhysicalFile(apkPath, contentType, "shabasher-v0.1.apk");
         }
     }
 }
