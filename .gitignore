@@ -437,3 +437,6 @@ fabric.properties
 
 # DotNetEnv
 .env
+
+# apk
+.apk

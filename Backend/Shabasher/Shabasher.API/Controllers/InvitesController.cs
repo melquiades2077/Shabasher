@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DotNetEnv;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -39,6 +40,21 @@ namespace Shabasher.API.Controllers
         }
 
         [HttpGet("{id}")]
+        public async Task<ActionResult> GetInvitePage(string id)
+        {
+            var invite = await _shabashesManageService.GetInviteAsync(id);
+            if (invite.IsFailure)
+                return NotFound(invite.Error);
+
+            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId);
+            if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
+                return BadRequest("Приглашение недействительно");
+
+            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Pages/invite.html";
+            return PhysicalFile(absolutePath, "text/html");
+        }
+
+        [HttpGet("{id}/details")]
         public async Task<ActionResult> GetShabashInfoViaLink(string id)
         {
             var invite = await _shabashesManageService.GetInviteAsync(id);
@@ -75,6 +91,18 @@ namespace Shabasher.API.Controllers
                 return BadRequest(response.Error);
 
             return Ok(response.Value);
+        }
+
+        [HttpGet("download")]
+        public async Task<ActionResult> DownloadApk()
+        {
+            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Files/shabasher-v0.1.apk";
+
+            if (!System.IO.File.Exists(absolutePath))
+                return NotFound();
+
+            var fileBytes = System.IO.File.ReadAllBytes(absolutePath);
+            return File(fileBytes, "application/vnd.android.package-archive", "shabasher-v0.1.apk");
         }
     }
 }
