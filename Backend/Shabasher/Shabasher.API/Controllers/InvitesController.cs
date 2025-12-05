@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DotNetEnv;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -11,15 +12,17 @@ namespace Shabasher.API.Controllers
     public class InvitesController : ControllerBase
     {
         private readonly IShabashesManageService _shabashesManageService;
+        private readonly IWebHostEnvironment _env;
 
         private string GetUserId()
         {
             return User.FindFirstValue("userId") ?? string.Empty;
         }
 
-        public InvitesController(IShabashesManageService shabashesManageService)
+        public InvitesController(IShabashesManageService shabashesManageService, IWebHostEnvironment env)
         {
             _shabashesManageService = shabashesManageService;
+            _env = env;
         }
 
         [HttpPost("create")]
@@ -39,6 +42,21 @@ namespace Shabasher.API.Controllers
         }
 
         [HttpGet("{id}")]
+        public async Task<ActionResult> GetInvitePage(string id)
+        {
+            var invite = await _shabashesManageService.GetInviteAsync(id);
+            if (invite.IsFailure)
+                return NotFound(invite.Error);
+
+            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId);
+            if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
+                return BadRequest("Приглашение недействительно");
+
+            var filePath = Path.Combine(_env.ContentRootPath, "Pages", "invite.html");
+            return PhysicalFile(filePath, "text/html");
+        }
+
+        [HttpGet("{id}/details")]
         public async Task<ActionResult> GetShabashInfoViaLink(string id)
         {
             var invite = await _shabashesManageService.GetInviteAsync(id);
@@ -75,6 +93,18 @@ namespace Shabasher.API.Controllers
                 return BadRequest(response.Error);
 
             return Ok(response.Value);
+        }
+
+        [HttpGet("download")]
+        public async Task<ActionResult> DownloadApk()
+        {
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", "shabasher-v0.1.apk");
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/vnd.android.package-archive", "shabasher-v0.1.apk");
         }
     }
 }
