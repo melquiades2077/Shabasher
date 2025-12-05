@@ -15,8 +15,7 @@ import kotlinx.coroutines.launch
 data class EventUiState(
     val isLoading: Boolean = true,
     val event: EventData? = null,
-    val error: String? = null,
-    val isUpdatingStatus: Boolean = false
+    val error: String? = null
 )
 
 class EventViewModel(
@@ -66,37 +65,20 @@ class EventViewModel(
         }
     }
 
-    //Обновление статуса участника
+    // Добавим функцию для обновления статуса участника на сервере
     fun updateParticipationStatusOnServer(eventId: String, newStatus: ParticipationStatus) {
-        if (ui.value.isUpdatingStatus) {
-            println("[EventViewModel] Кнопка заблокирована, пропускаем")
-            return
-        }
-
-        val oldEvent = ui.value.event
-        val oldStatus = oldEvent?.userStatus
-
-        ui.value = ui.value.copy(isUpdatingStatus = true)
-
         viewModelScope.launch {
             val result = repository.updateParticipationStatus(eventId, newStatus)
 
-            ui.value = ui.value.copy(isUpdatingStatus = false)
-
+            // Обработка результата
             if (result.isSuccess) {
                 val updatedEvent = ui.value.event?.copy(userStatus = newStatus)
                 ui.value = ui.value.copy(event = updatedEvent)
                 println("[EventViewModel] Статус обновлен на сервере: $newStatus")
             } else {
                 val error = result.exceptionOrNull()?.message ?: "Ошибка обновления статуса"
-                println("[EventViewModel] Ошибка: $error")
-
-                if (oldEvent != null && oldStatus != null) {
-                    ui.value = ui.value.copy(
-                        event = oldEvent.copy(userStatus = oldStatus),
-                        error = error
-                    )
-                }
+                println("[EventViewModel] Ошибка обновления статуса: $error")
+                ui.value = ui.value.copy(error = error)
             }
         }
     }
@@ -123,6 +105,7 @@ class EventViewModel(
 
         return try {
             val date = eventDto.startDate ?: ""
+
             val time = if (!eventDto.startTime.isNullOrEmpty()) {
                 if (eventDto.startTime.length >= 5) {
                     eventDto.startTime.substring(0, 5)
@@ -133,9 +116,6 @@ class EventViewModel(
                 ""
             }
 
-            // Определяем статус текущего пользователя из данных API
-            val userStatus = determineUserStatusFromDto(eventDto)
-
             EventData(
                 id = eventDto.id,
                 title = eventDto.name ?: "Без названия",
@@ -144,40 +124,11 @@ class EventViewModel(
                 time = time,
                 place = eventDto.address ?: "",
                 participants = convertParticipants(eventDto.participants),
-                userStatus = userStatus  // Используем реальный статус из API
+                userStatus = ParticipationStatus.INVITED
             )
         } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-    }
-
-    // Новая функция для определения статуса из DTO
-    private fun determineUserStatusFromDto(eventDto: GetEventResponse): ParticipationStatus {
-        // Для простоты: если есть участники, берем статус первого
-        // В реальности нужно найти текущего пользователя по ID
-        return if (eventDto.participants.isNotEmpty()) {
-            // Конвертируем числовой статус из API (0,1,2) в наш enum
-            val apiStatus = eventDto.participants.first().status
-            when (apiStatus) {
-                "1" -> ParticipationStatus.GOING
-                "2" -> ParticipationStatus.NOT_GOING
-                else -> ParticipationStatus.INVITED  // "0" или другой
-            }
-        } else {
-            ParticipationStatus.INVITED
-        }
-    }
-
-    // Обновляем convertStatus чтобы понимать числовые статусы
-    private fun convertStatus(status: String): ParticipationStatus {
-        return when (status) {
-            "1" -> ParticipationStatus.GOING
-            "2" -> ParticipationStatus.NOT_GOING
-            "0" -> ParticipationStatus.INVITED
-            "GOING" -> ParticipationStatus.GOING
-            "NOT_GOING" -> ParticipationStatus.NOT_GOING
-            else -> ParticipationStatus.INVITED
         }
     }
 
