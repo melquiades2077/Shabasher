@@ -50,7 +50,7 @@ namespace Shabasher.API.Controllers
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");
 
-            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/wwwroot/invite.html";
+            var absolutePath = "wwwroot/invite.html";
             return PhysicalFile(absolutePath, "text/html");
         }
 
@@ -96,7 +96,7 @@ namespace Shabasher.API.Controllers
         [HttpGet("download")]
         public async Task<ActionResult> DownloadApk()
         {
-            var absolutePath = "/home/user1/Shabasher/Backend/Shabasher/Shabasher.API/Files/shabasher-v0.1.apk";
+            var absolutePath = "wwwroot/shabasher-v0.1.apk";
 
             if (!System.IO.File.Exists(absolutePath))
                 return NotFound();
