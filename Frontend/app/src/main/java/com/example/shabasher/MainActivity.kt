@@ -48,11 +48,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavController
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
-import com.example.shabasher.ViewModels.ShareEventViewModelFactory
-import com.example.shabasher.data.network.InviteRepository
-import com.example.shabasher.data.network.EventsRepository
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -167,6 +162,7 @@ class MainActivity : ComponentActivity() {
 fun DeepLinkHandler(navController: NavController) {
     val context = LocalContext.current
 
+    // Handle Deep Link navigation
     LaunchedEffect(context) {
         val intent = (context as? ComponentActivity)?.intent
         val uri = intent?.data
@@ -174,8 +170,7 @@ fun DeepLinkHandler(navController: NavController) {
             if (it.scheme == "shabasher" && it.host == "event") {
                 val eventId = it.getQueryParameter("eventId")
                 eventId?.let { id ->
-                    addParticipantViaDeepLink(context, eventId)
-
+                    // Navigate to the Event Page
                     navController.navigate("${Routes.EVENT}/$id") {
                         popUpTo(Routes.MAIN) { inclusive = false }
                         launchSingleTop = true
@@ -184,4 +179,4 @@ fun DeepLinkHandler(navController: NavController) {
             }
         }
     }
-
+}
