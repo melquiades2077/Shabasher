@@ -176,7 +176,6 @@ fun EventContent(
         item {
             ParticipationSelector(
                 selected = event.userStatus,
-                isUpdating = vm.ui.value.isUpdatingStatus,
                 onSelect = { status ->
                     // Обновляем статус и отправляем на сервер
                     vm.updateParticipationStatusOnServer(event.id, status)

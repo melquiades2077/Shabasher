@@ -28,7 +28,6 @@ import com.example.shabasher.ui.theme.ShabasherTheme
 @Composable
 fun ParticipationSelector(
     selected: ParticipationStatus,
-    isUpdating: Boolean = false,
     onSelect: (ParticipationStatus) -> Unit
 ) {
     Column(
@@ -50,14 +49,12 @@ fun ParticipationSelector(
             ParticipationButton(
                 text = "Приду",
                 active = selected == ParticipationStatus.GOING,
-                isUpdating = isUpdating,
                 onClick = { onSelect(ParticipationStatus.GOING) }
             )
 
             ParticipationButton(
                 text = "Не смогу",
                 active = selected == ParticipationStatus.NOT_GOING,
-                isUpdating = isUpdating,
                 onClick = { onSelect(ParticipationStatus.NOT_GOING) }
             )
         }
@@ -67,7 +64,7 @@ fun ParticipationSelector(
 
 
 @Composable
-fun ParticipationButton(text: String, active: Boolean, isUpdating: Boolean = false, onClick: () -> Unit) {
+fun ParticipationButton(text: String, active: Boolean, onClick: () -> Unit) {
     val bg = if (active)
         MaterialTheme.colorScheme.primary
     else
@@ -82,7 +79,7 @@ fun ParticipationButton(text: String, active: Boolean, isUpdating: Boolean = fal
         modifier = Modifier
             .clip(RoundedCornerShape(30.dp))
             .background(bg)
-            .clickable(enabled = !isUpdating, onClick = onClick)
+            .clickable(onClick = onClick)
             .padding(vertical = 10.dp, horizontal = 16.dp)
             .width(115.dp)
             .height(30.dp),
@@ -99,7 +96,6 @@ fun ParticipationSelectorPreview() {
     ShabasherTheme(darkTheme = true) {
         ParticipationSelector(
             selected = ParticipationStatus.GOING,
-            isUpdating = false,
             onSelect = { }
         )
     }
