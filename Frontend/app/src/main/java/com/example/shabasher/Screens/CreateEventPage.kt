@@ -73,10 +73,9 @@ fun CreateEventPage(
     val showDatePicker = remember { mutableStateOf(false) }
     val showTimePicker = remember { mutableStateOf(false) }
 
-    // Когда событие создано → переход
     LaunchedEffect(ui.successEventId) {
         ui.successEventId?.let {
-            navController.navigate(Routes.EVENT) {
+            navController.navigate("${Routes.EVENT}/$it") {
                 popUpTo(Routes.MAIN) { inclusive = false }
                 launchSingleTop = true
             }
@@ -214,8 +213,7 @@ fun CreateEventPage(
                     }
                 )
             }
-
-            // Ошибка
+            //Время
             item {
                 ui.error?.let {
                     Text(
@@ -230,7 +228,6 @@ fun CreateEventPage(
             }
         }
 
-        // Date Picker
         if (showDatePicker.value) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker.value = false },
@@ -238,7 +235,6 @@ fun CreateEventPage(
             )
         }
 
-        // Time Picker
         if (showTimePicker.value) {
             TimePickerDialog(
                 onDismissRequest = { showTimePicker.value = false },

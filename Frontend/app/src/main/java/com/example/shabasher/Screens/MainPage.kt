@@ -144,7 +144,7 @@ fun MainPage(
                         events = ui.events,
                         onClick = { eventId ->
                             SafeNavigation.navigate {
-                                navController.navigate(/*"${Routes.EVENT}/$eventId"*/ Routes.EVENT)
+                                navController.navigate("${Routes.EVENT}/$eventId")
                             }
                         }
                     )

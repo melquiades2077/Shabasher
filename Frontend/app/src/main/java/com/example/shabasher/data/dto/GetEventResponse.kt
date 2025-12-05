@@ -6,9 +6,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GetEventResponse(
     val id: String,
-    val title: String? = null,
+    val name: String? = null,
     val description: String? = null,
     val address: String? = null,
+    val startDate: String? = null,
+    val startTime: String? = null,
     val dateTime: String? = null,
     val creatorId: String? = null,
     val createdAt: String? = null,

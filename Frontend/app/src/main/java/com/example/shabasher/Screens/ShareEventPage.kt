@@ -45,7 +45,7 @@ import com.example.shabasher.ui.theme.Typography
 fun ShareEventPage(
     navController: NavController,
     viewModel: ShareEventViewModel = viewModel(),
-    eventId: String = "123"
+    eventId: String
 ) {
     LaunchedEffect(eventId) {
         viewModel.init(eventId)
@@ -129,18 +129,18 @@ fun ShareEventPage(
 
 
                 // Кнопка "Продолжить"
-                ShabasherSecondaryButton(
-                    text = "Продолжить",
-                    onClick = {
-                        SafeNavigation.navigate {
-                            navController.navigate(Routes.EVENT) {
-                                popUpTo(Routes.MAIN) { inclusive = false }
-                                launchSingleTop = true
+                    ShabasherSecondaryButton(
+                        text = "Продолжить",
+                        onClick = {
+                            SafeNavigation.navigate {
+                                navController.navigate("${Routes.EVENT}/$eventId") {
+                                    popUpTo(Routes.MAIN) { inclusive = false }
+                                    launchSingleTop = true
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
             }
         }
     }

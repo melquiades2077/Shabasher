@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.data.dto.EventParticipantDto
+import com.example.shabasher.data.dto.GetEventResponse
 import com.example.shabasher.data.network.EventsRepository
 import kotlinx.coroutines.launch
 
@@ -24,10 +26,8 @@ class EventViewModel(
     var ui = mutableStateOf(EventUiState())
         private set
 
-    private var eventId: String = ""
-
     fun loadEvent(id: String) {
-        eventId = id
+        println("[EventViewModel] Загрузка события с ID: '$id'")
 
         ui.value = ui.value.copy(isLoading = true)
 
@@ -37,16 +37,30 @@ class EventViewModel(
             ui.value = when {
                 result.isSuccess -> {
                     val eventDto = result.getOrNull()
+                    println("[EventViewModel] Получен DTO: ${eventDto?.name}")
                     val eventData = convertToEventData(eventDto)
+                    if (eventData != null) {
+                        println("[EventViewModel] Событие успешно преобразовано: ${eventData.title}")
+                        EventUiState(
+                            isLoading = false,
+                            event = eventData
+                        )
+                    } else {
+                        println("[EventViewModel] Не удалось преобразовать данные события")
+                        EventUiState(
+                            isLoading = false,
+                            error = "Не удалось преобразовать данные события"
+                        )
+                    }
+                }
+                else -> {
+                    val error = result.exceptionOrNull()?.message ?: "Ошибка загрузки события"
+                    println("[EventViewModel] Ошибка: $error")
                     EventUiState(
                         isLoading = false,
-                        event = eventData
+                        error = error
                     )
                 }
-                else -> EventUiState(
-                    isLoading = false,
-                    error = result.exceptionOrNull()?.message ?: "Ошибка загрузки события"
-                )
             }
         }
     }
@@ -65,11 +79,56 @@ class EventViewModel(
 
         ui.value = ui.value.copy(event = updated)
 
-        // TODO: отправить на backend
+        println("[EventViewModel] Статус обновлен: $oldStatus -> $newStatus")
     }
 
-    private fun convertToEventData(eventDto: Any?): EventData? {
-        // TODO: реализовать конвертацию когда будет DTO для полного события
-        return null // временно возвращаем null
+    private fun convertToEventData(eventDto: GetEventResponse?): EventData? {
+        if (eventDto == null) return null
+
+        return try {
+            val date = eventDto.startDate ?: ""
+
+            val time = if (!eventDto.startTime.isNullOrEmpty()) {
+                if (eventDto.startTime.length >= 5) {
+                    eventDto.startTime.substring(0, 5)
+                } else {
+                    eventDto.startTime
+                }
+            } else {
+                ""
+            }
+
+            EventData(
+                id = eventDto.id,
+                title = eventDto.name ?: "Без названия",
+                description = eventDto.description ?: "",
+                date = date,
+                time = time,
+                place = eventDto.address ?: "",
+                participants = convertParticipants(eventDto.participants),
+                userStatus = ParticipationStatus.INVITED
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun convertParticipants(participantDtos: List<EventParticipantDto>): List<Participant> {
+        return participantDtos.map { dto ->
+            Participant(
+                id = dto.user.id,
+                name = dto.user.name ?: "Неизвестный",
+                status = convertStatus(dto.status)
+            )
+        }
+    }
+
+    private fun convertStatus(status: String): ParticipationStatus {
+        return when (status.uppercase()) {
+            "GOING" -> ParticipationStatus.GOING
+            "NOT_GOING" -> ParticipationStatus.NOT_GOING
+            else -> ParticipationStatus.INVITED
+        }
     }
 }

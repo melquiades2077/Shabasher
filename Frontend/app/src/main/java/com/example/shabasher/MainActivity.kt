@@ -44,6 +44,8 @@ import com.example.shabasher.ui.theme.ShabasherTheme
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -114,9 +116,13 @@ class MainActivity : ComponentActivity() {
                         ProfilePage(navController, themeViewModel, vm)
                     }
 
-                    composable(Routes.EVENT) {
+                    composable(
+                        route = "${Routes.EVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
                         val vm: EventViewModel = viewModel(factory = viewModelFactory)
-                        EventPage(navController, "1", vm)
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        EventPage(navController, eventId, vm)
                     }
 
                     composable(Routes.CREATEEVENT) {
@@ -128,13 +134,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable(Routes.SHAREEVENT) {
+                    composable(
+                        route = "${Routes.SHAREEVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
                         val vm: ShareEventViewModel = viewModel()
-                        ShareEventPage(navController, vm)
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        ShareEventPage(navController, vm, eventId)
                     }
 
-                    composable(Routes.PARTICIPANTS) {
-                        ParticipantsPage(navController, eventId = "1")
+                    composable(
+                        route = "${Routes.PARTICIPANTS}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        ParticipantsPage(navController, eventId = eventId)
                     }
                 }
             }

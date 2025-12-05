@@ -37,7 +37,6 @@ class EventsRepository(context: Context) {
         return try {
             println("[DEBUG] === НАЧАЛО ПОЛУЧЕНИЯ СОБЫТИЙ ===")
 
-            // 1. Получаем токен
             val token = tokenManager.getToken()
             if (token == null) {
                 println("[DEBUG] Токен не найден!")
@@ -47,7 +46,6 @@ class EventsRepository(context: Context) {
             val cleanToken = token.trim().removeSurrounding("\"")
             println("[DEBUG] Токен: ${cleanToken.take(20)}...")
 
-            // 2. Получаем email из SharedPreferences
             val userEmail = sharedPrefs.getString("user_email", null)
             if (userEmail == null) {
                 println("[DEBUG] Email не найден в SharedPreferences!")
@@ -56,7 +54,6 @@ class EventsRepository(context: Context) {
 
             println("[DEBUG] Email пользователя: $userEmail")
 
-            // 3. Получаем пользователя по email
             val userByEmailUrl = "$baseUrl/api/Users/by-email?email=${userEmail}"
             println("[DEBUG] Запрос пользователя по email: $userByEmailUrl")
 
@@ -72,7 +69,6 @@ class EventsRepository(context: Context) {
                 val user: UserResponse = userByEmailResponse.body()
                 println("[DEBUG] Получен пользователь по email: ${user.name}, ID: ${user.id}")
 
-                // 4. Получаем пользователя с участиями по ID
                 val userWithParticipations = getUserWithParticipations(cleanToken, user.id)
 
                 if (userWithParticipations.participations.isEmpty()) {
@@ -80,7 +76,6 @@ class EventsRepository(context: Context) {
                     return Result.success(emptyList())
                 }
 
-                // 5. Для каждого участия получаем полную информацию о событии
                 val events = mutableListOf<EventShortDto>()
 
                 for ((index, participation) in userWithParticipations.participations.withIndex()) {
@@ -88,8 +83,7 @@ class EventsRepository(context: Context) {
 
                     val event = getShabashById(cleanToken, participation.shabashId)
 
-                    // Используем безопасное извлечение полей
-                    val title = event?.title ?: participation.shabashName ?: "Без названия"
+                    val title = event?.name ?: participation.shabashName ?: "Без названия"
                     val dateTime = event?.dateTime ?: "Дата неизвестна"
 
                     events.add(
@@ -160,7 +154,7 @@ class EventsRepository(context: Context) {
 
                 try {
                     val event: GetEventResponse = response.body()
-                    println("[DEBUG] Событие успешно получено: ${event.title ?: "без названия"}")
+                    println("[DEBUG] Событие успешно получено: ${event.name ?: "без названия"}")
                     event
                 } catch (e: Exception) {
                     println("[DEBUG] Ошибка десериализации события: ${e.message}")
@@ -229,7 +223,7 @@ class EventsRepository(context: Context) {
     }
 
     // Получить событие по ID
-    suspend fun getEventById(id: String): Result<GetEventResponse> {
+    suspend fun getEventById(id: String): Result<GetEventResponse?> {
         return try {
             val token = tokenManager.getToken()
             if (token == null) {
@@ -244,8 +238,13 @@ class EventsRepository(context: Context) {
             }
 
             if (response.status.isSuccess()) {
-                val event: GetEventResponse = response.body()
-                Result.success(event)
+                try {
+                    val event: GetEventResponse = response.body()
+                    Result.success(event)
+                } catch (e: Exception) {
+                    println("[DEBUG] Ошибка десериализации события $id: ${e.message}")
+                    Result.success(null) // Возвращаем null вместо ошибки
+                }
             } else {
                 val errorText = response.body<String>()
                 Result.failure(Exception(errorText))
