@@ -37,6 +37,7 @@ import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.components.InputField
 import com.example.shabasher.ViewModels.NameViewModel
 import com.example.shabasher.ViewModels.NameViewModelFactory
+import com.example.shabasher.data.local.TokenManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +58,20 @@ fun NamePage(
 
     LaunchedEffect(viewModel.success.value) {
         if (viewModel.success.value) {
-            navController.navigate(Routes.MAIN) {
-                popUpTo(0) { inclusive = true }
+            // Проверяем, что токен действительно сохранен
+            val tokenManager = TokenManager(context)
+            val token = tokenManager.getToken()
+
+            if (token != null) {
+                println("DEBUG: Token found, navigating to MAIN")
+                navController.navigate(Routes.MAIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+                viewModel.success.value = false  // Сбрасываем флаг
+            } else {
+                println("DEBUG: ERROR - No token found!")
+                viewModel.error.value = "Ошибка сохранения токена"
             }
-            viewModel.success.value = false
         }
     }
 
