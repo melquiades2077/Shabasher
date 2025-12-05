@@ -11,13 +11,8 @@
   <component name="ChangeListManager">
     <list default="true" id="ed262617-0aaa-4ae5-b0c1-8ab5a31fec7b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/CreateEventPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/CreateEventPage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/MainPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/Screens/MainPage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/CreateEventViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/CreateEventViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/MainPageViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/ViewModels/MainPageViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/EventParticipantDto.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/EventParticipantDto.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/GetEventResponse.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/dto/GetEventResponse.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/EventsRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/shabasher/data/network/EventsRepository.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

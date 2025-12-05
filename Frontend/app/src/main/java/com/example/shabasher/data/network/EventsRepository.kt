@@ -86,28 +86,20 @@ class EventsRepository(context: Context) {
                 for ((index, participation) in userWithParticipations.participations.withIndex()) {
                     println("[DEBUG] Обработка участия $index: ${participation.shabashId} - ${participation.shabashName}")
 
-                    try {
-                        val event = getShabashById(cleanToken, participation.shabashId)
-                        events.add(
-                            EventShortDto(
-                                id = event.id,
-                                title = event.title,
-                                dateTime = event.dateTime,
-                                status = participation.status.toString()
-                            )
+                    val event = getShabashById(cleanToken, participation.shabashId)
+
+                    // Используем безопасное извлечение полей
+                    val title = event?.title ?: participation.shabashName ?: "Без названия"
+                    val dateTime = event?.dateTime ?: "Дата неизвестна"
+
+                    events.add(
+                        EventShortDto(
+                            id = participation.shabashId,
+                            title = title,
+                            dateTime = dateTime,
+                            status = participation.status.toString()
                         )
-                    } catch (e: Exception) {
-                        println("[DEBUG] Ошибка получения события: ${e.message}")
-                        // Добавляем с базовой информацией
-                        events.add(
-                            EventShortDto(
-                                id = participation.shabashId,
-                                title = participation.shabashName,
-                                dateTime = "Дата неизвестна",
-                                status = participation.status.toString()
-                            )
-                        )
-                    }
+                    )
 
                     // Небольшая задержка чтобы не нагружать сервер
                     if (index < userWithParticipations.participations.size - 1) {
@@ -150,18 +142,39 @@ class EventsRepository(context: Context) {
         return response.body()
     }
 
-    private suspend fun getShabashById(token: String, shabashId: String): GetEventResponse {
-        val response: HttpResponse = client.get("$baseUrl/api/Shabashes/by-id") {
-            header("Authorization", "Bearer $token")
-            parameter("id", shabashId)
-            timeout { requestTimeoutMillis = 5000 }
-        }
+    private suspend fun getShabashById(token: String, shabashId: String): GetEventResponse? {
+        return try {
+            println("[DEBUG] Получение события по ID: $shabashId")
 
-        if (!response.status.isSuccess()) {
-            throw Exception("Ошибка получения события: ${response.status}")
-        }
+            val response: HttpResponse = client.get("$baseUrl/api/Shabashes/by-id") {
+                header("Authorization", "Bearer $token")
+                parameter("id", shabashId)
+                timeout { requestTimeoutMillis = 5000 }
+            }
 
-        return response.body()
+            println("[DEBUG] Статус получения события: ${response.status}")
+
+            if (response.status.isSuccess()) {
+                val responseText = response.bodyAsText()
+                println("[DEBUG] Тело ответа события: $responseText")
+
+                try {
+                    val event: GetEventResponse = response.body()
+                    println("[DEBUG] Событие успешно получено: ${event.title ?: "без названия"}")
+                    event
+                } catch (e: Exception) {
+                    println("[DEBUG] Ошибка десериализации события: ${e.message}")
+                    // Возвращаем null если не можем распарсить
+                    null
+                }
+            } else {
+                println("[DEBUG] Ошибка HTTP при получении события: ${response.status}")
+                null
+            }
+        } catch (e: Exception) {
+            println("[DEBUG] Исключение при получении события: ${e.message}")
+            null
+        }
     }
 
     suspend fun createEvent(
