@@ -3,6 +3,7 @@ package com.example.shabasher.data.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class JoinEventRequest(
-    val shabashId: String
+data class UpdateUserStatusRequest(
+    val shabashId: String,
+    val status: Int
 )

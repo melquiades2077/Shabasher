@@ -37,8 +37,8 @@ class MainPageViewModel(
                 val eventList = dtoList.map { dto ->
                     EventShort(
                         id = dto.id,
-                        title = dto.title,
-                        date = formatDate(dto.dateTime),
+                        title = dto.name,
+                        date = formatDate(dto.startDate, dto.startTime),
                         status = dto.status
                     )
                 }
@@ -54,8 +54,8 @@ class MainPageViewModel(
         loadEvents()
     }
 
-    private fun formatDate(dateTime: String): String {
+    private fun formatDate(startDate: String, startTime: String): String {
         // TODO: реализовать парсинг даты
-        return dateTime
+        return "$startDate $startTime"  // Просто объединяем пока
     }
 }

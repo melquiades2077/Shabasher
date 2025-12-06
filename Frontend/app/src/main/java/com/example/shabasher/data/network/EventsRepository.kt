@@ -15,7 +15,6 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
-import io.ktor.http.*
 
 class EventsRepository(context: Context) {
     private val tokenManager = TokenManager(context)
@@ -90,7 +89,7 @@ class EventsRepository(context: Context) {
             val response: HttpResponse = client.patch("$baseUrl/api/Users/status") {
                 header("Authorization", "Bearer $cleanToken")
                 contentType(ContentType.Application.Json)
-                setBody(StatusUpdateRequest(
+                setBody(UpdateUserStatusRequest(
                     shabashId = eventId,
                     status = newStatus.code
                 ))
@@ -111,7 +110,7 @@ class EventsRepository(context: Context) {
 
 
     // Получить все события пользователя
-    suspend fun getEvents(): Result<List<EventShortDto>> {
+    suspend fun getEvents(): Result<List<ShabashShortResponse>> {
         return try {
             println("[DEBUG] === НАЧАЛО ПОЛУЧЕНИЯ СОБЫТИЙ ===")
 
@@ -154,7 +153,7 @@ class EventsRepository(context: Context) {
                     return Result.success(emptyList())
                 }
 
-                val events = mutableListOf<EventShortDto>()
+                val events = mutableListOf<ShabashShortResponse>()
 
                 for ((index, participation) in userWithParticipations.participations.withIndex()) {
                     println("[DEBUG] Обработка участия $index: ${participation.shabashId} - ${participation.shabashName}")
@@ -165,10 +164,11 @@ class EventsRepository(context: Context) {
                     val dateTime = event?.startDate ?: "Дата неизвестна"
 
                     events.add(
-                        EventShortDto(
+                        ShabashShortResponse(
                             id = participation.shabashId,
-                            title = title,
-                            dateTime = dateTime,
+                            name = title,
+                            startDate = dateTime,
+                            startTime = "00:00",
                             status = getEventStatus(participation.status)
                         )
                     )
@@ -259,7 +259,7 @@ class EventsRepository(context: Context) {
         }
     }
 
-    private suspend fun getShabashById(token: String, shabashId: String): GetEventResponse? {
+    private suspend fun getShabashById(token: String, shabashId: String): ShabashResponse? {
         return try {
             println("[DEBUG] Получение события по ID: $shabashId")
 
@@ -276,7 +276,7 @@ class EventsRepository(context: Context) {
                 println("[DEBUG] Тело ответа события: $responseText")
 
                 try {
-                    val event: GetEventResponse = response.body()
+                    val event: ShabashResponse = response.body()
                     println("[DEBUG] Событие успешно получено: ${event.name ?: "без названия"}")
                     event
                 } catch (e: Exception) {
@@ -310,7 +310,7 @@ class EventsRepository(context: Context) {
 
             val cleanToken = token.trim().removeSurrounding("\"")
 
-            val request = CreateEventRequest(
+            val request = CreateShabashRequest(
                 name = title,
                 description = description,
                 address = address,
@@ -346,7 +346,7 @@ class EventsRepository(context: Context) {
     }
 
     // Получить событие по ID
-    suspend fun getEventById(id: String): Result<GetEventResponse?> {
+    suspend fun getEventById(id: String): Result<ShabashResponse?> {
         return try {
             val token = tokenManager.getToken()
             if (token == null) {
@@ -362,7 +362,7 @@ class EventsRepository(context: Context) {
 
             if (response.status.isSuccess()) {
                 try {
-                    val event: GetEventResponse = response.body()
+                    val event: ShabashResponse = response.body()
                     Result.success(event)
                 } catch (e: Exception) {
                     println("[DEBUG] Ошибка десериализации события $id: ${e.message}")

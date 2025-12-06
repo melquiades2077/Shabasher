@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
-import com.example.shabasher.data.dto.EventParticipantDto
-import com.example.shabasher.data.dto.GetEventResponse
+import com.example.shabasher.data.dto.ShabashParticipantDto
+import com.example.shabasher.data.dto.ShabashResponse
 import com.example.shabasher.data.network.EventsRepository
 import kotlinx.coroutines.launch
 
@@ -118,7 +118,7 @@ class EventViewModel(
         println("[EventViewModel] Статус обновлен: $oldStatus -> $newStatus")
     }
 
-    private fun convertToEventData(eventDto: GetEventResponse?): EventData? {
+    private fun convertToEventData(eventDto: ShabashResponse?): EventData? {
         if (eventDto == null) return null
 
         return try {
@@ -153,7 +153,7 @@ class EventViewModel(
     }
 
     // Новая функция для определения статуса из DTO
-    private fun determineUserStatusFromDto(eventDto: GetEventResponse): ParticipationStatus {
+    private fun determineUserStatusFromDto(eventDto: ShabashResponse): ParticipationStatus {
         // Для простоты: если есть участники, берем статус первого
         // В реальности нужно найти текущего пользователя по ID
         return if (eventDto.participants.isNotEmpty()) {
@@ -181,7 +181,7 @@ class EventViewModel(
         }
     }
 
-    private fun convertParticipants(participantDtos: List<EventParticipantDto>): List<Participant> {
+    private fun convertParticipants(participantDtos: List<ShabashParticipantDto>): List<Participant> {
         return participantDtos.map { dto ->
             Participant(
                 id = dto.user.id,
