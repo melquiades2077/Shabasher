@@ -439,4 +439,4 @@ fabric.properties
 .env
 
 # apk
-.apk
+*.apk
