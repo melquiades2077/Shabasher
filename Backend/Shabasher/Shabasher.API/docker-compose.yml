@@ -23,7 +23,7 @@
       - ./certs:/app/certs:ro
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ASPNETCORE_URLS: http://0.0.0.0:5000;https://0.0.0.0:5001
+      ASPNETCORE_URLS: http://0.0.0.0:5000
       SSL_CERT_PATH: ${SSL_CERT_PATH:-/app/certs/certificate.pfx}
       SSL_CERT_PASSWORD: ${SSL_CERT_PASSWORD:-}
       DB_CONNECTION_STRING: Host=postgres;Port=5432;Database=${DB_NAME:-shabasher_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-123123123}
