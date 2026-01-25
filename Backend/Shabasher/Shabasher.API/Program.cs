@@ -1,5 +1,4 @@
 using DotNetEnv;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
@@ -12,6 +11,9 @@ using System.Security.Cryptography.X509Certificates;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+builder.WebHost.UseUrls("https://0.0.0.0:5001");
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -99,11 +101,7 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Shabasher API v1");
-        c.RoutePrefix = string.Empty;
-    });
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
