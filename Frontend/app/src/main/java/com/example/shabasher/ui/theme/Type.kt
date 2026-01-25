@@ -19,7 +19,7 @@ val Typography = Typography(
     displayMedium = TextStyle(
         fontFamily = ShabasherFont,
         fontWeight = FontWeight.ExtraBold,
-        fontSize = 32.sp,
+        fontSize = 38.sp,
         lineHeight = 38.sp
     ),
 

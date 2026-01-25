@@ -13,12 +13,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Shabasher">
+        android:theme="@style/Theme.Shabasher.Splash">
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Shabasher">
+            android:exported="true">
 
             <!-- Это intent-filter для обработки стандартного запуска приложения -->
             <intent-filter>
