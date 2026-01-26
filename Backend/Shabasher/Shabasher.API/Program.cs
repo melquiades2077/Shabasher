@@ -25,11 +25,7 @@ builder.WebHost.ConfigureKestrel(options =>
     {
         listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
         
-        if (builder.Environment.IsDevelopment())
-        {
-            listenOptions.UseHttps();
-        }
-        else if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
+        if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
         {
             var cert = string.IsNullOrEmpty(certPassword)
                 ? new X509Certificate2(certPath)
