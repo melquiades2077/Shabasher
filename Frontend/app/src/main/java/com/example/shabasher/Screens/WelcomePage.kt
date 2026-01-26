@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -21,13 +22,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.shabasher.components.ShabasherPrimaryButton
 import com.example.shabasher.components.ShabasherSecondaryButton
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.components.ShimmeringText
+import com.example.shabasher.ui.theme.ShabasherFont
 
 @Composable
 fun Welcome(
@@ -48,12 +53,24 @@ fun Welcome(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineLarge
             )
-            Text(
+            ShimmeringText(
+                "Шабашер",
+                Color(0xFFfcc600),
+                textStyle = LocalTextStyle.current.copy(
+                    fontFamily = ShabasherFont,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 38.sp,
+                    lineHeight = 38.sp
+
+                )
+            )
+
+                /*Text(
                 "Шабашер",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary
-            )
+            )*/
         }
 
         Box(
@@ -76,7 +93,7 @@ fun Welcome(
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                MaterialTheme.colorScheme.background
+                                MaterialTheme.colorScheme.scrim
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY

@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.shabasher.R
 
-private val ShabasherFont = FontFamily(
+public val ShabasherFont = FontFamily(
     Font(R.font.shabasher_font)
 )
 

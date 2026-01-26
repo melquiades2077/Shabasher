@@ -14,6 +14,8 @@ val LightAccent = Color(0xFFF09C00)
 val LightInputs = Color(0xFFE3E3E3)
 val LightTertiary = Color(0xFFF09C00)
 
+val LightScrim = Color.Transparent
+
 val DarkTextPrimary = Color(0xFFEAEAEA)
 val DarkTextSecondary = Color(0xFFAFAFAF)
 
@@ -26,6 +28,7 @@ val DarkButtons = Color(0xFF3D3D3D)
 val DarkAccent = Color(0xFFF09C00)
 val DarkInputs = Color(0xFF323232)
 val DarkTertiary = Color(0xFFF09C00)
+val DarkScrim = Color(0xFF121212)
 val LightTextPrimary = Color(0xFF0D0D0D)
 val LightTextSecondary = Color(0xFF757575)
 
