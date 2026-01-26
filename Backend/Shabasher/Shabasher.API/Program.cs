@@ -12,8 +12,7 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://0.0.0.0:5000");
-builder.WebHost.UseUrls("https://0.0.0.0:5001");
+builder.WebHost.UseUrls("http://0.0.0.0:5000", "https://0.0.0.0:5001");
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -99,8 +98,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
