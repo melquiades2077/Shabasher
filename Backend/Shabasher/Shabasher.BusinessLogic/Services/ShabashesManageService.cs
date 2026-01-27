@@ -12,7 +12,7 @@ namespace Shabasher.BusinessLogic.Services
 {
     public class ShabashesManageService : IShabashesManageService
     {
-        private const string BASE_URL = "http://213.171.27.237:5000";
+        private const string BASE_URL = "https://shabasher.duckdns.org:5001";
 
         private readonly ShabasherDbContext _dbcontext;
 
