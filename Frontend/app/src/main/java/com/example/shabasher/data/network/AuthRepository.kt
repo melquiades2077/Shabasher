@@ -31,11 +31,11 @@ class AuthRepository(context: Context) {
 
     private val baseUrl = Config.BASE_URL
 
-    suspend fun register(email: String, password: String): Result<Unit> {
+    suspend fun register(name: String, email: String, password: String): Result<Unit> {
         return try {
             val response = client.post("$baseUrl/api/auth/register") {
                 contentType(ContentType.Application.Json)
-                setBody(RegisterRequest(email.substringBefore("@"), email, password))
+                setBody(RegisterRequest(name, email, password))
             }
 
             if (response.status.isSuccess()) {

@@ -87,5 +87,20 @@ namespace Shabasher.API.Controllers
 
             return Ok(shabashId);
         }
+
+        [HttpPatch("leave")]
+        public async Task<ActionResult> LeaveShabash([FromQuery]string shabashId)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var response = await _shabashesManageService.LeaveShabashAsync(userId, shabashId);
+
+            if (response.IsFailure)
+                return BadRequest(response.Error);
+
+            return Ok();
+        }
     }
 }

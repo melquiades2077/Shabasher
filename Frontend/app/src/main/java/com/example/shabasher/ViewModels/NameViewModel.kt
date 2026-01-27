@@ -28,6 +28,7 @@ class NameViewModel(
     private val nameRepo = NameRepository(context)
 
     fun submit() {
+        success.value = false
         val value = name.value.trim()
 
         // --- 1) Проверка имени ---
@@ -47,7 +48,7 @@ class NameViewModel(
         viewModelScope.launch {
 
             // --- 2) REGISTER FIRST ---
-            val register = authRepo.register(email, password)
+            val register = authRepo.register(value, email, password)
             if (register.isFailure) {
                 error.value = register.exceptionOrNull()?.message ?: "Ошибка регистрации"
                 loading.value = false
@@ -78,6 +79,10 @@ class NameViewModel(
                 return@launch
             }
 
+            success.value = true
+
+            /*
+            ЭТО ВАЩЕ НЕ ЗНАЮ ЧО. НЕЙРОШЛАК
             // --- 6) SAVE NAME ---
             val result = nameRepo.setUserName(userId, value, token)
 
@@ -88,6 +93,7 @@ class NameViewModel(
             }
 
             loading.value = false
+                         */
         }
     }
 }

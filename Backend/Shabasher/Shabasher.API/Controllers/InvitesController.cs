@@ -102,8 +102,8 @@ namespace Shabasher.API.Controllers
             return Ok(response.Value);
         }
 
-        [HttpGet("download")]
-        public async Task<ActionResult> DownloadApk()
+        [HttpGet("download/{fileName?}")]
+        public async Task<ActionResult> DownloadApk(string fileName = null)
         {
             var apkPath = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "shabasher-v0.1.apk");
 
