@@ -105,15 +105,28 @@ namespace Shabasher.API.Controllers
         [HttpGet("download/{fileName?}")]
         public async Task<ActionResult> DownloadApk(string fileName = null)
         {
-            var apkPath = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "shabasher-v0.1.apk");
+            var filesDirectory = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+
+            var apkFiles = Directory.GetFiles(filesDirectory, "*.apk");
+
+            if (apkFiles.Length == 0)
+                return NotFound("No APK files found");
+
+            var latestFile = apkFiles
+                .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+                .FirstOrDefault();
+
+            string apkPath = latestFile;
 
             if (!System.IO.File.Exists(apkPath))
                 return NotFound();
 
+            var fileInfo = new FileInfo(apkPath);
+
             if (!_contentTypeProvider.TryGetContentType(apkPath, out var contentType))
                 contentType = "application/vnd.android.package-archive";
 
-            return PhysicalFile(apkPath, contentType, "shabasher-v0.1.apk");
+            return PhysicalFile(apkPath, contentType, fileInfo.Name);
         }
     }
 }
