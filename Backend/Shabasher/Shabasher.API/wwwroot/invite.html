@@ -146,13 +146,13 @@
 
   <script>
       // Константы
-      const APK_URL = "http://213.171.27.237:5000/api/invites/download/shabasher-v0.1.apk";
-      const API_BASE_URL = "http://213.171.27.237:5000/api/invites"; // Относительный путь
+      const APK_URL = "https://shabasher.duckdns.org:5001/api/invites/download/shabasher-v0.1.apk";
+      const API_BASE_URL = "https://shabasher.duckdns.org:5001/api/invites"; // Относительный путь
 
       // Функция для получения inviteId из URL
       function getInviteIdFromPath() {
-          // Пример: http://213.171.27.237:5000/invites/abc123
-          // или http://213.171.27.237:5000/api/invites/abc123
+          // Пример: https://shabasher.duckdns.org:5001/invites/abc123
+          // или https://shabasher.duckdns.org:5001/api/invites/abc123
           const pathSegments = window.location.pathname.split('/').filter(seg => seg);
           
           // Ищем inviteId (последний сегмент в пути)
