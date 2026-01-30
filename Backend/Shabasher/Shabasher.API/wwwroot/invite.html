@@ -146,7 +146,7 @@
 
   <script>
       // Базовый URL API: по умолчанию текущий origin (относительные пути)
-      // Чтобы задать другой сервер, добавьте перед скриптом: <script>window.__API_ORIGIN__ = "https://shabasher.duckdns.org";</script>
+      // Чтобы задать другой сервер, добавьте перед скриптом: <script>window.__API_ORIGIN__ = "https://shabasher.duckdns.org";
       const API_ORIGIN = (typeof window.__API_ORIGIN__ !== "undefined" && window.__API_ORIGIN__) ? window.__API_ORIGIN__.replace(/\/$/, "") : "";
       const APK_URL = API_ORIGIN + "/api/invites/download/shabasher-v0.1.apk";
       const API_BASE_URL = API_ORIGIN + "/api/invites";
