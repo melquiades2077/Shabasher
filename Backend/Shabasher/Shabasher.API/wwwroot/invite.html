@@ -145,14 +145,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
-      // Константы
-      const APK_URL = "https://shabasher.duckdns.org:5001/api/invites/download/shabasher-v0.1.apk";
-      const API_BASE_URL = "https://shabasher.duckdns.org:5001/api/invites"; // Относительный путь
+      // Базовый URL API: по умолчанию текущий origin (относительные пути)
+      // Чтобы задать другой сервер, добавьте перед скриптом: <script>window.__API_ORIGIN__ = "https://shabasher.duckdns.org";</script>
+      const API_ORIGIN = (typeof window.__API_ORIGIN__ !== "undefined" && window.__API_ORIGIN__) ? window.__API_ORIGIN__.replace(/\/$/, "") : "";
+      const APK_URL = API_ORIGIN + "/api/invites/download/shabasher-v0.1.apk";
+      const API_BASE_URL = API_ORIGIN + "/api/invites";
 
       // Функция для получения inviteId из URL
       function getInviteIdFromPath() {
-          // Пример: https://shabasher.duckdns.org:5001/invites/abc123
-          // или https://shabasher.duckdns.org:5001/api/invites/abc123
+          // Пример: /api/invites/abc123 → inviteId = abc123
           const pathSegments = window.location.pathname.split('/').filter(seg => seg);
           
           // Ищем inviteId (последний сегмент в пути)

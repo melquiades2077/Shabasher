@@ -16,8 +16,8 @@ services:
     build:
       context: ../..
       dockerfile: Shabasher/Shabasher.API/Dockerfile
-    expose:
-      - "5000"
+    ports:
+      - "5000:5000"
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://0.0.0.0:5000
