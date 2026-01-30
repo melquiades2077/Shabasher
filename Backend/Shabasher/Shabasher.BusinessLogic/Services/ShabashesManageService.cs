@@ -191,6 +191,9 @@ namespace Shabasher.BusinessLogic.Services
             if (shabashParticipant == null)
                 return Result.Failure("Пользователь не является участником шабаша");
 
+            if (shabashParticipant.Shabash.Participants.Count == 1)
+                _dbcontext.Shabashes.Remove(shabashParticipant.Shabash);
+
             _dbcontext.ShabashParticipants.Remove(shabashParticipant);
             await _dbcontext.SaveChangesAsync();
 
