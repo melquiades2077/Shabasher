@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Shabasher.Core.Interfaces;
 using Shabasher.Core.Models;
 using Shabasher.Core.DTOs;
@@ -12,9 +12,8 @@ namespace Shabasher.BusinessLogic.Services
 {
     public class ShabashesManageService : IShabashesManageService
     {
-        private const string BASE_URL = "https://shabasher.duckdns.org:5001";
-
         private readonly ShabasherDbContext _dbcontext;
+        private readonly string _baseUrl = Environment.GetEnvironmentVariable("BASE_URL")?.TrimEnd('/') ?? "https://shabasher.duckdns.org";
 
         public ShabashesManageService(ShabasherDbContext dbContext)
         {
@@ -134,7 +133,7 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext.Invites.Add(InviteEntityMapper.ToEntity(invite));
             await _dbcontext.SaveChangesAsync();
 
-            var link = $"{BASE_URL}/api/invites/{invite.Id}";
+            var link = $"{_baseUrl}/api/invites/{invite.Id}";
 
             return Result.Success(link);
         }

@@ -1,4 +1,5 @@
 using DotNetEnv;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
@@ -6,33 +7,12 @@ using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
 using Shabasher.DataManage;
-using System.Security.Cryptography.X509Certificates;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://0.0.0.0:5000", "https://0.0.0.0:5001");
-
-builder.WebHost.ConfigureKestrel(options =>
-{
-    var httpsPort = 5001;
-    var certPath = Environment.GetEnvironmentVariable("SSL_CERT_PATH");
-    var certPassword = Environment.GetEnvironmentVariable("SSL_CERT_PASSWORD");
-
-    options.ListenAnyIP(httpsPort, listenOptions =>
-    {
-        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-        
-        if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
-        {
-            var cert = string.IsNullOrEmpty(certPassword)
-                ? new X509Certificate2(certPath)
-                : new X509Certificate2(certPath, certPassword);
-            listenOptions.UseHttps(cert);
-        }
-    });
-});
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 var jwtHours = Environment.GetEnvironmentVariable("JWT_HOURS");
@@ -71,10 +51,18 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddHttpsRedirection(options =>
 {
     options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 5001;
+    options.HttpsPort = 443;
 });
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
 builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
@@ -93,12 +81,15 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UseForwardedHeaders();
+app.UseHttpsRedirection();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
