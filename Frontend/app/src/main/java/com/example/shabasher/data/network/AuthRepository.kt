@@ -52,6 +52,7 @@ class AuthRepository(context: Context) {
 
     suspend fun login(email: String, password: String): Result<Unit> {
         return try {
+            // 1. Авторизация и получение токена
             val response: HttpResponse = client.post("$baseUrl/api/auth/login") {
                 contentType(ContentType.Application.Json)
                 setBody(LoginRequest(email, password))
@@ -59,18 +60,35 @@ class AuthRepository(context: Context) {
 
             if (response.status.isSuccess()) {
                 val rawToken: String = response.body()
-                println("[AuthRepository] RAW TOKEN BODY: '$rawToken'")
-
                 val cleanToken = rawToken.trim().removeSurrounding("\"")
-                println("[AuthRepository] CLEAN TOKEN: '$cleanToken'")
 
-                // Сохраняем email для дальнейшего использования
+                tokenManager.saveToken(cleanToken)
+                println("[AuthRepository] Токен сохранён")
+
+                // 2. Сохраняем email
                 sharedPrefs.edit()
                     .putString("user_email", email)
                     .apply()
-                println("[AuthRepository] Email сохранен: $email")
+                println("[AuthRepository] Email сохранён: $email")
 
-                tokenManager.saveToken(cleanToken)
+                // 3. 🔥 Получаем ID пользователя по email (используя новый токен)
+                val userResponse: HttpResponse = client.get("$baseUrl/api/Users/by-email") {
+                    header("Authorization", "Bearer $cleanToken")
+                    parameter("email", email)
+                }
+
+                if (userResponse.status.isSuccess()) {
+                    val user: UserResponse = userResponse.body()
+                    val userId = user.id
+
+                    // 4. 🔥 Сохраняем актуальный user_id
+                    tokenManager.saveUserId(userId)
+                    println("[AuthRepository] User ID сохранён: $userId")
+                } else {
+                    println("[AuthRepository] Не удалось получить user ID после входа")
+                    // Можно продолжить без ID, но лучше не скрывать ошибку
+                }
+
                 Result.success(Unit)
             } else {
                 val errorText = response.body<String>()

@@ -1,5 +1,7 @@
 package com.example.shabasher.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventCard(
     title: String,
@@ -81,7 +84,7 @@ fun EventCard(
 
             // Описание (увеличено количество строк)
             Text(
-                text = description,
+                text = description.formatAsRussianDate(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
                 maxLines = 3,                     // ← больше строк
@@ -98,11 +101,4 @@ fun EventCard(
             )
         }
     }
-}
-
-
-@PreviewLightDark
-@Composable
-fun ShabashContainerPrview2() {
-    EventCard("Тусовка", "26 февраля 2026 г.", "Событие завершено", {})
 }

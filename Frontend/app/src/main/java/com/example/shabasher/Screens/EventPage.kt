@@ -1,6 +1,8 @@
 package com.example.shabasher.Screens
 
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +46,7 @@ import com.example.shabasher.components.ServiceCard
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.ViewModels.EventUiState
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventPage(
@@ -146,6 +149,7 @@ fun LoadingScreen() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventContent(
     event: com.example.shabasher.Model.EventData,
@@ -180,9 +184,8 @@ fun EventContent(
         item {
             ParticipationSelector(
                 selected = event.userStatus,
-                isUpdating = vm.ui.value.isUpdatingStatus,
+                isUpdating = vm.ui.value.isUpdatingStatus || vm.ui.value.isJoining, // ← блокируем, если joining
                 onSelect = { status ->
-                    // Обновляем статус и отправляем на сервер
                     vm.updateMyParticipationStatus(status)
                 }
             )

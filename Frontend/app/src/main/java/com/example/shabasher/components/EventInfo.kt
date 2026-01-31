@@ -1,5 +1,7 @@
 package com.example.shabasher.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun String.formatAsRussianDate(): String {
+    return LocalDate.parse(this)
+        .format(DateTimeFormatter.ofPattern("d MMMM yyyy 'г.'", Locale("ru", "RU")))
+}
 @Composable
 fun EventInfo(
     title: String = "Заголовок",
@@ -76,6 +88,7 @@ fun EventInfo(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventMoreInfo(
     date: String = "12 декабря 2026 г.",
@@ -99,7 +112,7 @@ fun EventMoreInfo(
             style = MaterialTheme.typography.titleMedium
         )
         Column() {
-            InfoRow(icon = Icons.Default.CalendarMonth, label = date)
+            InfoRow(icon = Icons.Default.CalendarMonth, label = date.formatAsRussianDate())
             InfoRow(icon = Icons.Default.LocationOn, label = place)
             InfoRow(icon = Icons.Default.AccessTime, label = time)
         }

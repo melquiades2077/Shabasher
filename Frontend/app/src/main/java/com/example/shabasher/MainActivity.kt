@@ -120,11 +120,18 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "${Routes.EVENT}/{eventId}",
-                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                        route = "${Routes.EVENT}/{eventId}?inviteId={inviteId}",
+                        arguments = listOf(
+                            navArgument("eventId") { type = NavType.StringType },
+                            navArgument("inviteId") {
+                                type = NavType.StringType
+                                nullable = true
+                            }
+                        )
                     ) { backStackEntry ->
                         val vm: EventViewModel = viewModel(factory = viewModelFactory)
                         val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        // inviteId больше не используется в логике
                         EventPage(navController, eventId, vm)
                     }
 
@@ -156,6 +163,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }
 
 @Composable

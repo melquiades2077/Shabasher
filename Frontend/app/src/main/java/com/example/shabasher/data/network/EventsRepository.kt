@@ -2,6 +2,8 @@ package com.example.shabasher.data.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.shabasher.Model.ParticipationStatus
 import com.example.shabasher.data.dto.*
 import com.example.shabasher.data.local.TokenManager
@@ -16,6 +18,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import io.ktor.http.*
+import java.time.LocalDate
 
 class EventsRepository(context: Context) {
     private val tokenManager = TokenManager(context)
@@ -111,6 +114,7 @@ class EventsRepository(context: Context) {
 
 
     // Получить все события пользователя
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getEvents(): Result<List<EventShortDto>> {
         return try {
             println("[DEBUG] === НАЧАЛО ПОЛУЧЕНИЯ СОБЫТИЙ ===")
@@ -169,7 +173,7 @@ class EventsRepository(context: Context) {
                             id = participation.shabashId,
                             title = title,
                             dateTime = dateTime,
-                            status = getEventStatus(participation.status)
+                            status = getEventStatus(dateTime)
                         )
                     )
 
@@ -381,11 +385,17 @@ class EventsRepository(context: Context) {
 }
 
 
-fun getEventStatus(status: String): String {
-    return when (status) {
-        "0" -> "Скоро начнётся" // или "Ожидается", "Впереди"
-        "1" -> "Завершено" // или "Прошло", "Состоялось"
-        else -> "Статус неизвестен"
-    }
+@RequiresApi(Build.VERSION_CODES.O)
+fun getEventStatus(eventDateStr: String): String {
+    val eventDate = LocalDate.parse(eventDateStr)
+    val today = LocalDate.now()
 
+    return when {
+        eventDate.isBefore(today) -> "Событие завершено"
+        eventDate.isEqual(today) -> "Сегодня"
+        eventDate.isEqual(today.plusDays(1)) -> "Завтра"
+        eventDate.isBefore(today.plusDays(7)) -> "Скоро"
+        else -> "Планируется"
+    }
 }
+
