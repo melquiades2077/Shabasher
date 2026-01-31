@@ -22,6 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.shabasher.Model.Participant
 import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.components.EventInfo
 import com.example.shabasher.components.EventMoreInfo
@@ -37,6 +42,7 @@ import com.example.shabasher.components.ParticipationSelector
 import com.example.shabasher.components.ParticipatorsCard
 import com.example.shabasher.components.ServiceCard
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.ViewModels.EventUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +64,7 @@ fun EventPage(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = ui.event?.title ?: "Событие",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = ""
                     )
                 },
                 navigationIcon = {
@@ -179,7 +183,7 @@ fun EventContent(
                 isUpdating = vm.ui.value.isUpdatingStatus,
                 onSelect = { status ->
                     // Обновляем статус и отправляем на сервер
-                    vm.updateParticipationStatusOnServer(event.id, status)
+                    vm.updateMyParticipationStatus(status)
                 }
             )
         }

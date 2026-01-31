@@ -66,7 +66,8 @@ fun EventInfo(
         }
 
         Text(title,
-            style = MaterialTheme.typography.titleLarge)
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center)
         Text(description,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.error,

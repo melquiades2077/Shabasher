@@ -27,6 +27,7 @@ class EventViewModel(
     var ui = mutableStateOf(EventUiState())
         private set
 
+
     fun loadEvent(id: String) {
         println("[EventViewModel] Загрузка события с ID: '$id'")
 
@@ -66,6 +67,57 @@ class EventViewModel(
         }
     }
 
+    fun updateMyParticipationStatus(newStatus: ParticipationStatus) {
+        val currentState = ui.value
+        val currentEvent = currentState.event ?: return
+
+        // Получаем ID текущего пользователя (лучше кэшировать один раз при старте)
+        viewModelScope.launch {
+            val currentUserId = repository.getCurrentUserId()
+            if (currentUserId == null) {
+                // Обработка ошибки: не авторизован
+                return@launch
+            }
+
+            // === 1. Оптимистичное обновление UI ===
+            val updatedParticipants = currentEvent.participants.map { participant ->
+                if (participant.id == currentUserId) {
+                    participant.copy(status = newStatus)
+                } else {
+                    participant
+                }
+            }
+
+            val optimisticEvent = currentEvent.copy(
+                userStatus = newStatus,
+                participants = updatedParticipants
+            )
+
+            // Обновляем состояние с isUpdating = true
+            ui.value = currentState.copy(
+                event = optimisticEvent,
+                isUpdatingStatus = true,
+                error = null
+            )
+
+            // === 2. Отправляем запрос на сервер ===
+            val result = repository.updateParticipationStatus(currentEvent.id, newStatus)
+
+            // === 3. Обрабатываем результат ===
+            if (result.isSuccess) {
+                // Успех — оставляем оптимистичное состояние
+                ui.value = ui.value.copy(isUpdatingStatus = false)
+            } else {
+                // Ошибка — откатываем
+                ui.value = currentState.copy(
+                    isUpdatingStatus = false,
+                    error = "Не удалось обновить статус: ${result.exceptionOrNull()?.message}"
+                )
+                // TODO: показать Snackbar через SharedFlow/StateFlow
+            }
+        }
+    }
+
     //Обновление статуса участника
     fun updateParticipationStatusOnServer(eventId: String, newStatus: ParticipationStatus) {
         if (ui.value.isUpdatingStatus) {
@@ -101,22 +153,6 @@ class EventViewModel(
         }
     }
 
-    fun updateParticipation(status: ParticipationStatus) {
-        val current = ui.value.event ?: return
-        val oldStatus = current.userStatus
-
-        val newStatus =
-            if (oldStatus == status)
-                ParticipationStatus.INVITED
-            else
-                status
-
-        val updated = current.copy(userStatus = newStatus)
-
-        ui.value = ui.value.copy(event = updated)
-
-        println("[EventViewModel] Статус обновлен: $oldStatus -> $newStatus")
-    }
 
     private fun convertToEventData(eventDto: GetEventResponse?): EventData? {
         if (eventDto == null) return null
