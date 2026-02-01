@@ -182,21 +182,34 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result> LeaveShabashAsync(string userId, string shabashId)
         {
-            var shabashParticipant = await _dbcontext.ShabashParticipants
-                .Include(sp => sp.User)
-                .Include(sp => sp.Shabash)
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
 
-            if (shabashParticipant == null)
-                return Result.Failure("Пользователь не является участником шабаша");
+            try
+            {
+                var shabashParticipant = await _dbcontext.ShabashParticipants
+                    .Include(sp => sp.User)
+                    .Include(sp => sp.Shabash)
+                    .FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
 
-            if (shabashParticipant.Shabash.Participants.Count == 1)
-                _dbcontext.Shabashes.Remove(shabashParticipant.Shabash);
+                if (shabashParticipant == null)
+                    return Result.Failure("Пользователь не является участником шабаша");
 
-            _dbcontext.ShabashParticipants.Remove(shabashParticipant);
-            await _dbcontext.SaveChangesAsync();
+                var participantsCount = await _dbcontext.ShabashParticipants
+                    .CountAsync(p => p.ShabashId == shabashId);
 
-            return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
+                _dbcontext.ShabashParticipants.Remove(shabashParticipant);
+
+                if (participantsCount == 0)
+                    _dbcontext.Shabashes.Remove(shabashParticipant.Shabash);
+
+                await _dbcontext.SaveChangesAsync();
+
+                return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
+            }
+            catch(Exception ex) {
+                await transaction.RollbackAsync();
+                return Result.Failure($"Ошибка при выходе из шабаша: {ex.Message}");
+            }
         }
     }
 }

@@ -36,7 +36,6 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Let's Encrypt: монтируем весь каталог, чтобы симлинки live/* -> archive/* работали
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - shabasher
