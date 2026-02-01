@@ -199,10 +199,11 @@ namespace Shabasher.BusinessLogic.Services
 
                 _dbcontext.ShabashParticipants.Remove(shabashParticipant);
 
-                if (participantsCount == 0)
+                if (participantsCount == 1)
                     _dbcontext.Shabashes.Remove(shabashParticipant.Shabash);
 
                 await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
             }
