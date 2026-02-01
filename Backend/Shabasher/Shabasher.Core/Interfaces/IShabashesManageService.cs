@@ -14,5 +14,6 @@ namespace Shabasher.Core.Interfaces
         Task<Result<Invite>> GetInviteAsync(string inviteId);
         Task<Result<UserShabashParticipationResponse>> JoinShabashAsync(string userId, string shabashId);
         Task<Result> LeaveShabashAsync(string userId, string shabashId);
+        Task<Result<string>> UpdateParticipantRoleAsync(string shabashId, string userId, string adminId, ShabashRole role);
     }
 }

@@ -207,10 +207,31 @@ namespace Shabasher.BusinessLogic.Services
 
                 return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 await transaction.RollbackAsync();
                 return Result.Failure($"Ошибка при выходе из шабаша: {ex.Message}");
             }
+        }
+
+        public async Task<Result<string>> UpdateParticipantRoleAsync(string shabashId, string userId, string adminId, ShabashRole role)
+        {
+            var spUser = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+            var spAdmin = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == adminId && p.ShabashId == shabashId);
+
+            if (spUser == null || spAdmin == null)
+                return Result.Failure<string>("Участник шабаша не найден");
+
+            if (spAdmin.Role != ShabashRole.Admin)
+                return Result.Failure<string>("У участника недостаточно прав");
+
+            if (adminId == userId && role != ShabashRole.Admin)
+                return Result.Failure<string>("Нужен хотя бы один админ");
+
+            spUser.Role = role;
+            await _dbcontext.SaveChangesAsync();
+
+            return Result.Success(spUser.UserId);
         }
     }
 }
