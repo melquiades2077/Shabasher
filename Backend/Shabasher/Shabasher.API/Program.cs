@@ -52,18 +52,18 @@ builder.Services.AddSwaggerGen(options =>
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
+//builder.Services.Configure<ForwardedHeadersOptions>(options =>
+//{
+//    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+//    options.KnownNetworks.Clear();
+//    options.KnownProxies.Clear();
+//});
 
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 443;
-});
+//builder.Services.AddHttpsRedirection(options =>
+//{
+//    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
+//    options.HttpsPort = 443;
+//});
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
 builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
@@ -81,8 +81,8 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-app.UseForwardedHeaders();
-app.UseHttpsRedirection();
+//app.UseForwardedHeaders();
+//app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())
 {

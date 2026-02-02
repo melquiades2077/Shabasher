@@ -218,22 +218,42 @@ namespace Shabasher.BusinessLogic.Services
 
         public async Task<Result<string>> UpdateParticipantRoleAsync(string shabashId, string userId, string adminId, ShabashRole role)
         {
-            var spUser = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
-            var spAdmin = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == adminId && p.ShabashId == shabashId);
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
 
-            if (spUser == null || spAdmin == null)
-                return Result.Failure<string>("Участник шабаша не найден");
+            try
+            {
+                var spUser = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+                var spAdmin = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == adminId && p.ShabashId == shabashId);
 
-            if (spAdmin.Role != ShabashRole.Admin)
-                return Result.Failure<string>("У участника недостаточно прав");
+                if (spUser == null || spAdmin == null)
+                    return Result.Failure<string>("Участник шабаша не найден");
 
-            if (adminId == userId && role != ShabashRole.Admin)
-                return Result.Failure<string>("Нужен хотя бы один админ");
+                if (spAdmin.Role != ShabashRole.Admin)
+                    return Result.Failure<string>("У участника недостаточно прав");
 
-            spUser.Role = role;
-            await _dbcontext.SaveChangesAsync();
+                if (adminId == userId)
+                    return Result.Failure<string>("Нужен хотя бы один админ");
 
-            return Result.Success(spUser.UserId);
+                if (role == ShabashRole.Admin)
+                {
+                    spAdmin.Role = ShabashRole.CoAdmin;
+                }
+                else if (spUser.Role == ShabashRole.Admin)
+                {
+                    return Result.Failure<string>("Нельзя изменить роль администратора"); //скорее всего лишнее, но возможно это уместно в edge-case а-ля несколько одновременных запросов со сменами админки
+                }
+
+                spUser.Role = role;
+                await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Result.Success(spUser.UserId);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure<string>($"Ошибка при изменении ролей: {ex.Message}");
+            }
         }
     }
 }

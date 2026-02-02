@@ -45,17 +45,6 @@ namespace Shabasher.API.Controllers
             return Ok(user.Value);
         }
 
-        //[HttpPatch("username")]
-        //public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
-        //{
-        //    var updateResult = await _usersManageService.UpdateUserNameAsync(updateUserNameRequest.Id, updateUserNameRequest.Name);
-
-        //    if (updateResult.IsFailure)
-        //        return BadRequest(updateResult.Error);
-
-        //    return Ok(updateUserNameRequest.Name);
-        //}
-
         [HttpPatch("profile")]
         public async Task<ActionResult<UserResponse>> UpdateUserProfile([FromBody] UpdateUserProfileRequest request)
         {
