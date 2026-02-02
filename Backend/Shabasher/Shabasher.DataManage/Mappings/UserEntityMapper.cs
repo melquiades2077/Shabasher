@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Shabasher.DataManage.Entities;
 using Shabasher.Core.Models;
 
@@ -13,6 +13,8 @@ namespace Shabasher.DataManage.Mappings
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                AboutMe = user.AboutMe,
+                Telegram = user.Telegram,
                 CreatedAt = user.CreatedAt,
                 PasswordHash = user.PasswordHash
             };
@@ -24,6 +26,8 @@ namespace Shabasher.DataManage.Mappings
                 userEntity.Id,
                 userEntity.Name,
                 userEntity.Email,
+                userEntity.AboutMe ?? string.Empty,
+                userEntity.Telegram ?? string.Empty,
                 userEntity.PasswordHash,
                 userEntity.CreatedAt);
         }

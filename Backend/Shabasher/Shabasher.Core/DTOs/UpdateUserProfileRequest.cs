@@ -1,9 +1,7 @@
 namespace Shabasher.Core.DTOs
 {
-    public record RegisterUserRequest(
+    public record UpdateUserProfileRequest(
         string Name,
-        string Email,
-        string Password,
         string? AboutMe = null,
         string? Telegram = null
         );

@@ -4,7 +4,8 @@ namespace Shabasher.Core.Validators
 {
     public static class UserValidator
     {
-        public static Result ValidateUserCreation(string name, string email, string password)
+        private const int MAX_ABOUT_SIZE = 400;
+        public static Result ValidateUserCreation(string name, string email, string? telegram, string? about, string password)
         {
             var errors = new List<string>();
 
@@ -15,6 +16,16 @@ namespace Shabasher.Core.Validators
             var emailResult = EmailValidator.IsValidEmail(email);
             if (emailResult.IsFailure)
                 errors.Add(emailResult.Error);
+
+            if (telegram != null)
+            {
+                var telegramResult = TelegramValidator.IsValidTelegram(telegram);
+                if (telegramResult.IsFailure)
+                    errors.Add(telegramResult.Error);
+            }
+
+            if (about != null && about.Length > MAX_ABOUT_SIZE)
+                errors.Add($"Длина секции 'Обо мне' не должна превышать {MAX_ABOUT_SIZE} символов");
 
             var passwordResult = PasswordValidator.IsValidPassword(password);
             if (passwordResult.IsFailure)

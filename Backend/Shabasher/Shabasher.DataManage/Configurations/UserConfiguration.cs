@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shabasher.DataManage.Entities;
 
@@ -28,6 +28,12 @@ namespace Shabasher.DataManage.Configurations
             builder.Property(x => x.CreatedAt)
                    .IsRequired()
                    .HasDefaultValueSql("NOW()");
+
+            builder.Property(x => x.AboutMe)
+                   .IsRequired(false);
+
+            builder.Property(x => x.Telegram)
+                   .IsRequired(false);
 
             builder.HasMany(u => u.Participations)
                    .WithOne(sp => sp.User)

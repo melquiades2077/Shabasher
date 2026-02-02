@@ -8,6 +8,10 @@
 
         public string Email { get; set; }
 
+        public string AboutMe { get; set; }
+
+        public string Telegram { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public string PasswordHash { get; set; }

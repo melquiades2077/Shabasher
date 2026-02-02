@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -45,15 +45,30 @@ namespace Shabasher.API.Controllers
             return Ok(user.Value);
         }
 
-        [HttpPatch("username")]
-        public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
+        //[HttpPatch("username")]
+        //public async Task<ActionResult> UpdateUserName([FromBody] UpdateUserNameRequest updateUserNameRequest)
+        //{
+        //    var updateResult = await _usersManageService.UpdateUserNameAsync(updateUserNameRequest.Id, updateUserNameRequest.Name);
+
+        //    if (updateResult.IsFailure)
+        //        return BadRequest(updateResult.Error);
+
+        //    return Ok(updateUserNameRequest.Name);
+        //}
+
+        [HttpPatch("profile")]
+        public async Task<ActionResult<UserResponse>> UpdateUserProfile([FromBody] UpdateUserProfileRequest request)
         {
-            var updateResult = await _usersManageService.UpdateUserNameAsync(updateUserNameRequest.Id, updateUserNameRequest.Name);
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
 
-            if (updateResult.IsFailure)
-                return BadRequest(updateResult.Error);
+            var result = await _usersManageService.UpdateUserProfileAsync(userId, request.Name, request.AboutMe, request.Telegram);
 
-            return Ok(updateUserNameRequest.Name);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
         }
 
         [HttpDelete]

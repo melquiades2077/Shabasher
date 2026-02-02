@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
 
@@ -21,7 +21,9 @@ namespace Shabasher.API.Controllers
             var user = await _usersManageService.RegisterUserAsync(
                 registerUserRequest.Name,
                 registerUserRequest.Email,
-                registerUserRequest.Password
+                registerUserRequest.Password,
+                registerUserRequest.AboutMe,
+                registerUserRequest.Telegram
                 );
 
             if (user.IsFailure)
