@@ -67,7 +67,8 @@ namespace Shabasher.BusinessLogic.Services
                     ShabashId = shabashEntity.Id,
                     UserId = participant.User.Id,
                     Status = participant.Status,
-                    Role = participant.Role
+                    Role = participant.Role,
+                    CreatedAt = participant.CreatedAt
                 };
                 _dbcontext.ShabashParticipants.Add(participantEntity);
             }
@@ -167,7 +168,8 @@ namespace Shabasher.BusinessLogic.Services
                 User = userEntity,
                 UserId = userId,
                 Role = ShabashRole.Member,
-                Status = UserStatus.Invited
+                Status = UserStatus.Invited,
+                CreatedAt = DateTime.UtcNow
             };
 
             var alreadyParticipating = await _dbcontext.ShabashParticipants.AnyAsync(p => p.UserId == userId && p.ShabashId == shabashId);

@@ -15,6 +15,10 @@ namespace Shabasher.DataManage.Configurations
 
             builder.Property(sp => sp.Role)
                    .IsRequired();
+
+            builder.Property(sp => sp.CreatedAt)
+                   .IsRequired()
+                   .HasDefaultValueSql("NOW()");
         }
     }
 }
