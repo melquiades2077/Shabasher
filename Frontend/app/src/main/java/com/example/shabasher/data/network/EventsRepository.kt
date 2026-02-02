@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import io.ktor.http.*
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class EventsRepository(context: Context) {
     private val tokenManager = TokenManager(context)
@@ -381,6 +382,35 @@ class EventsRepository(context: Context) {
         }
     }
 
+    suspend fun leaveFromEvent(shabashId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            // Используем PATCH, а не GET
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/leave") {
+                header("Authorization", "Bearer $cleanToken")
+                // Передаём параметр в query-строке с правильным именем
+                parameter("shabashId", shabashId)
+            }
+
+            if (response.status.isSuccess()) {
+                // Успех: тело ответа пустое — просто возвращаем Unit
+                Result.success(Unit)
+            } else {
+                // Читаем тело как строку (ошибка от сервера)
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 }
 
@@ -394,8 +424,16 @@ fun getEventStatus(eventDateStr: String): String {
         eventDate.isBefore(today) -> "Событие завершено"
         eventDate.isEqual(today) -> "Сегодня"
         eventDate.isEqual(today.plusDays(1)) -> "Завтра"
-        eventDate.isBefore(today.plusDays(7)) -> "Скоро"
-        else -> "Планируется"
+        else -> {
+            val daysUntil = ChronoUnit.DAYS.between(today, eventDate).toInt()
+            // daysUntil >= 2 здесь гарантировано
+            val daysText = when {
+                daysUntil % 10 == 1 && daysUntil % 100 != 11 -> "день"
+                daysUntil % 10 in 2..4 && daysUntil % 100 !in 12..14 -> "дня"
+                else -> "дней"
+            }
+            "Осталось $daysUntil $daysText"
+        }
     }
 }
 

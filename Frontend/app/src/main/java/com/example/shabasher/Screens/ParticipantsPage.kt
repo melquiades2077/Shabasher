@@ -1,5 +1,6 @@
 package com.example.shabasher.Screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +32,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -47,38 +50,36 @@ import com.example.shabasher.components.ParticipatorElem
 fun ParticipantsPage(
     navController: NavController,
     eventId: String,
-    vm: EventViewModel = viewModel()
+    context: Context = LocalContext.current
 ) {
-    val ui = vm.ui.value
-
-    // Если пока нет события — загружаем
-    LaunchedEffect(eventId) {
-        if (ui.event == null) {
-            vm.loadEvent(eventId)
+    // Создаём ViewModel вручную и запоминаем его на время жизни экрана
+    val vm = remember(eventId) {
+        EventViewModel(context).also {
+            it.loadEvent(eventId)
         }
     }
+
+    val uiState = vm.ui.value // ← mutableStateOf, поэтому просто .value
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Участники") },
                 navigationIcon = {
-                    IconButton(onClick = { SafeNavigation.navigate { navController.popBackStack() } }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         }
     ) { innerPadding ->
-
         when {
-            ui.isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -89,21 +90,25 @@ fun ParticipantsPage(
                 }
             }
 
-            ui.event != null -> {
+            uiState.event != null -> {
                 ParticipantsList(
-                    participants = ui.event.participants,
+                    participants = uiState.event.participants,
                     modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize()
                 )
             }
 
-            ui.error != null -> {
+            uiState.error != null -> {
                 Text(
-                    ui.error,
+                    uiState.error,
                     modifier = Modifier.padding(innerPadding),
                     color = MaterialTheme.colorScheme.error
                 )
+            }
+
+            else -> {
+                Text("Нет данных", modifier = Modifier.padding(innerPadding))
             }
         }
     }

@@ -75,7 +75,11 @@ fun EventCard(
 
             // Название
             Text(
-                text = title,
+                text = if (title.length > 35) {
+                    title.take(35).trim() + "..."
+                } else {
+                    title
+                },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

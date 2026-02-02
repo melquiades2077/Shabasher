@@ -3,18 +3,30 @@ package com.example.shabasher.Screens
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,9 +68,32 @@ fun EventPage(
 ) {
     val ui = viewModel.ui.value
 
+    var leaveEventId by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(eventId) {
         println("[EventPage] Загрузка события с ID: '$eventId'")
         viewModel.loadEvent(eventId)
+    }
+
+    LaunchedEffect(leaveEventId) {
+        val id = leaveEventId ?: return@LaunchedEffect
+        val result = viewModel.leaveFromEventSuspend(id) // ← сделаем suspend-версию!
+        leaveEventId = null // сбросить триггер
+
+        when {
+            result.isSuccess -> {
+                // Опционально: обновить данные (перезагрузить событие)
+                // viewModel.loadEvent(id)
+
+                // Навигация
+                navController.navigate(Routes.MAIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+            result.isFailure -> {
+                // показать ошибку
+            }
+        }
     }
 
     Scaffold(
@@ -78,6 +113,8 @@ fun EventPage(
                     }
                 },
                 actions = {
+                    var expanded by remember { mutableStateOf(false) }
+
                     IconButton(
                         onClick = {
                             ui.event?.id?.let { eventId ->
@@ -86,6 +123,45 @@ fun EventPage(
                         }
                     ) {
                         Icon(Icons.Default.Share, contentDescription = "Поделиться")
+                    }
+                    Box {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.surface)
+                                .width(IntrinsicSize.Min)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clickable {
+                                        expanded = false
+                                        leaveEventId = eventId // ← триггер
+                                    }
+                                    .padding(horizontal = 17.dp, vertical = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp) // отступ между иконкой и текстом
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ExitToApp,
+                                        contentDescription = null, // или "Выйти из события"
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Выйти из события",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -175,8 +251,9 @@ fun EventContent(
             ParticipatorsCard(
                 participants = event.participants,
                 onClick = {
-                    //navController.navigate("participants/${event.id}")
-                    Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show()
+                    vm.ui.value.event?.id?.let { eventId ->
+                        navController.navigate("${Routes.PARTICIPANTS}/$eventId")
+                    }
                 }
             )
         }

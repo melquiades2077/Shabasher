@@ -10,6 +10,8 @@ import com.example.shabasher.Model.ParticipationStatus
 import com.example.shabasher.data.dto.EventParticipantDto
 import com.example.shabasher.data.dto.GetEventResponse
 import com.example.shabasher.data.network.EventsRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 data class EventUiState(
@@ -30,6 +32,21 @@ class EventViewModel(
 
     // Чтобы избежать повторного присоединения при пересоздании ViewModel
     private var hasJoinedForEvent = mutableSetOf<String>()
+
+    private val _eventLeaveResult = MutableSharedFlow<Result<Unit>>()
+    val eventLeaveResult = _eventLeaveResult.asSharedFlow()
+
+    fun leaveFromEvent(shabashId: String) {
+        viewModelScope.launch {
+            val result = repository.leaveFromEvent(shabashId)
+            _eventLeaveResult.emit(result)
+        }
+    }
+
+    // В EventViewModel
+    suspend fun leaveFromEventSuspend(shabashId: String): Result<Unit> {
+        return repository.leaveFromEvent(shabashId)
+    }
 
     fun loadEvent(eventId: String) {
         ui.value = ui.value.copy(isLoading = true)
@@ -172,41 +189,6 @@ class EventViewModel(
                     error = "Не удалось обновить статус: ${result.exceptionOrNull()?.message}"
                 )
                 // TODO: показать Snackbar через SharedFlow/StateFlow
-            }
-        }
-    }
-
-    //Обновление статуса участника
-    fun updateParticipationStatusOnServer(eventId: String, newStatus: ParticipationStatus) {
-        if (ui.value.isUpdatingStatus) {
-            println("[EventViewModel] Кнопка заблокирована, пропускаем")
-            return
-        }
-
-        val oldEvent = ui.value.event
-        val oldStatus = oldEvent?.userStatus
-
-        ui.value = ui.value.copy(isUpdatingStatus = true)
-
-        viewModelScope.launch {
-            val result = repository.updateParticipationStatus(eventId, newStatus)
-
-            ui.value = ui.value.copy(isUpdatingStatus = false)
-
-            if (result.isSuccess) {
-                val updatedEvent = ui.value.event?.copy(userStatus = newStatus)
-                ui.value = ui.value.copy(event = updatedEvent)
-                println("[EventViewModel] Статус обновлен на сервере: $newStatus")
-            } else {
-                val error = result.exceptionOrNull()?.message ?: "Ошибка обновления статуса"
-                println("[EventViewModel] Ошибка: $error")
-
-                if (oldEvent != null && oldStatus != null) {
-                    ui.value = ui.value.copy(
-                        event = oldEvent.copy(userStatus = oldStatus),
-                        error = error
-                    )
-                }
             }
         }
     }
