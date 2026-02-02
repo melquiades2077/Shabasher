@@ -179,7 +179,7 @@ namespace Shabasher.BusinessLogic.Services
             await _dbcontext.ShabashParticipants.AddAsync(sp);
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(new UserShabashParticipationResponse(sp.ShabashId, sp.Shabash.Name, sp.Status));
+            return Result.Success(new UserShabashParticipationResponse(sp.ShabashId, sp.Shabash.Name, sp.Status, sp.Role));
         }
 
         public async Task<Result> LeaveShabashAsync(string userId, string shabashId)

@@ -32,7 +32,8 @@ namespace Shabasher.BusinessLogic.Mappings
                     .Select(p => new UserShabashParticipationResponse(
                         p.ShabashId,
                         p.Shabash?.Name ?? string.Empty,
-                        p.Status))
+                        p.Status,
+                        p.Role))
                     .ToList() ?? new List<UserShabashParticipationResponse>());
 
         public static UserShortResponse EntityToShortResponse(UserEntity userEntity) =>
