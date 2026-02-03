@@ -81,9 +81,14 @@ namespace Shabasher.BusinessLogic.Services
         public async Task<Result<ShabashResponse>> UpdateShabashAsync(string shabashId, UpdateShabashRequest request, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);
-
             if (shabashEntity == null)
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
+
+            var actorEntity = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.ShabashId == shabashId && sp.UserId == userId);
+            if (actorEntity == null)
+                return Result.Failure<ShabashResponse>("Пользователь не найден");
 
             shabashEntity.Name = request.Name;
             shabashEntity.Description = request.Description;
@@ -93,7 +98,7 @@ namespace Shabasher.BusinessLogic.Services
 
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role));
         }
 
         public async Task<Result<string>> DeleteShabashAsync(string shabashId, string userId)
@@ -117,14 +122,19 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success(shabashId);
         }
 
-        public async Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId)
+        public async Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);
-
             if (shabashEntity == null)
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+            var actorEntity = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.ShabashId == shabashId && sp.UserId == userId);
+            if (actorEntity == null)
+                return Result.Failure<ShabashResponse>("Пользователь не найден");
+
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role));
         }
 
         public async Task<Result<string>> CreateInviteAsync(string shabashId, string userId)

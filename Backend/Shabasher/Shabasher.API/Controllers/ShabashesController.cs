@@ -52,7 +52,11 @@ namespace Shabasher.API.Controllers
         [HttpGet("by-id")]
         public async Task<ActionResult> GetShabashById([FromQuery] string id)
         {
-            var result = await _shabashesManageService.GetShabashByIdAsync(id);
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _shabashesManageService.GetShabashByIdAsync(id, userId);
 
             if (result.IsFailure)
                 return NotFound(result.Error);

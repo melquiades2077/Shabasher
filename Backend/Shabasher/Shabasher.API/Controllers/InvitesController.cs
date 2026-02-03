@@ -51,7 +51,7 @@ namespace Shabasher.API.Controllers
             if (invite.IsFailure)
                 return NotFound(invite.Error);
 
-            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId);
+            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId, invite.Value.InviterUserId);
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");
 
@@ -71,7 +71,7 @@ namespace Shabasher.API.Controllers
             if (invite.IsFailure)
                 return NotFound(invite.Error);
 
-            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId);
+            var shabashEntity = await _shabashesManageService.GetShabashByIdAsync(invite.Value.ShabashId, invite.Value.InviterUserId);
 
             if (shabashEntity.IsFailure || invite.Value.ExpiresAt <= DateTime.UtcNow)
                 return BadRequest("Приглашение недействительно");

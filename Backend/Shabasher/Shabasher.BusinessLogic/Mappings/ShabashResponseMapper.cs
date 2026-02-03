@@ -8,7 +8,7 @@ namespace Shabasher.BusinessLogic.Mappings
 {
     public static class ShabashResponseMapper
     {
-        public static ShabashResponse DomainToResponse(Shabash shabash) =>
+        public static ShabashResponse DomainToResponse(Shabash shabash, ShabashRole actorRole) =>
             new ShabashResponse(
                 shabash.Id,
                 shabash.Name,
@@ -23,7 +23,8 @@ namespace Shabasher.BusinessLogic.Mappings
                 DateOnly.FromDateTime(shabash.StartDate),
                 TimeOnly.FromDateTime(shabash.StartDate),
                 shabash.CreatedAt,
-                shabash.Status);
+                shabash.Status,
+                actorRole);
 
         public static ShabashShortResponse DomainToShortResponse(Shabash shabash) =>
             new ShabashShortResponse(
@@ -33,7 +34,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 TimeOnly.FromDateTime(shabash.StartDate),
                 shabash.Status);
 
-        public static ShabashResponse EntityToResponse(ShabashEntity shabashEntity) =>
+        public static ShabashResponse EntityToResponse(ShabashEntity shabashEntity, ShabashRole actorRole) =>
             new ShabashResponse(
                 shabashEntity.Id,
                 shabashEntity.Name,
@@ -50,7 +51,8 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabashEntity.CreatedAt,
                 DateTime.UtcNow >= shabashEntity.StartDate
                     ? ShabashStatus.Finished
-                    : ShabashStatus.Active);
+                    : ShabashStatus.Active,
+                actorRole);
 
         public static ShabashShortResponse EntityToShortResponse(ShabashEntity shabashEntity) =>
             new ShabashShortResponse(
