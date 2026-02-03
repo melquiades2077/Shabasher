@@ -2,6 +2,7 @@
 {
     public record KickParticipantRequest(
         string UserId, 
+        string AdminId,
         string ShabashId
         );
 }

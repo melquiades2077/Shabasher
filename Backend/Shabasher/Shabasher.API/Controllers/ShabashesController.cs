@@ -112,7 +112,7 @@ namespace Shabasher.API.Controllers
         [HttpPatch("kick")]
         public async Task<ActionResult> KickFromShabash([FromBody]KickParticipantRequest request)
         {
-            var response = await _shabashesManageService.LeaveShabashAsync(request.UserId, request.ShabashId);
+            var response = await _shabashesManageService.KickFromShabashAsync(request.UserId, request.AdminId, request.ShabashId);
 
             if (response.IsFailure)
                 return BadRequest(response.Error);
