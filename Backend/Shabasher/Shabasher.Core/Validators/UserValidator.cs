@@ -17,14 +17,14 @@ namespace Shabasher.Core.Validators
             if (emailResult.IsFailure)
                 errors.Add(emailResult.Error);
 
-            if (telegram != null)
+            if (!string.IsNullOrEmpty(telegram))
             {
                 var telegramResult = TelegramValidator.IsValidTelegram(telegram);
                 if (telegramResult.IsFailure)
                     errors.Add(telegramResult.Error);
             }
 
-            if (about != null && about.Length > MAX_ABOUT_SIZE)
+            if (!string.IsNullOrEmpty(about) && about.Length > MAX_ABOUT_SIZE)
                 errors.Add($"Длина секции 'Обо мне' не должна превышать {MAX_ABOUT_SIZE} символов");
 
             var passwordResult = PasswordValidator.IsValidPassword(password);
