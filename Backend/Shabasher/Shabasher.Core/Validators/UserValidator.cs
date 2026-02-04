@@ -24,7 +24,7 @@ namespace Shabasher.Core.Validators
                     errors.Add(telegramResult.Error);
             }
 
-            if (!string.IsNullOrEmpty(about) && about.Length > MAX_ABOUT_SIZE)
+            if (!string.IsNullOrWhiteSpace(about) && about.Length > MAX_ABOUT_SIZE)
                 errors.Add($"Длина секции 'Обо мне' не должна превышать {MAX_ABOUT_SIZE} символов");
 
             var passwordResult = PasswordValidator.IsValidPassword(password);
