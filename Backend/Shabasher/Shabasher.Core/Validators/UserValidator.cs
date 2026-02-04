@@ -17,7 +17,7 @@ namespace Shabasher.Core.Validators
             if (emailResult.IsFailure)
                 errors.Add(emailResult.Error);
 
-            if (!string.IsNullOrEmpty(telegram) && !string.IsNullOrWhiteSpace(telegram) && telegram != "@")
+            if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@")
             {
                 var telegramResult = TelegramValidator.IsValidTelegram(telegram);
                 if (telegramResult.IsFailure)
