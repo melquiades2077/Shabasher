@@ -15,13 +15,19 @@ data class ProfileUiState(
     val isLoading: Boolean = true,
     val name: String = "",
     val email: String = "",
+    val aboutMe: String? = null,       // ← добавлено
+    val telegram: String? = null,      // ← добавлено
     val avatarUrl: String? = null,
+    val eventsCount: Int = 0,          // ← можно добавить позже
+    val organizedCount: Int = 0,
+    val participatingCount: Int = 0,
     val error: String? = null
 )
 
 class ProfileViewModel(
     private val context: Context,
-    private val tokenManager: TokenManager = TokenManager(context)
+    private val tokenManager: TokenManager = TokenManager(context),
+    private val targetUserId: String? = null // null = мой профиль, иначе — чужой
 ) : ViewModel() {
 
     private val repo = ProfileRepository(tokenManager)
@@ -30,22 +36,41 @@ class ProfileViewModel(
     val uiState: StateFlow<ProfileUiState> = _uiState
 
     fun loadProfile() {
-        // избегаем повторных параллельных вызовов
-        if (_uiState.value.isLoading) {
-            // но позволим первый запрос выполниться — всё ок
-        }
-
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            val res = repo.getProfile()
+            val res = if (targetUserId != null) {
+                repo.getProfileById(targetUserId)
+            } else {
+                repo.getProfile()
+            }
+
             if (res.isSuccess) {
                 val p = res.getOrNull()!!
+
+                // 🔥 Подсчёт статистики по ролям из participations
+                var organizedCount = 0
+                var participatingCount = 0
+
+                for (participation in p.participations) {
+                    val role = participation.role?.uppercase() ?: "MEMBER"
+                    if (role == "ADMIN" || role == "MODERATOR") {
+                        organizedCount++
+                    } else {
+                        participatingCount++
+                    }
+                }
+
                 _uiState.value = ProfileUiState(
                     isLoading = false,
                     name = p.name,
                     email = p.email,
-                    avatarUrl = null,
+                    aboutMe = p.aboutMe,
+                    telegram = p.telegram,
+                    avatarUrl = null, // TODO
+                    eventsCount = p.participations.size,
+                    organizedCount = organizedCount,
+                    participatingCount = participatingCount,
                     error = null
                 )
             } else {
@@ -55,10 +80,15 @@ class ProfileViewModel(
         }
     }
 
+    // Метод выхода — только для своего профиля
     fun logout() {
+        if (targetUserId != null) return // нельзя выйти из чужого профиля
+
         viewModelScope.launch {
             tokenManager.clearToken()
-            _uiState.value = ProfileUiState(isLoading = false)
+            // навигация обрабатывается снаружи
         }
     }
+
+    val isOwnProfile: Boolean get() = targetUserId == null
 }

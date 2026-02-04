@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.Model.UserRole
 import com.example.shabasher.data.dto.EventParticipantDto
 import com.example.shabasher.data.dto.GetEventResponse
 import com.example.shabasher.data.network.EventsRepository
@@ -46,6 +47,15 @@ class EventViewModel(
     // В EventViewModel
     suspend fun leaveFromEventSuspend(shabashId: String): Result<Unit> {
         return repository.leaveFromEvent(shabashId)
+    }
+
+    private val _currentUserId = mutableStateOf<String?>(null)
+    val currentUserId: String? get() = _currentUserId.value
+
+    init {
+        viewModelScope.launch {
+            _currentUserId.value = repository.getCurrentUserId()
+        }
     }
 
     fun loadEvent(eventId: String) {
@@ -197,6 +207,7 @@ class EventViewModel(
     private suspend fun convertToEventData(eventDto: GetEventResponse?): EventData? {
         if (eventDto == null) return null
 
+
         return try {
             val date = eventDto.startDate ?: ""
             val time = if (!eventDto.startTime.isNullOrEmpty()) {
@@ -212,6 +223,12 @@ class EventViewModel(
             // Определяем статус текущего пользователя из данных API
             val userStatus = determineUserStatusFromDto(eventDto)
 
+            val currentUserRole = when (eventDto.currentUserRole?.uppercase()) {
+                "ADMIN" -> UserRole.ADMIN
+                "MODERATOR" -> UserRole.MODERATOR
+                else -> UserRole.MEMBER
+            }
+
             EventData(
                 id = eventDto.id,
                 title = eventDto.name ?: "Без названия",
@@ -220,7 +237,8 @@ class EventViewModel(
                 time = time,
                 place = eventDto.address ?: "",
                 participants = convertParticipants(eventDto.participants),
-                userStatus = userStatus  // Используем реальный статус из API
+                userStatus = userStatus,  // Используем реальный статус из API
+                currentUserRole = currentUserRole
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -255,10 +273,17 @@ class EventViewModel(
 
     private fun convertParticipants(participantDtos: List<EventParticipantDto>): List<Participant> {
         return participantDtos.map { dto ->
+            val role = when (dto.role?.uppercase()) {
+                "ADMIN" -> UserRole.ADMIN
+                "MODERATOR" -> UserRole.MODERATOR
+                else -> UserRole.MEMBER
+            }
+
             Participant(
                 id = dto.user.id,
                 name = dto.user.name ?: "Неизвестный",
-                status = convertStatus(dto.status)
+                status = convertStatus(dto.status),
+                role = role // ← добавили
             )
         }
     }
@@ -271,6 +296,55 @@ class EventViewModel(
                 println("Участник успешно добавлен в событие.")
             } else {
                 println("Ошибка при добавлении участника: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    // В EventViewModel.kt
+
+    fun kickParticipant(shabashId: String, targetUserId: String) {
+        viewModelScope.launch {
+            val result = repository.kickParticipant(shabashId, targetUserId)
+            if (result.isSuccess) {
+                // Перезагрузим событие, чтобы обновить список
+                loadEvent(shabashId)
+            } else {
+                // Можно показать ошибку через SharedFlow
+                println("Ошибка кика: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    fun makeAdmin(shabashId: String, targetUserId: String) {
+        viewModelScope.launch {
+            val result = repository.updateParticipantRole(shabashId, targetUserId, UserRole.ADMIN)
+            if (result.isSuccess) {
+                loadEvent(shabashId)
+            } else {
+                println("Ошибка назначения админа: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    fun makeModerator(shabashId: String, targetUserId: String) {
+        viewModelScope.launch {
+            val result = repository.updateParticipantRole(shabashId, targetUserId, UserRole.MODERATOR)
+            if (result.isSuccess) {
+                loadEvent(shabashId)
+            } else {
+                println("Ошибка назначения модератора: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    fun revokeRole(shabashId: String, targetUserId: String) {
+        // Разжалование → делаем участником
+        viewModelScope.launch {
+            val result = repository.updateParticipantRole(shabashId, targetUserId, UserRole.MEMBER)
+            if (result.isSuccess) {
+                loadEvent(shabashId)
+            } else {
+                println("Ошибка разжалования: ${result.exceptionOrNull()?.message}")
             }
         }
     }

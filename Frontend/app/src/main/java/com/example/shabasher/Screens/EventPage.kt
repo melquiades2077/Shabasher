@@ -56,6 +56,7 @@ import com.example.shabasher.components.ParticipationSelector
 import com.example.shabasher.components.ParticipatorsCard
 import com.example.shabasher.components.ServiceCard
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.EventUiState
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -107,7 +108,7 @@ fun EventPage(
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navController.popBackStack() }
+                        onClick = { SafeNavigation.navigate { navController.popBackStack() } }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }

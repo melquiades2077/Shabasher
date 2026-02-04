@@ -112,8 +112,8 @@ fun EventMoreInfo(
             style = MaterialTheme.typography.titleMedium
         )
         Column() {
-            InfoRow(icon = Icons.Default.CalendarMonth, label = date.formatAsRussianDate())
             InfoRow(icon = Icons.Default.LocationOn, label = place)
+            InfoRow(icon = Icons.Default.CalendarMonth, label = date.formatAsRussianDate())
             InfoRow(icon = Icons.Default.AccessTime, label = time)
         }
     }

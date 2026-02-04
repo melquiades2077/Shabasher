@@ -69,6 +69,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -82,11 +83,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.shabasher.data.local.TokenManager
+
+@Composable
+fun ProfileScreen(
+    navController: NavController,
+    themeViewModel: ThemeViewModel,
+    userId: String? = null // null = свой профиль, иначе — чужой
+) {
+    val viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModelFactory(LocalContext.current, userId)
+    )
+    ProfilePage(navController, themeViewModel, viewModel)
+}
+
+// Фабрика
+class ProfileViewModelFactory(
+    private val context: Context,
+    private val targetUserId: String?
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return ProfileViewModel(context, TokenManager(context), targetUserId) as T
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -97,6 +125,7 @@ fun ProfilePage(
 ) {
     val ui by viewModel.uiState.collectAsState()
     val uriHandler = LocalUriHandler.current
+    val isOwnProfile = viewModel.isOwnProfile
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
@@ -106,7 +135,7 @@ fun ProfilePage(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Профиль") },
+                title = { Text(if (isOwnProfile) "Профиль" else "") },
                 navigationIcon = {
                     IconButton(
                         onClick = { SafeNavigation.navigate { navController.popBackStack() } }
@@ -115,74 +144,87 @@ fun ProfilePage(
                     }
                 },
                 actions = {
-                    var expanded by remember { mutableStateOf(false) }
-
-                    Box {
-                        IconButton(onClick = { expanded = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
+                    if (isOwnProfile) {
+                        IconButton(
+                            onClick = {
+                                navController.navigate(Routes.EDIT_PROFILE)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Редактировать профиль"
+                            )
                         }
 
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.surface)
-                                .width(IntrinsicSize.Min)
-                        ) {
-                            // Пункт "Сменить тему"
-                            Box(
-                                modifier = Modifier
-                                    .clickable {
-                                        expanded = false
-                                        themeViewModel.toggleTheme()
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.BrightnessMedium,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "Сменить тему",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                        var expanded by remember { mutableStateOf(false) }
+
+                        Box {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
                             }
 
-                            // Пункт "Выйти"
-                            Box(
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
                                 modifier = Modifier
-                                    .clickable {
-                                        expanded = false
-                                        viewModel.logout()
-                                        navController.navigate(Routes.WELCOME) {
-                                            popUpTo(0) { inclusive = true }
-                                        }
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .width(IntrinsicSize.Min)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                // Пункт "Сменить тему"
+                                Box(
+                                    modifier = Modifier
+                                        .clickable {
+                                            expanded = false
+                                            themeViewModel.toggleTheme()
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        .fillMaxWidth()
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ExitToApp,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "Выйти",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.BrightnessMedium,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Сменить тему",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+
+                                // Пункт "Выйти"
+                                Box(
+                                    modifier = Modifier
+                                        .clickable {
+                                            expanded = false
+                                            viewModel.logout()
+                                            navController.navigate(Routes.WELCOME) {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ExitToApp,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Выйти",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -221,7 +263,7 @@ fun ProfilePage(
                 // Обёртка с достаточным размером, чтобы ничего не обрезалось
                 Box(
                     modifier = Modifier
-                        .size(280.dp) // достаточно большой, чтобы вместить и градиент, и аватар с отступами
+                        .size(260.dp) // достаточно большой, чтобы вместить и градиент, и аватар с отступами
                         .padding(8.dp), // минимальный отступ, чтобы тень/градиент не обрезался
                     contentAlignment = Alignment.Center
                 ) {
@@ -282,18 +324,17 @@ fun ProfilePage(
                 ) {
                     // Имя
                     Text(
-                        text = ui.name ?: "Имя не указано",
+                        text = ui.name.ifBlank { "Имя не указано" },
                         style = MaterialTheme.typography.headlineLarge,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Bold
                     )
 
-                    // Статус (мок: пользовательский текст)
-                    val mockStatus =
-                        "Не важно волк ли ты если волк не ты 🌟\nИщу команду для хакатона!"
-                    if (mockStatus.isNotBlank()) {
+                    // Статус (реальный aboutMe)
+                    val aboutMe = ui.aboutMe
+                    if (!aboutMe.isNullOrBlank()) {
                         Text(
-                            text = mockStatus,
+                            text = aboutMe, // ← теперь это non-null String
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -302,26 +343,28 @@ fun ProfilePage(
                         )
                     }
 
-                    // Статистика мероприятий
+                    // Статистика (временно — если нет данных, можно скрыть или оставить мок)
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        StatItem(value = "12", label = "События")
-                        StatItem(value = "3", label = "Организовал(а)")
-                        StatItem(value = "8", label = "Участвует")
+                        StatItem(value = ui.eventsCount.toString(), label = "События")
+                        StatItem(value = ui.organizedCount.toString(), label = "Организовал(а)")
+                        StatItem(value = ui.participatingCount.toString(), label = "Участвует")
                     }
 
-                    // Telegram ссылка
-                    val mockTelegram = "@whoami2077"
-                    if (mockTelegram.isNotBlank()) {
+                    // Telegram (реальный)
+                    if (!ui.telegram.isNullOrBlank()) {
+                        val displayTelegram = ui.telegram?.let { "@${it.removePrefix("@")}" } ?: ""
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp)
                                 .clickable {
-                                    val username = mockTelegram.removePrefix("@")
-                                    uriHandler.openUri("https://t.me/$username")
+                                    val username = ui.telegram?.let { "@${it.removePrefix("@")}" } ?: ""
+                                    if (username.isNotBlank()) {
+                                        uriHandler.openUri("https://t.me/$username") // ← исправлена лишняя пара пробелов!
+                                    }
                                 },
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
@@ -340,19 +383,17 @@ fun ProfilePage(
                                 horizontalArrangement = Arrangement.Center,
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                
-                                    Icon(
-                                        painter = painterResource(id = com.example.shabasher.R.drawable.telegram), // ✅ правильно
-                                        contentDescription = "Telegram",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                
+                                Icon(
+                                    painter = painterResource(id = com.example.shabasher.R.drawable.telegram),
+                                    contentDescription = "Telegram",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
 
                                 Spacer(Modifier.width(12.dp))
 
                                 Text(
-                                    text = mockTelegram,
+                                    text = displayTelegram,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Medium

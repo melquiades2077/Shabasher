@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.Model.UserRole
 import com.example.shabasher.data.dto.*
 import com.example.shabasher.data.local.TokenManager
 import io.ktor.client.*
@@ -411,6 +412,72 @@ class EventsRepository(context: Context) {
         }
     }
 
+    // В EventsRepository.kt
+
+    suspend fun kickParticipant(shabashId: String, targetUserId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val currentUserId = getCurrentUserId() ?: return Result.failure(Exception("Не удалось определить пользователя"))
+
+            val request = KickParticipantRequest(
+                shabashId = shabashId,
+                userId = targetUserId,
+                adminId = currentUserId
+            )
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/kick") {
+                header("Authorization", "Bearer ${token.trim().removeSurrounding("\"")}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка при исключении: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateParticipantRole(shabashId: String, targetUserId: String, newRole: UserRole): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val roleString = when (newRole) {
+                UserRole.ADMIN -> "Admin"
+                UserRole.MODERATOR -> "Moderator"
+                UserRole.MEMBER -> "Member"
+            }
+
+            val request = UpdateRoleRequest(
+                shabashId = shabashId,
+                userId = targetUserId,
+                role = roleString
+            )
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/roles") {
+                header("Authorization", "Bearer ${token.trim().removeSurrounding("\"")}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка при смене роли: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 }
 
@@ -436,4 +503,6 @@ fun getEventStatus(eventDateStr: String): String {
         }
     }
 }
+
+
 

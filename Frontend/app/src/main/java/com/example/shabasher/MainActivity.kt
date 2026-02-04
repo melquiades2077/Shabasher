@@ -48,6 +48,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavController
+import com.example.shabasher.Screens.EditProfileScreen
+import com.example.shabasher.Screens.ProfileScreen
+import com.example.shabasher.Screens.ProfileViewModelFactory
+
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
     return remember { ViewModelFactory(context) }
@@ -114,9 +118,31 @@ class MainActivity : ComponentActivity() {
                         MainPage(navController, vm)
                     }
 
+                    // Свой профиль (без ID)
                     composable(Routes.PROFILE) {
-                        val vm: ProfileViewModel = viewModel(factory = viewModelFactory)
-                        ProfilePage(navController, themeViewModel, vm)
+                        val vm: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = null
+                            )
+                        )
+                        ProfileScreen(navController, themeViewModel, null)
+                    }
+
+                    // Чужой профиль (с ID)
+                    composable(Routes.PROFILE_WITH_ID) { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId")
+                        if (userId == null) {
+                            // Ошибка — вернуть назад или показать ошибку
+                            navController.popBackStack()
+                            return@composable
+                        }
+
+                        val vm: ProfileViewModel = viewModel(
+                            key = "profile_$userId", // ← важно! иначе ViewModel будет кэшироваться
+                            factory = ProfileViewModelFactory(LocalContext.current, targetUserId = userId)
+                        )
+                        ProfileScreen(navController, themeViewModel, userId)
                     }
 
                     composable(
@@ -158,6 +184,15 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
                         ParticipantsPage(navController, eventId = eventId)
+                    }
+
+                    composable(Routes.EDIT_PROFILE) {
+                        val context = LocalContext.current
+
+
+                        EditProfileScreen(
+                            navController = navController
+                        )
                     }
                 }
             }

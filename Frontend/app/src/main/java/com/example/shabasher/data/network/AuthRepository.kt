@@ -31,11 +31,17 @@ class AuthRepository(context: Context) {
 
     private val baseUrl = Config.BASE_URL
 
-    suspend fun register(name: String, email: String, password: String): Result<Unit> {
+    suspend fun register(
+        name: String,
+        email: String,
+        password: String,
+        aboutMe: String = "",       // ← опционально
+        telegram: String = ""       // ← опционально
+    ): Result<Unit> {
         return try {
             val response = client.post("$baseUrl/api/auth/register") {
                 contentType(ContentType.Application.Json)
-                setBody(RegisterRequest(name, email, password))
+                setBody(RegisterRequest(name, email, password, aboutMe, telegram)) // ← обновите data class!
             }
 
             if (response.status.isSuccess()) {

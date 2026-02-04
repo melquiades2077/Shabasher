@@ -13,8 +13,11 @@ enum class ParticipationStatus(val code: Int) {
     }
 }
 
+enum class UserRole { ADMIN, MODERATOR, MEMBER }
+
 data class Participant(
     val id: String,
     val name: String,
-    val status: ParticipationStatus
+    val status: ParticipationStatus,
+    val role: UserRole = UserRole.MODERATOR // ← пока по умолчанию MEMBER
 )
