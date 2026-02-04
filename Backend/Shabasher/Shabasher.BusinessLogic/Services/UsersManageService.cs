@@ -135,13 +135,13 @@ namespace Shabasher.BusinessLogic.Services
                         return Result.Failure<UserResponse>(newNameResult.Error);
                     user.Name = newName;
                 }
-                if (!string.IsNullOrWhiteSpace(aboutMe))
+                if (!string.IsNullOrWhiteSpace(aboutMe) || !string.IsNullOrWhiteSpace(user.AboutMe))
                 {
                     if (aboutMe.Length > 400)
                         return Result.Failure<UserResponse>("Длина секции 'Обо мне' не должна превышать 400 символов");
                     user.AboutMe = aboutMe;
                 }
-                if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@")
+                if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@" || !string.IsNullOrWhiteSpace(user.Telegram))
                 {
                     var telegramResult = TelegramValidator.IsValidTelegram(telegram);
                     if (telegramResult.IsFailure)
