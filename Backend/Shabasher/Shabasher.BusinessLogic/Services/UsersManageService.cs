@@ -141,12 +141,17 @@ namespace Shabasher.BusinessLogic.Services
                         return Result.Failure<UserResponse>("Длина секции 'Обо мне' не должна превышать 400 символов");
                     user.AboutMe = aboutMe;
                 }
-                if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@" || !string.IsNullOrWhiteSpace(user.Telegram))
+
+                if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@")
                 {
                     var telegramResult = TelegramValidator.IsValidTelegram(telegram);
                     if (telegramResult.IsFailure)
                         return Result.Failure<UserResponse>(telegramResult.Error);
                     user.Telegram = telegram;
+                }
+                else if (!string.IsNullOrWhiteSpace(user.Telegram))
+                {
+                    user.Telegram = "";
                 }
 
                 await _dbcontext.SaveChangesAsync();
