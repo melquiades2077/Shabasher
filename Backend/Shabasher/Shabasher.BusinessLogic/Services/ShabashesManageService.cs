@@ -102,7 +102,7 @@ namespace Shabasher.BusinessLogic.Services
 
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role));
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
         }
 
         public async Task<Result<string>> DeleteShabashAsync(string shabashId, string userId)
@@ -138,7 +138,7 @@ namespace Shabasher.BusinessLogic.Services
             if (actorEntity == null)
                 return Result.Failure<ShabashResponse>("Пользователь не найден");
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role));
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
         }
 
         public async Task<Result<string>> CreateInviteAsync(string shabashId, string userId)

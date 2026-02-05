@@ -12,6 +12,7 @@ namespace Shabasher.Core.DTOs
         TimeOnly StartTime,
         DateTime CreatedAt,
         ShabashStatus Status,
-        ShabashRole ActorRole
+        ShabashRole ActorRole,
+        UserStatus ActorStatus
         );
 }
