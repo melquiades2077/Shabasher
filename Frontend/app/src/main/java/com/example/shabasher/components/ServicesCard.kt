@@ -32,10 +32,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.shabasher.Model.Routes
 import com.example.shabasher.ui.theme.ShabasherTheme
 
 @Composable
-fun ServiceCard() {
+fun ServiceCard(navController: NavController) {
     val context = LocalContext.current
 
     Column(
@@ -58,7 +60,8 @@ fun ServiceCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-                ServiceButton("Предложения", Icons.Default.Lightbulb, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
+                ServiceButton("Предложения", Icons.Default.Lightbulb, { navController.navigate(
+                    Routes.SUGGESTIONS) })
                 ServiceButton("Сбор средств", Icons.Default.MonetizationOn, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
         }
     }
@@ -119,10 +122,3 @@ fun ServiceButton(title: String, icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ServiceCardPreview() {
-    ShabasherTheme(darkTheme = true) {
-        ServiceCard()
-    }
-}

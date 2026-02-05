@@ -46,11 +46,14 @@ import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.ui.theme.ShabasherTheme
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import com.example.shabasher.Screens.EditProfileScreen
 import com.example.shabasher.Screens.ProfileScreen
 import com.example.shabasher.Screens.ProfileViewModelFactory
+import com.example.shabasher.Screens.SuggestionsScreen
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         window.setBackgroundDrawableResource(android.R.color.transparent)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             val context = LocalContext.current
@@ -75,7 +79,8 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val tokenManager = remember { TokenManager(context) }
-            val startDestination = if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
+            val startDestination =
+                if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 // Handle Deep Link navigation
@@ -140,7 +145,10 @@ class MainActivity : ComponentActivity() {
 
                         val vm: ProfileViewModel = viewModel(
                             key = "profile_$userId", // ← важно! иначе ViewModel будет кэшироваться
-                            factory = ProfileViewModelFactory(LocalContext.current, targetUserId = userId)
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = userId
+                            )
                         )
                         ProfileScreen(navController, themeViewModel, userId)
                     }
@@ -175,7 +183,11 @@ class MainActivity : ComponentActivity() {
                         val vm: ShareEventViewModel = viewModel(
                             factory = ShareEventViewModelFactory(inviteRepository)
                         )
-                        ShareEventPage(navController = navController, viewModel = vm, eventId = eventId)
+                        ShareEventPage(
+                            navController = navController,
+                            viewModel = vm,
+                            eventId = eventId
+                        )
                     }
 
                     composable(
@@ -187,18 +199,23 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.EDIT_PROFILE) {
-                        val context = LocalContext.current
 
 
                         EditProfileScreen(
                             navController = navController
                         )
                     }
+
+                    composable(Routes.SUGGESTIONS) {
+
+
+                        SuggestionsScreen()
+
+                    }
                 }
             }
         }
     }
-
 
 }
 

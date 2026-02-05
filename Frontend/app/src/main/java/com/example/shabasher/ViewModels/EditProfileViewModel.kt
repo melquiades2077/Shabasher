@@ -90,7 +90,7 @@ class EditProfileViewModel(
             val request = UpdateUserProfileRequest(
                 name = current.name,
                 aboutMe = if (current.aboutMe.isNotBlank()) current.aboutMe else "",
-                telegram = if (current.telegram.isNotBlank()) current.telegram else ""
+                telegram = current.telegram.ifBlank { null }
             )
 
             val result = profileRepo.updateProfile(request)

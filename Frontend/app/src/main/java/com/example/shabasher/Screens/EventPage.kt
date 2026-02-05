@@ -270,7 +270,7 @@ fun EventContent(
         }
 
         item {
-            ServiceCard()
+            ServiceCard(navController)
         }
 
         item {

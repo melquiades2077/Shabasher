@@ -273,17 +273,17 @@ class EventViewModel(
 
     private fun convertParticipants(participantDtos: List<EventParticipantDto>): List<Participant> {
         return participantDtos.map { dto ->
-            val role = when (dto.role?.uppercase()) {
-                "ADMIN" -> UserRole.ADMIN
-                "MODERATOR" -> UserRole.MODERATOR
+            val role = when (dto.role) {
+                "Admin" -> UserRole.ADMIN       // или 1? — нужно уточнить маппинг
+                "CoAdmin" -> UserRole.MODERATOR
+                "Member" -> UserRole.MEMBER
                 else -> UserRole.MEMBER
             }
-
             Participant(
                 id = dto.user.id,
                 name = dto.user.name ?: "Неизвестный",
                 status = convertStatus(dto.status),
-                role = role // ← добавили
+                role = role
             )
         }
     }

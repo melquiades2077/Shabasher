@@ -12,6 +12,6 @@ object Routes {
     const val SHAREEVENT = "shareevent"
     const val PARTICIPANTS = "participants"
     const val PROFILE_WITH_ID = "profile/{userId}"
-
     const val EDIT_PROFILE = "edit_profile"
+    const val SUGGESTIONS = "suggestions"
 }
