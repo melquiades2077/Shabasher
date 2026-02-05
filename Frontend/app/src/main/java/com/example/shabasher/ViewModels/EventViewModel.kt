@@ -59,36 +59,68 @@ class EventViewModel(
     }
 
     fun loadEvent(eventId: String) {
-        ui.value = ui.value.copy(isLoading = true)
+        ui.value = ui.value.copy(
+            isLoading = true,
+            isJoining = false,
+            error = null
+        )
 
         viewModelScope.launch {
-            val result = repository.getEventById(eventId)
+            // === 1. ПЕРВАЯ ПОПЫТКА ЗАГРУЗКИ ===
+            val firstLoad = repository.getEventById(eventId)
 
-            if (result.isSuccess && result.getOrNull() != null) {
-                val eventData = convertToEventData(result.getOrNull())
-                if (eventData != null) {
-                    ui.value = ui.value.copy(
-                        isLoading = false,
-                        event = eventData,
-                        error = null
-                    )
-
-                    // 🔥 ВСЕГДА проверяем, нужно ли присоединиться
-                    if (!hasJoinedForEvent.contains(eventId)) {
-                        checkAndJoinIfNeeded(eventId, eventData)
-                    }
-                } else {
-                    ui.value = ui.value.copy(
-                        isLoading = false,
-                        error = "Не удалось преобразовать данные события"
-                    )
-                }
-            } else {
-                val error = result.exceptionOrNull()?.message ?: "Ошибка загрузки"
-                ui.value = ui.value.copy(isLoading = false, error = error)
+            if (firstLoad.isSuccess && firstLoad.getOrNull() != null) {
+                // Пользователь уже участник → просто показываем
+                showEvent(firstLoad.getOrNull()!!)
+                return@launch
             }
+
+            // === 2. ЕСЛИ НЕ УЧАСТНИК → ДЖОЙНИМСЯ ===
+            ui.value = ui.value.copy(isJoining = true)
+
+            val joinResult = repository.addParticipant(eventId)
+
+            if (joinResult.isFailure) {
+                val msg = joinResult.exceptionOrNull()?.message ?: ""
+
+                // Сервер говорит "уже участвуете" → это ок
+                if (!msg.contains("уже", ignoreCase = true)) {
+                    ui.value = ui.value.copy(
+                        isLoading = false,
+                        isJoining = false,
+                        error = "Не удалось присоединиться к событию"
+                    )
+                    return@launch
+                }
+            }
+
+            // === 3. ВТОРАЯ ЗАГРУЗКА (УЖЕ КАК УЧАСТНИК) ===
+            val secondLoad = repository.getEventById(eventId)
+
+            if (secondLoad.isFailure || secondLoad.getOrNull() == null) {
+                ui.value = ui.value.copy(
+                    isLoading = false,
+                    isJoining = false,
+                    error = "Не удалось загрузить событие после входа"
+                )
+                return@launch
+            }
+
+            showEvent(secondLoad.getOrNull()!!)
         }
     }
+
+    private fun showEvent(dto: GetEventResponse) {
+        val event = convertToEventData(dto)
+
+        ui.value = ui.value.copy(
+            isLoading = false,
+            isJoining = false,
+            event = event,
+            error = null
+        )
+    }
+
 
     private fun checkAndJoinIfNeeded(eventId: String, eventData: EventData) {
         viewModelScope.launch {
@@ -204,47 +236,33 @@ class EventViewModel(
     }
 
 
-    private suspend fun convertToEventData(eventDto: GetEventResponse?): EventData? {
-        if (eventDto == null) return null
-
-
-        return try {
-            val date = eventDto.startDate ?: ""
-            val time = if (!eventDto.startTime.isNullOrEmpty()) {
-                if (eventDto.startTime.length >= 5) {
-                    eventDto.startTime.substring(0, 5)
-                } else {
-                    eventDto.startTime
-                }
-            } else {
-                ""
-            }
-
-            // Определяем статус текущего пользователя из данных API
-            val userStatus = determineUserStatusFromDto(eventDto)
-
-            val currentUserRole = when (eventDto.currentUserRole?.uppercase()) {
-                "ADMIN" -> UserRole.ADMIN
-                "MODERATOR" -> UserRole.MODERATOR
-                else -> UserRole.MEMBER
-            }
-
-            EventData(
-                id = eventDto.id,
-                title = eventDto.name ?: "Без названия",
-                description = eventDto.description ?: "",
-                date = date,
-                time = time,
-                place = eventDto.address ?: "",
-                participants = convertParticipants(eventDto.participants),
-                userStatus = userStatus,  // Используем реальный статус из API
-                currentUserRole = currentUserRole
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+    private fun convertToEventData(dto: GetEventResponse): EventData {
+        val userStatus = when (dto.currentUserParticipationStatus?.uppercase()) {
+            "GOING" -> ParticipationStatus.GOING
+            "NOT_GOING" -> ParticipationStatus.NOT_GOING
+            "INVITED", "0", null -> ParticipationStatus.INVITED
+            else -> ParticipationStatus.INVITED
         }
+
+        val role = when (dto.currentUserRole?.uppercase()) {
+            "ADMIN" -> UserRole.ADMIN
+            "MODERATOR", "COADMIN" -> UserRole.MODERATOR
+            else -> UserRole.MEMBER
+        }
+
+        return EventData(
+            id = dto.id,
+            title = dto.name ?: "Без названия",
+            description = dto.description ?: "",
+            date = dto.startDate ?: "",
+            time = dto.startTime?.take(5) ?: "",
+            place = dto.address ?: "",
+            participants = convertParticipants(dto.participants),
+            userStatus = userStatus,
+            currentUserRole = role
+        )
     }
+
 
     private suspend fun determineUserStatusFromDto(eventDto: GetEventResponse): ParticipationStatus {
         val currentUserId = repository.getCurrentUserId() ?: return ParticipationStatus.INVITED
@@ -262,28 +280,25 @@ class EventViewModel(
     // Обновляем convertStatus чтобы понимать числовые статусы
     private fun convertStatus(status: String): ParticipationStatus {
         return when (status) {
-            "1" -> ParticipationStatus.GOING
-            "2" -> ParticipationStatus.NOT_GOING
-            "0" -> ParticipationStatus.INVITED
-            "GOING" -> ParticipationStatus.GOING
-            "NOT_GOING" -> ParticipationStatus.NOT_GOING
+            "1", "GOING" -> ParticipationStatus.GOING
+            "2", "NOT_GOING" -> ParticipationStatus.NOT_GOING
             else -> ParticipationStatus.INVITED
         }
     }
 
-    private fun convertParticipants(participantDtos: List<EventParticipantDto>): List<Participant> {
+    private fun convertParticipants(
+        participantDtos: List<EventParticipantDto>
+    ): List<Participant> {
         return participantDtos.map { dto ->
-            val role = when (dto.role) {
-                "Admin" -> UserRole.ADMIN       // или 1? — нужно уточнить маппинг
-                "CoAdmin" -> UserRole.MODERATOR
-                "Member" -> UserRole.MEMBER
-                else -> UserRole.MEMBER
-            }
             Participant(
                 id = dto.user.id,
                 name = dto.user.name ?: "Неизвестный",
                 status = convertStatus(dto.status),
-                role = role
+                role = when (dto.role) {
+                    "Admin" -> UserRole.ADMIN
+                    "CoAdmin", "Moderator" -> UserRole.MODERATOR
+                    else -> UserRole.MEMBER
+                }
             )
         }
     }

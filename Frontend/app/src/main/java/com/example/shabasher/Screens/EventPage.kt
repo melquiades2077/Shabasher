@@ -273,9 +273,9 @@ fun EventContent(
             ServiceCard(navController)
         }
 
-        item {
+        /*item {
             GamesCard()
-        }
+        }*/
         item {
             Spacer(Modifier.height(8.dp))
         }

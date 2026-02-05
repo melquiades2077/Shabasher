@@ -15,5 +15,6 @@ data class GetEventResponse(
     val creatorId: String? = null,
     val createdAt: String? = null,
     val participants: List<EventParticipantDto> = emptyList(),
-    val currentUserRole: String? = null
+    val currentUserRole: String? = null,
+    val currentUserParticipationStatus: String? = null
 )

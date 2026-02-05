@@ -209,7 +209,7 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.SUGGESTIONS) {
 
 
-                        SuggestionsScreen()
+                        SuggestionsScreen(navController = navController)
 
                     }
                 }

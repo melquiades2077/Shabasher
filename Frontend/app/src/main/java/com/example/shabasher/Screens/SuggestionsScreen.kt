@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.shabasher.Model.SafeNavigation
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,6 +68,7 @@ data class User(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuggestionsScreen(
+    navController: NavController,
     onNavigateToProfile: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -90,6 +94,15 @@ fun SuggestionsScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Предложения") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            SafeNavigation.navigate { navController.popBackStack() }
+                        }
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -145,7 +158,7 @@ fun SuggestionsScreen(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .navigationBarsPadding(), // ← Защита от системных кнопок
+                            .navigationBarsPadding().padding(bottom = 2.dp), // ← Защита от системных кнопок
                         color = MaterialTheme.colorScheme.background,
                         shadowElevation = 2.dp
                     ) {
