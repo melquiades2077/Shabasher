@@ -449,16 +449,15 @@ class EventsRepository(context: Context) {
             val token = tokenManager.getToken()
             if (token == null) return Result.failure(Exception("Не авторизован"))
 
-            val roleString = when (newRole) {
-                UserRole.ADMIN -> "Admin"
-                UserRole.MODERATOR -> "Moderator"
-                UserRole.MEMBER -> "Member"
-            }
+            val roleString = newRole.backendValue
+            val currentUserId = getCurrentUserId() ?: return Result.failure(Exception("Не удалось определить пользователя"))
+
 
             val request = UpdateRoleRequest(
                 shabashId = shabashId,
                 userId = targetUserId,
-                role = roleString
+                adminId = currentUserId, // ← Передаём себя как админа
+                role = newRole.backendValue
             )
 
             val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/roles") {
@@ -472,6 +471,29 @@ class EventsRepository(context: Context) {
             } else {
                 val error = response.body<String>()
                 Result.failure(Exception("Ошибка при смене роли: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteEvent(shabashId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.delete("$baseUrl/api/Shabashes") {
+                header("Authorization", "Bearer $cleanToken")
+                parameter("shabashId", shabashId)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка удаления: $error"))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -361,7 +361,7 @@ fun ProfilePage(
                                 .fillMaxWidth()
                                 .height(56.dp)
                                 .clickable {
-                                    val username = ui.telegram?.let { "@${it.removePrefix("@")}" } ?: ""
+                                    val username = ui.telegram?.let { "${it.removePrefix("@")}" } ?: ""
                                     if (username.isNotBlank()) {
                                         uriHandler.openUri("https://t.me/$username") // ← исправлена лишняя пара пробелов!
                                     }

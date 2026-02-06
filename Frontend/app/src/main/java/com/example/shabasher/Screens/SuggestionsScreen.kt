@@ -158,7 +158,7 @@ fun SuggestionsScreen(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .navigationBarsPadding().padding(bottom = 2.dp), // ← Защита от системных кнопок
+                            .navigationBarsPadding().padding(bottom = 4.dp), // ← Защита от системных кнопок
                         color = MaterialTheme.colorScheme.background,
                         shadowElevation = 2.dp
                     ) {

@@ -15,16 +15,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +50,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,6 +66,7 @@ import com.example.shabasher.components.ParticipatorsCard
 import com.example.shabasher.components.ServiceCard
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.Model.UserRole
 import com.example.shabasher.ViewModels.EventUiState
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -68,44 +78,206 @@ fun EventPage(
     viewModel: EventViewModel = viewModel()
 ) {
     val ui = viewModel.ui.value
+    val currentUserId = viewModel.currentUserId
+
+    // Управление диалогами
+    var showCannotLeaveDialog by remember { mutableStateOf(false) }
+    var showConfirmLeaveDialog by remember { mutableStateOf(false) }
+    var showConfirmDeleteDialog by remember { mutableStateOf(false) } // ← НОВОЕ
 
     var leaveEventId by remember { mutableStateOf<String?>(null) }
+    var deleteEventId by remember { mutableStateOf<String?>(null) } // ← НОВОЕ
 
     LaunchedEffect(eventId) {
         println("[EventPage] Загрузка события с ID: '$eventId'")
         viewModel.loadEvent(eventId)
     }
 
+    // Обработка выхода
     LaunchedEffect(leaveEventId) {
         val id = leaveEventId ?: return@LaunchedEffect
-        val result = viewModel.leaveFromEventSuspend(id) // ← сделаем suspend-версию!
-        leaveEventId = null // сбросить триггер
+        val result = viewModel.leaveFromEventSuspend(id)
+        leaveEventId = null
 
         when {
             result.isSuccess -> {
-                // Опционально: обновить данные (перезагрузить событие)
-                // viewModel.loadEvent(id)
-
-                // Навигация
                 navController.navigate(Routes.MAIN) {
                     popUpTo(0) { inclusive = true }
                 }
             }
             result.isFailure -> {
-                // показать ошибку
+                // Опционально: показать ошибку
             }
         }
+    }
+
+    // Обработка удаления события
+    LaunchedEffect(deleteEventId) {
+        val id = deleteEventId ?: return@LaunchedEffect
+        viewModel.deleteEvent(id)
+        deleteEventId = null
+
+        // После удаления — сразу на главный экран
+        navController.navigate(Routes.MAIN) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
+    // Диалог ошибки (последний админ при участниках > 1)
+    if (showCannotLeaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showCannotLeaveDialog = false },
+            title = {
+                Text(
+                    "Нельзя покинуть событие",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "Вы организатор события.\nПеред выходом назначьте другого организатора в списке участников.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showCannotLeaveDialog = false }) {
+                    Text(
+                        "Понятно",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        )
+    }
+
+    // Диалог подтверждения выхода
+    if (showConfirmLeaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmLeaveDialog = false },
+            title = {
+                Text(
+                    "Покинуть событие?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Вы уверены, что хотите покинуть «${viewModel.ui.value.event?.title}»?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showConfirmLeaveDialog = false
+                        leaveEventId = eventId
+                    }
+                ) {
+                    Text(
+                        "Выйти",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmLeaveDialog = false }) {
+                    Text(
+                        "Отмена",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        )
+    }
+
+    // Диалог подтверждения УДАЛЕНИЯ (только для админов)
+    if (showConfirmDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDeleteDialog = false },
+            title = {
+                Text(
+                    "Удалить событие?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "Это действие необратимо! Все участники потеряют доступ к событию, а вся информация будет удалена без возможности восстановления.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showConfirmDeleteDialog = false
+                        deleteEventId = eventId // ← триггер удаления
+                    }
+                ) {
+                    Text(
+                        "Удалить",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDeleteDialog = false }) {
+                    Text(
+                        "Отмена",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        )
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = ""
-                    )
-                },
+                title = { Text("") },
                 navigationIcon = {
                     IconButton(
                         onClick = { SafeNavigation.navigate { navController.popBackStack() } }
@@ -137,22 +309,38 @@ fun EventPage(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .width(IntrinsicSize.Min)
                         ) {
+                            // Пункт "Выйти из события" — для всех
                             Box(
                                 modifier = Modifier
                                     .clickable {
                                         expanded = false
-                                        leaveEventId = eventId // ← триггер
+
+                                        val event = ui.event ?: return@clickable
+                                        val myRole = event.currentUserRole
+                                        val participants = event.participants
+
+                                        // 🔒 ЗАЩИТА: последний админ не может уйти, если участников > 1
+                                        if (myRole == UserRole.ADMIN) {
+                                            val adminCount = participants.count { it.role == UserRole.ADMIN }
+                                            if (adminCount == 1 && participants.size > 1) {
+                                                showCannotLeaveDialog = true
+                                                return@clickable
+                                            }
+                                        }
+
+                                        // ⚠️ Подтверждение выхода — ВСЕГДА
+                                        showConfirmLeaveDialog = true
                                     }
                                     .padding(horizontal = 17.dp, vertical = 8.dp)
                                     .fillMaxWidth()
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp) // отступ между иконкой и текстом
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.ExitToApp,
-                                        contentDescription = null, // или "Выйти из события"
+                                        contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
@@ -160,6 +348,36 @@ fun EventPage(
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
+                                }
+                            }
+
+                            // Пункт "Удалить событие" — ТОЛЬКО для админов
+                            if (ui.event?.currentUserRole == UserRole.ADMIN) {
+                                Box(
+                                    modifier = Modifier
+                                        .clickable {
+                                            expanded = false
+                                            showConfirmDeleteDialog = true
+                                        }
+                                        .padding(horizontal = 17.dp, vertical = 8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Удалить событие",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -236,18 +236,33 @@ class EventViewModel(
     }
 
 
+    fun sortParticipants(participants: List<Participant>): List<Participant> {
+        return participants.sortedWith(
+            compareBy<Participant> { it.role.priority }
+                .thenBy { it.status.priority }
+                .thenBy { it.name.lowercase() } // опционально, чтобы стабильно
+        )
+    }
+
+
     private fun convertToEventData(dto: GetEventResponse): EventData {
+        val currentUserId = currentUserId ?: ""
+
+        val participants = sortParticipants(
+            convertParticipants(dto.participants)
+        )
+
+
+        val myRole = participants
+            .find { it.id == currentUserId }
+            ?.role
+            ?: UserRole.MEMBER
+
         val userStatus = when (dto.currentUserParticipationStatus?.uppercase()) {
             "GOING" -> ParticipationStatus.GOING
             "NOT_GOING" -> ParticipationStatus.NOT_GOING
             "INVITED", "0", null -> ParticipationStatus.INVITED
             else -> ParticipationStatus.INVITED
-        }
-
-        val role = when (dto.currentUserRole?.uppercase()) {
-            "ADMIN" -> UserRole.ADMIN
-            "MODERATOR", "COADMIN" -> UserRole.MODERATOR
-            else -> UserRole.MEMBER
         }
 
         return EventData(
@@ -257,11 +272,13 @@ class EventViewModel(
             date = dto.startDate ?: "",
             time = dto.startTime?.take(5) ?: "",
             place = dto.address ?: "",
-            participants = convertParticipants(dto.participants),
+            participants = participants,
             userStatus = userStatus,
-            currentUserRole = role
+            currentUserRole = myRole
         )
+
     }
+
 
 
     private suspend fun determineUserStatusFromDto(eventDto: GetEventResponse): ParticipationStatus {
@@ -361,6 +378,13 @@ class EventViewModel(
             } else {
                 println("Ошибка разжалования: ${result.exceptionOrNull()?.message}")
             }
+        }
+    }
+
+    fun deleteEvent(shabashId: String) {
+        viewModelScope.launch {
+            val result = repository.deleteEvent(shabashId)
+            _eventLeaveResult.emit(result) // Используем тот же поток для обработки результата
         }
     }
 }

@@ -71,7 +71,7 @@ fun ServiceCard(navController: NavController) {
                 title = "Сбор средств",
                 painter = painterResource(id = com.example.shabasher.R.drawable.ruble),
                 onClick = {
-                    Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show()
+                    navController.navigate(Routes.DONATION)
                 }
             )
         }

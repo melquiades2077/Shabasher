@@ -66,9 +66,9 @@ class CreateEventViewModel(
             uiState.value = s.copy(isLoading = true, error = null)
 
             val result = repository.createEvent(
-                title = s.title,
-                description = s.description,
-                address = s.address,
+                title = s.title.trim(),
+                description = s.description.trim(),
+                address = s.address.trim(),
                 date = s.date,
                 time = s.time
             )

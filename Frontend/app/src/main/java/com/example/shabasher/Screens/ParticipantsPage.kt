@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +24,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonRemove
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -304,20 +309,43 @@ fun ParticipantRow(
         }
 
         // Контекстное меню
-        if (showContextMenu) {
-            DropdownMenu(
-                expanded = true,
-                onDismissRequest = { showContextMenu = false }
-            ) {
-                menuItems.forEach { item ->
-                    DropdownMenuItem(
-                        text = { Text(item.text) },
-                        onClick = {
-                            showContextMenu = false
-                            item.action()
-                        }
-                    )
-                }
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false },
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .width(IntrinsicSize.Min)
+        ) {
+            menuItems.forEach { item ->
+                DropdownMenuItem(
+                    onClick = {
+                        showContextMenu = false
+                        item.action()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = when (item.text) {
+                                "Сделать организатором" -> Icons.Default.AdminPanelSettings
+                                "Сделать модератором" -> Icons.Default.Security
+                                "Исключить" -> Icons.Default.Delete
+                                "Разжаловать" -> Icons.Default.ArrowDownward
+                                "Удалить из группы" -> Icons.Default.PersonRemove
+                                else -> Icons.Default.MoreVert
+                            },
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = item.text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.shabasher
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -50,10 +51,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import com.example.shabasher.Screens.DonationScreen
 import com.example.shabasher.Screens.EditProfileScreen
 import com.example.shabasher.Screens.ProfileScreen
 import com.example.shabasher.Screens.ProfileViewModelFactory
 import com.example.shabasher.Screens.SuggestionsScreen
+import com.example.shabasher.ViewModels.DonationViewModel
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -210,6 +213,13 @@ class MainActivity : ComponentActivity() {
 
 
                         SuggestionsScreen(navController = navController)
+
+                    }
+
+                    composable(Routes.DONATION) {
+
+                        val viewModel: DonationViewModel = viewModel()
+                        DonationScreen(navController = navController, viewModel, {})
 
                     }
                 }
