@@ -19,6 +19,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -499,7 +500,40 @@ class EventsRepository(context: Context) {
             Result.failure(e)
         }
     }
+    @Serializable
+    data class UpdateEventRequest(
+        val id: String,
+        val name: String,
+        val description: String,
+        val address: String,
+        val startDate: String,
+        val startTime: String
+    )
 
+    suspend fun updateEvent(request: UpdateEventRequest): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes") {
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer $cleanToken")
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 }
 

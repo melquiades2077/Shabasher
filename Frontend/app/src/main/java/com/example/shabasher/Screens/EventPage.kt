@@ -3,10 +3,12 @@ package com.example.shabasher.Screens
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
@@ -49,7 +52,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,6 +74,7 @@ import com.example.shabasher.components.ServiceCard
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.Model.UserRole
+import com.example.shabasher.R
 import com.example.shabasher.ViewModels.EventUiState
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -193,7 +201,7 @@ fun EventPage(
                     Text(
                         "Выйти",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             },
@@ -248,7 +256,7 @@ fun EventPage(
                     Text(
                         "Удалить",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             },
@@ -286,8 +294,7 @@ fun EventPage(
                     }
                 },
                 actions = {
-                    var expanded by remember { mutableStateOf(false) }
-
+                    // Кнопка "Поделиться" остаётся в тулбаре
                     IconButton(
                         onClick = {
                             ui.event?.id?.let { eventId ->
@@ -297,6 +304,9 @@ fun EventPage(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = "Поделиться")
                     }
+
+                    // Меню "Ещё"
+                    var expanded by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { expanded = true }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
@@ -309,49 +319,90 @@ fun EventPage(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .width(IntrinsicSize.Min)
                         ) {
-                            // Пункт "Выйти из события" — для всех
-                            Box(
-                                modifier = Modifier
-                                    .clickable {
-                                        expanded = false
-
-                                        val event = ui.event ?: return@clickable
-                                        val myRole = event.currentUserRole
-                                        val participants = event.participants
-
-                                        // 🔒 ЗАЩИТА: последний админ не может уйти, если участников > 1
-                                        if (myRole == UserRole.ADMIN) {
-                                            val adminCount = participants.count { it.role == UserRole.ADMIN }
-                                            if (adminCount == 1 && participants.size > 1) {
-                                                showCannotLeaveDialog = true
-                                                return@clickable
+                            // 👇 ПУНКТ "РЕДАКТИРОВАТЬ СОБЫТИЕ" — ТОЛЬКО ДЛЯ АДМИНА
+                            if (ui.event?.currentUserRole == UserRole.ADMIN) {
+                                Box(
+                                    modifier = Modifier
+                                        .clickable {
+                                            expanded = false
+                                            ui.event?.id?.let { eventId ->
+                                                navController.navigate("${Routes.EDITEVENT}/$eventId")
                                             }
                                         }
-
-                                        // ⚠️ Подтверждение выхода — ВСЕГДА
-                                        showConfirmLeaveDialog = true
-                                    }
-                                    .padding(horizontal = 17.dp, vertical = 8.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        .padding(horizontal = 17.dp, vertical = 8.dp)
+                                        .fillMaxWidth()
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ExitToApp,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "Выйти из события",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Редактировать событие",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                 }
                             }
 
-                            // Пункт "Удалить событие" — ТОЛЬКО для админов
+                            // 👇 Пункт "Выйти из события" — для всех НЕ-админов ИЛИ админов с >1 участником
+                            val event = ui.event
+                            if (event != null) {
+                                val isCurrentUserAdmin = event.currentUserRole == UserRole.ADMIN
+                                val totalParticipants = event.participants.size
+
+                                // Показываем "Выйти", если:
+                                // - пользователь НЕ админ → всегда можно выйти
+                                // - пользователь админ, но участников > 1 → можно выйти (оставив других)
+                                if (!isCurrentUserAdmin || (isCurrentUserAdmin && totalParticipants > 1)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clickable {
+                                                expanded = false
+
+                                                val myRole = event.currentUserRole
+                                                val participants = event.participants
+
+                                                // 🔒 ЗАЩИТА: последний админ не может уйти, если участников > 1
+                                                if (myRole == UserRole.ADMIN) {
+                                                    val adminCount = participants.count { it.role == UserRole.ADMIN }
+                                                    if (adminCount == 1 && participants.size > 1) {
+                                                        showCannotLeaveDialog = true
+                                                        return@clickable
+                                                    }
+                                                }
+
+                                                // ⚠️ Подтверждение выхода — ВСЕГДА
+                                                showConfirmLeaveDialog = true
+                                            }
+                                            .padding(horizontal = 17.dp, vertical = 8.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ExitToApp,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "Выйти из события",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 👇 Пункт "Удалить событие" — ТОЛЬКО для админов (всегда доступен, даже если один)
                             if (ui.event?.currentUserRole == UserRole.ADMIN) {
                                 Box(
                                     modifier = Modifier
@@ -416,7 +467,42 @@ fun EventPage(
                         .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(ui.error!!, color = MaterialTheme.colorScheme.error)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("Не удалось присоединиться к событию", color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                        Box(
+                            modifier = Modifier.size(300.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            Image(
+                                painter = painterResource(id = com.example.shabasher.R.drawable.manulnotlogin),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+
+                            // Градиент снизу
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                MaterialTheme.colorScheme.scrim
+                                            ),
+                                            startY = 0f,
+                                            endY = Float.POSITIVE_INFINITY
+                                        )
+                                    )
+                            )
+                        }
+                        Text(ui.error!!, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                    }
+
                 }
             }
 

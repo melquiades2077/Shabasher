@@ -88,7 +88,7 @@ class EventViewModel(
                     ui.value = ui.value.copy(
                         isLoading = false,
                         isJoining = false,
-                        error = "Не удалось присоединиться к событию"
+                        error = "Вы не авторизованы или события не существует"
                     )
                     return@launch
                 }
@@ -177,7 +177,7 @@ class EventViewModel(
                 println("[EventViewModel] Ошибка при присоединении: ${joinResult.exceptionOrNull()?.message}")
                 ui.value = ui.value.copy(
                     isJoining = false,
-                    error = "Не удалось присоединиться к событию"
+                    error = "Не удалось присоединиться к событию.\nВы не авторизованы или события не существует"
                 )
             }
         }

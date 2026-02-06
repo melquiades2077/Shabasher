@@ -80,6 +80,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.example.shabasher.ViewModels.EventSortOrder
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -255,11 +257,34 @@ fun EmptyEventsScreen() {
             style = MaterialTheme.typography.headlineMedium,
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.cat2),
-            contentDescription = "No events",
-            modifier = Modifier.size(200.dp)
-        )
+        Box(
+            modifier = Modifier.size(200.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Image(
+                painter = painterResource(id = com.example.shabasher.R.drawable.manulmain),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+
+            // Градиент снизу
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.scrim
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+        }
 
         Text(
             text = "Создайте новое или\nприсоединитесь по ссылке",

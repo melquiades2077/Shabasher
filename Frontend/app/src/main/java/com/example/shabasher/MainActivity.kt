@@ -52,6 +52,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import com.example.shabasher.Screens.DonationScreen
+import com.example.shabasher.Screens.EditEventPage
 import com.example.shabasher.Screens.EditProfileScreen
 import com.example.shabasher.Screens.ProfileScreen
 import com.example.shabasher.Screens.ProfileViewModelFactory
@@ -221,6 +222,17 @@ class MainActivity : ComponentActivity() {
                         val viewModel: DonationViewModel = viewModel()
                         DonationScreen(navController = navController, viewModel, {})
 
+                    }
+
+                    composable(
+                        route = "${Routes.EDITEVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId")!!
+                        EditEventPage(
+                            navController = navController,
+                            eventId = eventId
+                        )
                     }
                 }
             }
