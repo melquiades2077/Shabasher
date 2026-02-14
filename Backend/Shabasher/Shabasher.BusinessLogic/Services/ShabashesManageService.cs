@@ -180,5 +180,21 @@ namespace Shabasher.BusinessLogic.Services
 
             return Result.Success(new UserShabashParticipationResponse(sp.ShabashId, sp.Shabash.Name, sp.Status));
         }
+
+        public async Task<Result> LeaveShabashAsync(string userId, string shabashId)
+        {
+            var shabashParticipant = await _dbcontext.ShabashParticipants
+                .Include(sp => sp.User)
+                .Include(sp => sp.Shabash)
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+
+            if (shabashParticipant == null)
+                return Result.Failure("Пользователь не является участником шабаша");
+
+            _dbcontext.ShabashParticipants.Remove(shabashParticipant);
+            await _dbcontext.SaveChangesAsync();
+
+            return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
+        }
     }
 }

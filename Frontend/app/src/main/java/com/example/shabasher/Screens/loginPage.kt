@@ -22,8 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,6 +42,12 @@ import com.example.shabasher.ViewModels.LoginViewModel
 fun LoginPage(
     navController: NavController,
               viewModel: LoginViewModel = viewModel()) {
+
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),
@@ -113,7 +122,8 @@ fun LoginPage(
                         label = "Email",
                         value = viewModel.email.value,
                         onValueChange = { viewModel.email.value = it },
-                        keyboardType = KeyboardType.Email
+                        keyboardType = KeyboardType.Email,
+                        modifier = Modifier.focusRequester(focusRequester)
                     )
 
                     InputField(

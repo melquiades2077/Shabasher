@@ -23,9 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,6 +58,13 @@ fun NamePage(
             password = password
         )
     )
+    val focusRequester = remember { FocusRequester() }
+
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
 
     LaunchedEffect(viewModel.success.value) {
@@ -82,7 +93,11 @@ fun NamePage(
                 title = { Text("") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { SafeNavigation.navigate { navController.popBackStack() } }
+
+                        onClick = {
+                            focusManager.clearFocus()
+                            SafeNavigation.navigate { navController.popBackStack()
+                            } }
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
@@ -159,7 +174,8 @@ fun NamePage(
                 InputField(
                     label = "Имя",
                     value = viewModel.name.value,
-                    onValueChange = { viewModel.name.value = it }
+                    onValueChange = { viewModel.name.value = it },
+                    modifier = Modifier.focusRequester(focusRequester)
                 )
 
                 // Ошибка

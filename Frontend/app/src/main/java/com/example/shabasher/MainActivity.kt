@@ -3,6 +3,7 @@ package com.example.shabasher
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,8 +47,18 @@ import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.ui.theme.ShabasherTheme
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import com.example.shabasher.Screens.DonationScreen
+import com.example.shabasher.Screens.EditEventPage
+import com.example.shabasher.Screens.EditProfileScreen
+import com.example.shabasher.Screens.ProfileScreen
+import com.example.shabasher.Screens.ProfileViewModelFactory
+import com.example.shabasher.Screens.SuggestionsScreen
+import com.example.shabasher.ViewModels.DonationViewModel
+
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
     return remember { ViewModelFactory(context) }
@@ -59,6 +70,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             val context = LocalContext.current
@@ -70,7 +83,8 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val tokenManager = remember { TokenManager(context) }
-            val startDestination = if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
+            val startDestination =
+                if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 // Handle Deep Link navigation
@@ -113,17 +127,49 @@ class MainActivity : ComponentActivity() {
                         MainPage(navController, vm)
                     }
 
+                    // Свой профиль (без ID)
                     composable(Routes.PROFILE) {
-                        val vm: ProfileViewModel = viewModel(factory = viewModelFactory)
-                        ProfilePage(navController, themeViewModel, vm)
+                        val vm: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = null
+                            )
+                        )
+                        ProfileScreen(navController, themeViewModel, null)
+                    }
+
+                    // Чужой профиль (с ID)
+                    composable(Routes.PROFILE_WITH_ID) { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId")
+                        if (userId == null) {
+                            // Ошибка — вернуть назад или показать ошибку
+                            navController.popBackStack()
+                            return@composable
+                        }
+
+                        val vm: ProfileViewModel = viewModel(
+                            key = "profile_$userId", // ← важно! иначе ViewModel будет кэшироваться
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = userId
+                            )
+                        )
+                        ProfileScreen(navController, themeViewModel, userId)
                     }
 
                     composable(
-                        route = "${Routes.EVENT}/{eventId}",
-                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                        route = "${Routes.EVENT}/{eventId}?inviteId={inviteId}",
+                        arguments = listOf(
+                            navArgument("eventId") { type = NavType.StringType },
+                            navArgument("inviteId") {
+                                type = NavType.StringType
+                                nullable = true
+                            }
+                        )
                     ) { backStackEntry ->
                         val vm: EventViewModel = viewModel(factory = viewModelFactory)
                         val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        // inviteId больше не используется в логике
                         EventPage(navController, eventId, vm)
                     }
 
@@ -141,7 +187,11 @@ class MainActivity : ComponentActivity() {
                         val vm: ShareEventViewModel = viewModel(
                             factory = ShareEventViewModelFactory(inviteRepository)
                         )
-                        ShareEventPage(navController = navController, viewModel = vm, eventId = eventId)
+                        ShareEventPage(
+                            navController = navController,
+                            viewModel = vm,
+                            eventId = eventId
+                        )
                     }
 
                     composable(
@@ -151,10 +201,44 @@ class MainActivity : ComponentActivity() {
                         val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
                         ParticipantsPage(navController, eventId = eventId)
                     }
+
+                    composable(Routes.EDIT_PROFILE) {
+
+
+                        EditProfileScreen(
+                            navController = navController
+                        )
+                    }
+
+                    composable(Routes.SUGGESTIONS) {
+
+
+                        SuggestionsScreen(navController = navController)
+
+                    }
+
+                    composable(Routes.DONATION) {
+
+                        val viewModel: DonationViewModel = viewModel()
+                        DonationScreen(navController = navController, viewModel, {})
+
+                    }
+
+                    composable(
+                        route = "${Routes.EDITEVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId")!!
+                        EditEventPage(
+                            navController = navController,
+                            eventId = eventId
+                        )
+                    }
                 }
             }
         }
     }
+
 }
 
 @Composable

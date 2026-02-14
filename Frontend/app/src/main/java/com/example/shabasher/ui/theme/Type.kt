@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.shabasher.R
 
-private val ShabasherFont = FontFamily(
+public val ShabasherFont = FontFamily(
     Font(R.font.shabasher_font)
 )
 
@@ -19,7 +19,7 @@ val Typography = Typography(
     displayMedium = TextStyle(
         fontFamily = ShabasherFont,
         fontWeight = FontWeight.ExtraBold,
-        fontSize = 32.sp,
+        fontSize = 38.sp,
         lineHeight = 38.sp
     ),
 

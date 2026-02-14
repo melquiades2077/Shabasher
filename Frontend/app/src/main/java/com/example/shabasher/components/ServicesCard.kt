@@ -1,6 +1,6 @@
 package com.example.shabasher.components
 
-import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
@@ -27,15 +26,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.shabasher.ui.theme.ShabasherTheme
+import androidx.navigation.NavController
+import android.widget.Toast
+import androidx.compose.ui.graphics.painter.Painter
+import com.example.shabasher.Model.Routes
 
 @Composable
-fun ServiceCard() {
+fun ServiceCard(navController: NavController) {
     val context = LocalContext.current
 
     Column(
@@ -48,7 +51,6 @@ fun ServiceCard() {
             )
             .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 16.dp)
             .fillMaxWidth()
-
     ) {
         Text(
             "Сервисы",
@@ -58,8 +60,20 @@ fun ServiceCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-                ServiceButton("Предложения", Icons.Default.Lightbulb, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
-                ServiceButton("Сбор средств", Icons.Default.MonetizationOn, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
+            ServiceButton(
+                title = "Предложения",
+                iconVector = Icons.Default.Lightbulb,
+                onClick = {
+                    navController.navigate(Routes.SUGGESTIONS)
+                }
+            )
+            ServiceButton(
+                title = "Сбор средств",
+                painter = painterResource(id = com.example.shabasher.R.drawable.ruble),
+                onClick = {
+                    navController.navigate(Routes.DONATION)
+                }
+            )
         }
     }
 }
@@ -78,7 +92,6 @@ fun GamesCard() {
             )
             .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 16.dp)
             .fillMaxWidth()
-
     ) {
         Text(
             "Игры",
@@ -88,16 +101,33 @@ fun GamesCard() {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            ServiceButton("Правда или\nдействие", Icons.Default.CheckCircle, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
-            ServiceButton("Мафия", Icons.Default.Bedtime, { Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show() })
+            ServiceButton(
+                title = "Правда или\nдействие",
+                iconVector = Icons.Default.CheckCircle,
+                onClick = {
+                    Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show()
+                }
+            )
+            ServiceButton(
+                title = "Мафия",
+                iconVector = Icons.Default.Bedtime,
+                onClick = {
+                    Toast.makeText(context, "Экран в разработке", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
     }
 }
 
+// Основная функция с поддержкой и ImageVector, и Painter
 @Composable
-fun ServiceButton(title: String, icon: ImageVector, onClick: () -> Unit) {
-
-    Column (
+fun ServiceButton(
+    title: String,
+    iconVector: ImageVector? = null,
+    painter: Painter? = null,
+    onClick: () -> Unit
+) {
+    Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -108,21 +138,43 @@ fun ServiceButton(title: String, icon: ImageVector, onClick: () -> Unit) {
                 .padding(vertical = 10.dp, horizontal = 16.dp)
                 .width(115.dp)
                 .height(115.dp),
-            Alignment.Center
-
+            contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, Modifier.size(60.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (iconVector != null) {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (painter != null) {
+                Image(
+                    painter = painter,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                )
+            }
         }
         Spacer(Modifier.height(8.dp))
-        Text(title, textAlign = TextAlign.Center, )
+        Text(
+            text = title,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
-@Preview(showBackground = true)
+// Альтернативная версия с только ImageVector для обратной совместимости
 @Composable
-fun ServiceCardPreview() {
-    ShabasherTheme(darkTheme = true) {
-        ServiceCard()
-    }
+fun ServiceButton(
+    title: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    ServiceButton(
+        title = title,
+        iconVector = icon,
+        onClick = onClick
+    )
 }

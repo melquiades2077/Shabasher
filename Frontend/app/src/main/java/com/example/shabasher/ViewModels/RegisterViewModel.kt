@@ -22,6 +22,7 @@ class RegisterViewModel(
     var success = mutableStateOf(false)
 
     fun register() {
+        error.value = null
 
         // 1. Проверка email
         EmailValidator.validate(email.value)?.let {
@@ -50,28 +51,13 @@ object EmailValidator {
 
     private const val MAX_EMAIL_LEN = 254
 
-    private val regex = Pattern.compile(
-        "(?<Login>[a-zA-Z0-9._%+-]+)@(?<Domain>[a-zA-Z0-9.-]+)\\.(?<HLDomain>[a-zA-Z]{2,})\\b",
-        Pattern.CASE_INSENSITIVE
-    )
-
     fun validate(email: String): String? {
-        val errors = mutableListOf<String>()
-
-        if (email.isBlank())
-            errors.add("Электронная почта обязательна для заполнения")
-
-        if (email.length > MAX_EMAIL_LEN)
-            errors.add("Длина электронной почты не должна превышать $MAX_EMAIL_LEN")
-
-        try {
-            if (!regex.matcher(email).find())
-                errors.add("Неверный формат электронной почты")
-        } catch (e: Exception) {
-            errors.add("Неверный формат электронной почты")
+        if (email.isBlank()) return "Email обязателен"
+        if (email.length > 254) return "Слишком длинный email"
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            return "Неверный формат email"
         }
-
-        return if (errors.isEmpty()) null else errors.joinToString("; ")
+        return null
     }
 }
 

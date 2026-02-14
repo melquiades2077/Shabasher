@@ -439,4 +439,43 @@ fabric.properties
 .env
 
 # apk
-.apk
+*.apk
+
+## SSL/TLS Certificates
+Shabasher.API/certs/*.pfx
+Shabasher.API/certs/*.pem
+Shabasher.API/certs/*.key
+Shabasher.API/certs/*.crt
+Shabasher.API/certs/*.cer
+certs/*.pfx
+certs/*.pem
+certs/*.key
+certs/*.crt
+certs/*.cer
+
+## Build results
+bin/
+obj/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio cache/options
+.vs/
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## Environment variables
+.env
+.env.local
+
+## Database
+*.db
+*.sqlite

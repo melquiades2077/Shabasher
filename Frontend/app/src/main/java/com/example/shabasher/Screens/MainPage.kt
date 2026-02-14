@@ -1,11 +1,14 @@
 package com.example.shabasher.Screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -24,13 +27,21 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -69,17 +80,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.example.shabasher.ViewModels.EventSortOrder
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(
     navController: NavController,
     viewModel: MainPageViewModel
 ) {
-    val ui = viewModel.uiState.value
+    val uiState = viewModel.uiState.value
 
     LaunchedEffect(Unit) {
         viewModel.loadEvents()
+    }
+
+    // Получаем отсортированный список
+    val sortedEvents = remember(uiState.events, uiState.sortOrder) {
+        viewModel.getSortedEvents(uiState.events, uiState.sortOrder)
     }
 
     Scaffold(
@@ -94,6 +114,77 @@ fun MainPage(
                         }
                     ) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "В профиль")
+                    }
+                },
+                actions = {
+                    var expanded by remember { mutableStateOf(false) }
+
+                    Box {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.Sort, contentDescription = "Сортировка")
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.surface)
+                                .width(IntrinsicSize.Min)
+                        ) {
+                            // Вариант 1: Ближайшие
+                            Box(
+                                modifier = Modifier
+                                    .clickable {
+                                        viewModel.setSortOrder(EventSortOrder.NEAREST_FIRST)
+                                        expanded = false
+                                    }
+                                    .padding(horizontal = 17.dp, vertical = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Ближайшие",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+
+                            // Вариант 2: Наиболее отдалённые
+                            Box(
+                                modifier = Modifier
+                                    .clickable {
+                                        viewModel.setSortOrder(EventSortOrder.FARTHEST_FIRST)
+                                        expanded = false
+                                    }
+                                    .padding(horizontal = 17.dp, vertical = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Наиболее отдалённые",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -116,32 +207,30 @@ fun MainPage(
             }
         }
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
             when {
-                ui.isLoading -> {
+                uiState.isLoading -> {
                     MainLoadingScreen()
                 }
 
-                ui.error != null -> {
+                uiState.error != null -> {
                     ErrorScreen(
-                        message = ui.error!!,
+                        message = uiState.error!!,
                         onRetry = { viewModel.loadEvents() }
                     )
                 }
 
-                ui.events.isEmpty() -> {
+                sortedEvents.isEmpty() -> {
                     EmptyEventsScreen()
                 }
 
                 else -> {
                     EventsList(
-                        events = ui.events,
+                        events = sortedEvents,
                         onClick = { eventId ->
                             SafeNavigation.navigate {
                                 navController.navigate("${Routes.EVENT}/$eventId")
@@ -168,11 +257,34 @@ fun EmptyEventsScreen() {
             style = MaterialTheme.typography.headlineMedium,
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.cat2),
-            contentDescription = "No events",
-            modifier = Modifier.size(200.dp)
-        )
+        Box(
+            modifier = Modifier.size(200.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Image(
+                painter = painterResource(id = com.example.shabasher.R.drawable.manulmain),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+
+            // Градиент снизу
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.scrim
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+        }
 
         Text(
             text = "Создайте новое или\nприсоединитесь по ссылке",
@@ -210,6 +322,7 @@ fun MainLoadingScreen() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventsList(
     events: List<EventShort>,
@@ -217,7 +330,7 @@ fun EventsList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(events) { event ->
             EventCard(

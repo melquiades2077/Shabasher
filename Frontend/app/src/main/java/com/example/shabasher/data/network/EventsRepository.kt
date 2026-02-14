@@ -2,7 +2,10 @@ package com.example.shabasher.data.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.shabasher.Model.ParticipationStatus
+import com.example.shabasher.Model.UserRole
 import com.example.shabasher.data.dto.*
 import com.example.shabasher.data.local.TokenManager
 import io.ktor.client.*
@@ -16,6 +19,9 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class EventsRepository(context: Context) {
     private val tokenManager = TokenManager(context)
@@ -111,6 +117,7 @@ class EventsRepository(context: Context) {
 
 
     // Получить все события пользователя
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getEvents(): Result<List<EventShortDto>> {
         return try {
             println("[DEBUG] === НАЧАЛО ПОЛУЧЕНИЯ СОБЫТИЙ ===")
@@ -169,7 +176,7 @@ class EventsRepository(context: Context) {
                             id = participation.shabashId,
                             title = title,
                             dateTime = dateTime,
-                            status = getEventStatus(participation.status)
+                            status = getEventStatus(dateTime)
                         )
                     )
 
@@ -377,15 +384,181 @@ class EventsRepository(context: Context) {
         }
     }
 
+    suspend fun leaveFromEvent(shabashId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
 
-}
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            // Используем PATCH, а не GET
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/leave") {
+                header("Authorization", "Bearer $cleanToken")
+                // Передаём параметр в query-строке с правильным именем
+                parameter("shabashId", shabashId)
+            }
+
+            if (response.status.isSuccess()) {
+                // Успех: тело ответа пустое — просто возвращаем Unit
+                Result.success(Unit)
+            } else {
+                // Читаем тело как строку (ошибка от сервера)
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // В EventsRepository.kt
+
+    suspend fun kickParticipant(shabashId: String, targetUserId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val currentUserId = getCurrentUserId() ?: return Result.failure(Exception("Не удалось определить пользователя"))
+
+            val request = KickParticipantRequest(
+                shabashId = shabashId,
+                userId = targetUserId,
+                adminId = currentUserId
+            )
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/kick") {
+                header("Authorization", "Bearer ${token.trim().removeSurrounding("\"")}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка при исключении: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateParticipantRole(shabashId: String, targetUserId: String, newRole: UserRole): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val roleString = newRole.backendValue
+            val currentUserId = getCurrentUserId() ?: return Result.failure(Exception("Не удалось определить пользователя"))
 
 
-fun getEventStatus(status: String): String {
-    return when (status) {
-        "0" -> "Скоро начнётся" // или "Ожидается", "Впереди"
-        "1" -> "Завершено" // или "Прошло", "Состоялось"
-        else -> "Статус неизвестен"
+            val request = UpdateRoleRequest(
+                shabashId = shabashId,
+                userId = targetUserId,
+                adminId = currentUserId, // ← Передаём себя как админа
+                role = newRole.backendValue
+            )
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes/roles") {
+                header("Authorization", "Bearer ${token.trim().removeSurrounding("\"")}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка при смене роли: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteEvent(shabashId: String): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) return Result.failure(Exception("Не авторизован"))
+
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.delete("$baseUrl/api/Shabashes") {
+                header("Authorization", "Bearer $cleanToken")
+                parameter("shabashId", shabashId)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val error = response.body<String>()
+                Result.failure(Exception("Ошибка удаления: $error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    @Serializable
+    data class UpdateEventRequest(
+        val id: String,
+        val name: String,
+        val description: String,
+        val address: String,
+        val startDate: String,
+        val startTime: String
+    )
+
+    suspend fun updateEvent(request: UpdateEventRequest): Result<Unit> {
+        return try {
+            val token = tokenManager.getToken()
+            if (token == null) {
+                return Result.failure(Exception("Не авторизован"))
+            }
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.patch("$baseUrl/api/Shabashes") {
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer $cleanToken")
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val errorText = response.body<String>()
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 }
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun getEventStatus(eventDateStr: String): String {
+    val eventDate = LocalDate.parse(eventDateStr)
+    val today = LocalDate.now()
+
+    return when {
+        eventDate.isBefore(today) -> "Событие завершено"
+        eventDate.isEqual(today) -> "Сегодня"
+        eventDate.isEqual(today.plusDays(1)) -> "Завтра"
+        else -> {
+            val daysUntil = ChronoUnit.DAYS.between(today, eventDate).toInt()
+            // daysUntil >= 2 здесь гарантировано
+            val daysText = when {
+                daysUntil % 10 == 1 && daysUntil % 100 != 11 -> "день"
+                daysUntil % 10 in 2..4 && daysUntil % 100 !in 12..14 -> "дня"
+                else -> "дней"
+            }
+            "Осталось $daysUntil $daysText"
+        }
+    }
+}
+
+
+

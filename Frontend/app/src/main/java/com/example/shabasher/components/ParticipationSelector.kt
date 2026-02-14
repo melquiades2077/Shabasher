@@ -34,7 +34,8 @@ fun ParticipationSelector(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.background( color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(20.dp) )
+        modifier = Modifier
+            .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(20.dp))
             .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 16.dp)
             .fillMaxWidth()
     ) {
@@ -51,14 +52,26 @@ fun ParticipationSelector(
                 text = "Приду",
                 active = selected == ParticipationStatus.GOING,
                 isUpdating = isUpdating,
-                onClick = { onSelect(ParticipationStatus.GOING) }
+                onClick = {
+                    if (selected == ParticipationStatus.GOING) {
+                        onSelect(ParticipationStatus.INVITED)
+                    } else {
+                        onSelect(ParticipationStatus.GOING)
+                    }
+                }
             )
 
             ParticipationButton(
                 text = "Не смогу",
                 active = selected == ParticipationStatus.NOT_GOING,
                 isUpdating = isUpdating,
-                onClick = { onSelect(ParticipationStatus.NOT_GOING) }
+                onClick = {
+                    if (selected == ParticipationStatus.NOT_GOING) {
+                        onSelect(ParticipationStatus.INVITED)
+                    } else {
+                        onSelect(ParticipationStatus.NOT_GOING)
+                    }
+                }
             )
         }
     }

@@ -26,6 +26,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,6 +44,12 @@ import com.example.shabasher.ViewModels.RegisterViewModel
 fun RegisterPage(
     navController: NavController,
     viewModel: RegisterViewModel = viewModel()) {
+
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         modifier = Modifier.Companion.fillMaxSize(),
@@ -117,7 +126,8 @@ fun RegisterPage(
                         label = "Email",
                         value = viewModel.email.value,
                         onValueChange = { viewModel.email.value = it },
-                        keyboardType = KeyboardType.Email
+                        keyboardType = KeyboardType.Email,
+                        modifier = Modifier.focusRequester(focusRequester)
                     )
 
                     InputField(

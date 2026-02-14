@@ -16,10 +16,15 @@ class NameViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val MAX_NAME_LEN = 30   // ← лимит длины имени
+        private const val MAX_NAME_LEN = 30
+        private const val MAX_ABOUT_LEN = 150      // ← лимит "Обо мне"
+        private const val MAX_TELEGRAM_LEN = 32    // ← лимит Telegram (username без @)
     }
 
     var name = mutableStateOf("")
+    var aboutMe = mutableStateOf("")               // ← новое поле
+    var telegram = mutableStateOf("")              // ← новое поле
+
     var error = mutableStateOf<String?>(null)
     var loading = mutableStateOf(false)
     var success = mutableStateOf(false)
@@ -28,16 +33,28 @@ class NameViewModel(
     private val nameRepo = NameRepository(context)
 
     fun submit() {
-        val value = name.value.trim()
+        success.value = false
+        val trimmedName = name.value.trim()
+        val trimmedAbout = aboutMe.value.trim()
+        val trimmedTelegram = telegram.value.trim().removePrefix("@") // убираем @, если есть
 
-        // --- 1) Проверка имени ---
-        if (value.isBlank()) {
+        // --- Проверка имени ---
+        if (trimmedName.isBlank()) {
             error.value = "Введите имя"
             return
         }
-
-        if (value.length > MAX_NAME_LEN) {
+        if (trimmedName.length > MAX_NAME_LEN) {
             error.value = "Длина имени не должна превышать $MAX_NAME_LEN символов"
+            return
+        }
+
+        // --- Опциональные проверки (только длина, если заполнено) ---
+        if (trimmedAbout.length > MAX_ABOUT_LEN) {
+            error.value = "Поле «Обо мне» слишком длинное (макс. $MAX_ABOUT_LEN символов)"
+            return
+        }
+        if (trimmedTelegram.isNotEmpty() && trimmedTelegram.length > MAX_TELEGRAM_LEN) {
+            error.value = "Имя пользователя Telegram слишком длинное (макс. $MAX_TELEGRAM_LEN символов)"
             return
         }
 
@@ -45,16 +62,15 @@ class NameViewModel(
         error.value = null
 
         viewModelScope.launch {
-
-            // --- 2) REGISTER FIRST ---
-            val register = authRepo.register(email, password)
+            // --- Регистрация с новыми полями ---
+            val register = authRepo.register(trimmedName, email, password, trimmedAbout, trimmedTelegram)
             if (register.isFailure) {
                 error.value = register.exceptionOrNull()?.message ?: "Ошибка регистрации"
                 loading.value = false
                 return@launch
             }
 
-            // --- 3) LOGIN ---
+            // --- Логин и получение токена ---
             val login = authRepo.login(email, password)
             if (login.isFailure) {
                 error.value = login.exceptionOrNull()?.message ?: "Ошибка входа"
@@ -62,7 +78,6 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 4) GET TOKEN ---
             val token = authRepo.getToken()
             if (token == null) {
                 error.value = "Ошибка: токен не сохранён"
@@ -70,7 +85,6 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 5) PARSE USER ID ---
             val userId = decodeUserId(token)
             if (userId == null) {
                 error.value = "Ошибка получения userId"
@@ -78,15 +92,7 @@ class NameViewModel(
                 return@launch
             }
 
-            // --- 6) SAVE NAME ---
-            val result = nameRepo.setUserName(userId, value, token)
-
-            if (result.isSuccess) {
-                success.value = true
-            } else {
-                error.value = result.exceptionOrNull()?.message ?: "Ошибка сохранения имени"
-            }
-
+            success.value = true
             loading.value = false
         }
     }

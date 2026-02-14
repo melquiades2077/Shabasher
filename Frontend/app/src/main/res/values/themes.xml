@@ -2,4 +2,22 @@
 <resources>
 
     <style name="Theme.Shabasher" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Shabasher.Splash" parent="Theme.SplashScreen">
+
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <!-- Цвет фона splash -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <!-- Иконка -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+        <!-- Основная тема после splash -->
+        <item name="postSplashScreenTheme">@style/Theme.Shabasher</item>
+
+    </style>
+
+
 </resources>
