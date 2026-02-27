@@ -1,2 +1,175 @@
 package com.example.shabasher.Screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.shabasher.Model.Donation
+import com.example.shabasher.Model.DonationPaymentStatus
+import com.example.shabasher.Model.DonationStatus
+import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.ViewModels.DonationListViewModel
+import com.example.shabasher.ui.theme.ShabasherTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DonationListScreen(
+    navController: NavController,
+    viewModel: DonationListViewModel,
+    modifier: Modifier = Modifier
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Сбор средств") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            SafeNavigation.navigate {
+                                navController.popBackStack()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Назад"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = colorScheme.background
+                )
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = modifier
+                .padding(top = innerPadding.calculateTopPadding())
+        ) {
+            items(uiState.donations) { donation ->
+                DonationCard(donation)
+            }
+        }
+    }
+}
+
+@Composable
+fun DonationCard(
+    donation: Donation,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = donation.title
+                )
+                Text(
+                    text = when (donation.status) {
+                        DonationStatus.ACTIVE -> "Активен"
+                        DonationStatus.COMPLETED -> "Завершён"
+                        DonationStatus.CLOSED -> "Закрыт"
+                    },
+                    modifier = Modifier
+                        .background(
+                            color = when (donation.status) {
+                                DonationStatus.ACTIVE -> colorScheme.primary
+                                else -> colorScheme.secondary
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp)
+                )
+            }
+            Text(
+                text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽"
+            )
+            LinearProgressIndicator(
+                progress = {
+                    (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
+                        .coerceIn(0f, 1f)
+                           },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = colorScheme.primary,
+                trackColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = when (donation.paymentStatus) {
+                        DonationPaymentStatus.PAID -> "Оплачено"
+                        DonationPaymentStatus.NOT_PAID -> "Не оплачено"
+                    },
+                    modifier = Modifier
+                            .background(
+                            color = colorScheme.secondary,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                    .padding(horizontal = 8.dp)
+                )
+                Text(
+                    text = "Оплатили: ${donation.paidParticipants} из ${donation.totalParticipants}"
+                )
+            }
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+fun Preview() {
+    ShabasherTheme {
+        DonationListScreen(
+            navController = rememberNavController(),
+            viewModel = DonationListViewModel(),
+            modifier = Modifier
+        )
+    }
+}
