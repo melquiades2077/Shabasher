@@ -51,7 +51,7 @@ fun DonationListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Сбор средств") },
+                title = { Text("Сборы") },
                 navigationIcon = {
                     IconButton(
                         onClick = {
