@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -104,7 +105,9 @@ fun DonationCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = donation.title
+                    text = donation.title,
+                    color = colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = when (donation.status) {
@@ -112,19 +115,23 @@ fun DonationCard(
                         DonationStatus.COMPLETED -> "Завершён"
                         DonationStatus.CLOSED -> "Закрыт"
                     },
+                    color = colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
                         .background(
                             color = when (donation.status) {
                                 DonationStatus.ACTIVE -> colorScheme.primary
                                 else -> colorScheme.secondary
                             },
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(16.dp)
                         )
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
             Text(
-                text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽"
+                text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽",
+                color = colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
             )
             LinearProgressIndicator(
                 progress = {
@@ -147,15 +154,19 @@ fun DonationCard(
                         DonationPaymentStatus.PAID -> "Оплачено"
                         DonationPaymentStatus.NOT_PAID -> "Не оплачено"
                     },
+                    color = colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
                             .background(
                             color = colorScheme.secondary,
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(16.dp)
                 )
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
                 Text(
-                    text = "Оплатили: ${donation.paidParticipants} из ${donation.totalParticipants}"
+                    text = "Оплатили: ${donation.paidParticipants} из ${donation.totalParticipants}",
+                    color = colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
