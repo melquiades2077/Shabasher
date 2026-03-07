@@ -3,6 +3,7 @@ package com.example.shabasher.Model
 enum class DonationStatus { ACTIVE, COMPLETED, CLOSED }
 enum class DonationPaymentStatus { PAID, NOT_PAID }
 data class Donation(
+    val id: String,
     val title: String,
     val description: String,
     val status: DonationStatus,
