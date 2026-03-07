@@ -1,16 +1,23 @@
 package com.example.shabasher.Screens
 
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,8 +34,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.R
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -62,7 +75,7 @@ fun DonationListScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад"
                         )
                     }
@@ -73,13 +86,56 @@ fun DonationListScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = modifier
-                .padding(top = innerPadding.calculateTopPadding())
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(uiState.donations) { donation ->
-                DonationCard(donation)
+            if (uiState.donations.isEmpty()) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier
+                        .fillMaxSize()
+                        .weight(4f)
+                ) {
+                    Image(
+                        painter = painterResource(id = com.example.shabasher.R.drawable.manulnotlogin),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(280.dp)
+                    )
+                    Text(
+                        text = "В этом событии пока нет сборов",
+                        color = colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(uiState.donations) { donation ->
+                        DonationCard(donation)
+                    }
+                }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = "Приложение не принимает платежи, оно лишь фиксирует факт оплаты",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = colorScheme.outline
+                ),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -94,7 +150,6 @@ fun DonationCard(
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -175,7 +230,7 @@ fun DonationCard(
 
 @PreviewLightDark
 @Composable
-fun Preview() {
+fun DonationListScreenPreview() {
     ShabasherTheme {
         DonationListScreen(
             navController = rememberNavController(),

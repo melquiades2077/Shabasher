@@ -12,7 +12,8 @@ class DonationListViewModel : ViewModel() {
     val uiState: StateFlow<DonationListState> = _uiState
 
     fun fetchDonations() {
-        val mockDonations = listOf(
+        // val mockDonations = emptyList<Donation>()
+        val mockDonations =  listOf(
             Donation(
                 title = "Поездка в горы на выходные",
                 description = "Сбор на транспорт и проживание для группы из 12 человек",
