@@ -81,8 +81,8 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val tokenManager = remember { TokenManager(context) }
-            val startDestination =
-                if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
+            val startDestination = Routes.DONATION_LIST
+                //if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
 
             ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 // Handle Deep Link navigation
