@@ -3,18 +3,22 @@ package com.example.shabasher
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,20 +26,27 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.shabasher.Model.Routes
 import com.example.shabasher.Screens.CreateEventPage
+import com.example.shabasher.Screens.DonationListScreen
+import com.example.shabasher.Screens.DonationScreen
+import com.example.shabasher.Screens.EditEventPage
+import com.example.shabasher.Screens.EditProfileScreen
 import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
 import com.example.shabasher.Screens.ParticipantsPage
-import com.example.shabasher.Screens.ProfilePage
+import com.example.shabasher.Screens.ProfileScreen
+import com.example.shabasher.Screens.ProfileViewModelFactory
 import com.example.shabasher.Screens.RegisterPage
 import com.example.shabasher.Screens.ShareEventPage
+import com.example.shabasher.Screens.SuggestionsScreen
 import com.example.shabasher.Screens.WelcomePage
 import com.example.shabasher.ViewModels.CreateEventViewModel
+import com.example.shabasher.ViewModels.DonationListViewModel
+import com.example.shabasher.ViewModels.DonationViewModel
 import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.ViewModels.LoginViewModel
 import com.example.shabasher.ViewModels.MainPageViewModel
-import com.example.shabasher.ViewModels.NameViewModel
 import com.example.shabasher.ViewModels.ProfileViewModel
 import com.example.shabasher.ViewModels.RegisterViewModel
 import com.example.shabasher.ViewModels.ShareEventViewModel
@@ -45,19 +56,6 @@ import com.example.shabasher.ViewModels.ViewModelFactory
 import com.example.shabasher.data.local.TokenManager
 import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.ui.theme.ShabasherTheme
-import androidx.lifecycle.ViewModelProvider
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.core.view.WindowCompat
-import androidx.navigation.NavController
-import com.example.shabasher.Screens.DonationScreen
-import com.example.shabasher.Screens.EditEventPage
-import com.example.shabasher.Screens.EditProfileScreen
-import com.example.shabasher.Screens.ProfileScreen
-import com.example.shabasher.Screens.ProfileViewModelFactory
-import com.example.shabasher.Screens.SuggestionsScreen
-import com.example.shabasher.ViewModels.DonationViewModel
 
 @Composable
 fun rememberViewModelFactory(context: Context): ViewModelFactory {
@@ -217,10 +215,26 @@ class MainActivity : ComponentActivity() {
 
                     }
 
-                    composable(Routes.DONATION) {
+                    composable(Routes.DONATION_LIST) {
+                        val viewModel: DonationListViewModel = viewModel()
+                        DonationListScreen(
+                            navController = navController,
+                            viewModel = viewModel,
+                        )
+                    }
 
+                    composable(
+                        route = Routes.DONATION,
+                        arguments = listOf(navArgument("donationId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val donationId = backStackEntry.arguments?.getString("donationId")!!
                         val viewModel: DonationViewModel = viewModel()
-                        DonationScreen(navController = navController, viewModel, {})
+                        DonationScreen(
+                            navController = navController,
+                            viewModel = viewModel,
+                            donationId = donationId,
+                            onPaymentConfirmed = {}
+                        )
 
                     }
 

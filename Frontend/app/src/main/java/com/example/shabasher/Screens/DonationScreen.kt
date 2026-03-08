@@ -3,29 +3,54 @@ package com.example.shabasher.Screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.DonationViewModel
+import com.example.shabasher.ui.theme.ShabasherTheme
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +58,7 @@ import kotlinx.coroutines.delay
 fun DonationScreen(
     navController: NavController,
     viewModel: DonationViewModel,
+    donationId: String,
     onPaymentConfirmed: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -41,6 +67,14 @@ fun DonationScreen(
     var showCopiedToast by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
+
+    LaunchedEffect(donationId) {
+        viewModel.loadDonationById(donationId)
+    }
+
+    val donation = state.donation
+    if (donation == null)
+        return
 
     Scaffold(
         topBar = {
@@ -82,7 +116,7 @@ fun DonationScreen(
 
             // Header
             Text(
-                text = state.title,
+                text = donation.title,
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = colorScheme.onBackground
@@ -93,7 +127,7 @@ fun DonationScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = state.description,
+                text = donation.description,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = colorScheme.onSurfaceVariant
                 ),
@@ -111,7 +145,7 @@ fun DonationScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
 
                     val progress =
-                        (state.collectedAmount.toFloat() / state.targetAmount.toFloat())
+                        (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
                             .coerceIn(0f, 1f)
 
                     LinearProgressIndicator(
@@ -127,7 +161,7 @@ fun DonationScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Собрано ${state.collectedAmount} ₽ из ${state.targetAmount} ₽",
+                        text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Medium,
                             color = colorScheme.onSurfaceVariant
@@ -139,7 +173,7 @@ fun DonationScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Оплатили ${state.paidParticipants} из ${state.totalParticipants} участников",
+                        text = "Оплатили ${donation.paidParticipants} из ${donation.totalParticipants} участников",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Medium,
                             color = colorScheme.onSurfaceVariant
@@ -166,7 +200,7 @@ fun DonationScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = state.paymentDetails,
+                            text = donation.paymentDetails,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Medium,
                                 color = colorScheme.onSurface
@@ -195,7 +229,7 @@ fun DonationScreen(
                                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText(
                                 "PaymentDetails",
-                                state.paymentDetails
+                                donation.paymentDetails
                             )
                             clipboard.setPrimaryClip(clip)
                             showCopiedToast = true
@@ -274,5 +308,19 @@ fun ToastOverlay(text: String, colorScheme: ColorScheme) {
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+fun DonationScreenPreview() {
+    ShabasherTheme {
+        DonationScreen(
+            navController = rememberNavController(),
+            viewModel = viewModel(),
+            donationId = "2",
+            onPaymentConfirmed = { },
+            modifier = Modifier
+        )
     }
 }
