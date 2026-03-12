@@ -1,12 +1,15 @@
 package com.example.shabasher.Screens
 
+import android.widget.ProgressBar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +38,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -191,17 +196,25 @@ fun DonationCard(
                 color = colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium
             )
-            LinearProgressIndicator(
+            /*LinearProgressIndicator(
                 progress = {
                     (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
                         .coerceIn(0f, 1f)
                            },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
+                    .height(8.dp),
                     .clip(RoundedCornerShape(4.dp)),
                 color = colorScheme.primary,
                 trackColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            ) */
+            ProgressBar(
+                progress = (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
+                    .coerceIn(0f, 1f),
+                color = when (donation.status) {
+                    DonationStatus.CLOSED -> colorScheme.secondary
+                    else -> colorScheme.primary
+                }
             )
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -231,6 +244,29 @@ fun DonationCard(
     }
 }
 
+@Composable
+fun ProgressBar(
+    progress: Float,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(12.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colorScheme.surfaceVariant)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(16.dp))
+                .background(color)
+        )
+    }
+}
+
 @PreviewLightDark
 @Composable
 fun DonationListScreenPreview() {
@@ -240,5 +276,6 @@ fun DonationListScreenPreview() {
             viewModel = viewModel(),
             modifier = Modifier
         )
+        //ProgressBar(0.6f)
     }
 }
