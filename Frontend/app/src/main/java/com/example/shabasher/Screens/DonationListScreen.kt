@@ -225,7 +225,10 @@ fun DonationCard(
                         DonationPaymentStatus.PAID -> "Оплачено"
                         DonationPaymentStatus.NOT_PAID -> "Не оплачено"
                     },
-                    color = colorScheme.onSurface,
+                    color = when (donation.paymentStatus) {
+                        DonationPaymentStatus.PAID -> colorScheme.onSurface
+                        DonationPaymentStatus.NOT_PAID -> colorScheme.error
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
                             .background(
