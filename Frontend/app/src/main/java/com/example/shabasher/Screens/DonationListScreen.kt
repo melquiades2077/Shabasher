@@ -1,5 +1,6 @@
 package com.example.shabasher.Screens
 
+import android.R
 import android.widget.ProgressBar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -196,21 +198,8 @@ fun DonationCard(
                 color = colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium
             )
-            /*LinearProgressIndicator(
-                progress = {
-                    (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
-                        .coerceIn(0f, 1f)
-                           },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                    .clip(RoundedCornerShape(4.dp)),
-                color = colorScheme.primary,
-                trackColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ) */
             ProgressBar(
-                progress = (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
-                    .coerceIn(0f, 1f),
+                progress = (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat()).coerceIn(0f, 1f),
                 color = when (donation.status) {
                     DonationStatus.CLOSED -> colorScheme.secondary
                     else -> colorScheme.primary

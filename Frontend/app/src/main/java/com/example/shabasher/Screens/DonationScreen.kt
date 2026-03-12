@@ -3,9 +3,11 @@ package com.example.shabasher.Screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +55,7 @@ import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.DonationViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,19 +147,8 @@ fun DonationScreen(
                 colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-
-                    val progress =
-                        (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat())
-                            .coerceIn(0f, 1f)
-
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = colorScheme.primary,
-                        trackColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ProgressBar(
+                        progress = (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat()).coerceIn(0f, 1f)
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -308,6 +301,36 @@ fun ToastOverlay(text: String, colorScheme: ColorScheme) {
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@Composable
+fun ProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colorScheme.surfaceVariant)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colorScheme.primary)
+        )
+        Text(
+            text = "${(progress * 100).roundToInt()}%",
+            color = colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+        )
     }
 }
 
