@@ -75,6 +75,8 @@ namespace Shabasher.BusinessLogic.Services
                 return Result.Failure<SuggestionResponse>(created.Error);
 
             var s = created.Value;
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
             var entity = new SuggestionEntity
             {
                 Id = s.Id,
@@ -83,7 +85,8 @@ namespace Shabasher.BusinessLogic.Services
                 Description = s.Description,
                 LikesCount = 0,
                 DislikesCount = 0,
-                CreatedAt = s.CreatedAt
+                CreatedAt = s.CreatedAt,
+                User = user
             };
 
             _db.Suggestions.Add(entity);
