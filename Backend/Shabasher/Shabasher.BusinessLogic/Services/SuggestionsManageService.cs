@@ -17,11 +17,11 @@ namespace Shabasher.BusinessLogic.Services
             _db = db;
         }
 
-        private static SuggestionResponse ToResponse(SuggestionEntity s, Vote? myVote) =>
+        private static SuggestionResponse ToResponse(SuggestionEntity s, Vote? myVote, string userName) =>
             new(
                 s.Id,
                 s.UserId,
-                s.User.Name,
+                userName,
                 s.Description,
                 s.LikesCount,
                 s.DislikesCount,
@@ -49,6 +49,13 @@ namespace Shabasher.BusinessLogic.Services
             if (suggestions.Count == 0)
                 return Result.Success(new SuggestionsListResponse(Array.Empty<SuggestionResponse>()));
 
+            var userIds = suggestions.Select(s => s.UserId).Distinct().ToList();
+
+            var users = await _db.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Name);
+
             var ids = suggestions.Select(s => s.Id).ToList();
             var myVotes = await _db.SuggestionVotes
                 .AsNoTracking()
@@ -56,7 +63,10 @@ namespace Shabasher.BusinessLogic.Services
                 .ToDictionaryAsync(v => v.SuggestionId, v => v.Vote);
 
             var list = suggestions
-                .Select(s => ToResponse(s, myVotes.TryGetValue(s.Id, out var v) ? v : null))
+                .Select(s => ToResponse(
+                    s,
+                    myVotes.TryGetValue(s.Id, out var v) ? v : null,
+                    users.TryGetValue(s.UserId, out var name) ? name : "Неизвестный пользователь"))
                 .ToList();
 
             return Result.Success(new SuggestionsListResponse(list));
@@ -75,8 +85,6 @@ namespace Shabasher.BusinessLogic.Services
                 return Result.Failure<SuggestionResponse>(created.Error);
 
             var s = created.Value;
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
             var entity = new SuggestionEntity
             {
                 Id = s.Id,
@@ -85,14 +93,19 @@ namespace Shabasher.BusinessLogic.Services
                 Description = s.Description,
                 LikesCount = 0,
                 DislikesCount = 0,
-                CreatedAt = s.CreatedAt,
-                User = user
+                CreatedAt = s.CreatedAt
             };
 
             _db.Suggestions.Add(entity);
             await _db.SaveChangesAsync();
 
-            return Result.Success(ToResponse(entity, null));
+            var userName = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.Id == userId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync() ?? "Неизвестный пользователь";
+
+            return Result.Success(ToResponse(entity, null, userName));
         }
 
         public async Task<Result<SuggestionVoteResultResponse>> VoteAsync(string suggestionId, string userId, string action)
