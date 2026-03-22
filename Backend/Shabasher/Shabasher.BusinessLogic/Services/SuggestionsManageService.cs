@@ -20,8 +20,8 @@ namespace Shabasher.BusinessLogic.Services
         private static SuggestionResponse ToResponse(SuggestionEntity s, Vote? myVote) =>
             new(
                 s.Id,
-                s.ShabashId,
                 s.UserId,
+                s.User.Name,
                 s.Description,
                 s.LikesCount,
                 s.DislikesCount,
