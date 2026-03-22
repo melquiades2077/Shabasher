@@ -14,10 +14,12 @@ namespace Shabasher.API.Controllers
     public class ShabashesController : ControllerBase
     {
         private readonly IShabashesManageService _shabashesManageService;
+        private readonly ISuggestionsManageService _suggestions;
 
-        public ShabashesController(IShabashesManageService shabashesManageService)
+        public ShabashesController(IShabashesManageService shabashesManageService, ISuggestionsManageService suggestions)
         {
             _shabashesManageService = shabashesManageService;
+            _suggestions = suggestions;
         }
 
         private string GetUserId()
@@ -133,6 +135,34 @@ namespace Shabasher.API.Controllers
                 return BadRequest(response.Error);
 
             return Ok();
+        }
+
+        [HttpGet("{shabashId}/suggestions")]
+        public async Task<ActionResult<SuggestionsListResponse>> GetSuggestions(string shabashId)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _suggestions.GetSuggestionsAsync(shabashId, userId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
+        }
+
+        [HttpPost("{shabashId}/suggestions")]
+        public async Task<ActionResult<SuggestionResponse>> CreateSuggestion(string shabashId, [FromBody] string createSuggestionText)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _suggestions.CreateSuggestionAsync(shabashId, userId, createSuggestionText);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
         }
     }
 }

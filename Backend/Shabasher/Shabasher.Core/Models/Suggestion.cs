@@ -4,7 +4,7 @@ namespace Shabasher.Core.Models
 {
     public class Suggestion
     {
-        private const int MAX_DESCRIPTION_LEN = 600;
+        private const int MAX_DESCRIPTION_LEN = 300;
 
         public string Id { get; }
         public string ShabashId { get; }
@@ -27,7 +27,9 @@ namespace Shabasher.Core.Models
 
         public static Result<Suggestion> Create(string shabashId, string userId, string description)
         {
-            description ??= string.Empty;
+            description = (description ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(description))
+                return Result.Failure<Suggestion>("Текст предложения не может быть пустым");
             if (description.Length > MAX_DESCRIPTION_LEN)
                 return Result.Failure<Suggestion>($"Длина описания предложения не должна превышать {MAX_DESCRIPTION_LEN}");
 

@@ -1,4 +1,4 @@
-﻿using Shabasher.Core;
+using Shabasher.Core;
 
 namespace Shabasher.Core.DTOs
 {

@@ -21,7 +21,7 @@ namespace Shabasher.DataManage.Configurations
 
             builder.Property(x => x.Description)
                 .IsRequired()
-                .HasMaxLength(600)
+                .HasMaxLength(300)
                 .HasDefaultValue("");
 
             builder.Property(x => x.LikesCount)
