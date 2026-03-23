@@ -258,12 +258,10 @@ class EventViewModel(
             ?.role
             ?: UserRole.MEMBER
 
-        val userStatus = when (dto.currentUserParticipationStatus?.uppercase()) {
-            "GOING" -> ParticipationStatus.GOING
-            "NOT_GOING" -> ParticipationStatus.NOT_GOING
-            "INVITED", "0", null -> ParticipationStatus.INVITED
-            else -> ParticipationStatus.INVITED
-        }
+        val userStatus = participants
+            .find { it.id == currentUserId }
+            ?.status
+            ?: ParticipationStatus.INVITED
 
         return EventData(
             id = dto.id,

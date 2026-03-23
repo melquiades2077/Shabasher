@@ -30,6 +30,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,9 +64,13 @@ fun NamePage(
 
     val focusManager = LocalFocusManager.current
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+
+
 
 
     LaunchedEffect(viewModel.success.value) {
@@ -175,7 +181,13 @@ fun NamePage(
                     label = "Имя",
                     value = viewModel.name.value,
                     onValueChange = { viewModel.name.value = it },
-                    modifier = Modifier.focusRequester(focusRequester)
+                    modifier = Modifier.focusRequester(focusRequester),
+                    imeAction = ImeAction.Done,
+                    onImeAction = {
+                        keyboardController?.hide()     // закрыли клаву
+                        focusManager.clearFocus()      // убрали фокус
+                        viewModel.submit()             // сразу отправили
+                    }
                 )
 
                 // Ошибка

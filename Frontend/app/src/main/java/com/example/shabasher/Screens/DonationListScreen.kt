@@ -2,6 +2,10 @@ package com.example.shabasher.Screens
 
 import android.R
 import android.widget.ProgressBar
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,9 +43,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -55,6 +64,7 @@ import com.example.shabasher.Model.DonationStatus
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.DonationListViewModel
 import com.example.shabasher.ui.theme.ShabasherTheme
+import java.time.format.TextStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,101 +171,160 @@ fun DonationCard(
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), // ← Общий паддинг карточки
+            horizontalArrangement = Arrangement.SpaceBetween, // ← Текст слева, индикатор справа
+            verticalAlignment = Alignment.Top // ← Выравнивание по верху для корректного переноса
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            // 📝 Левая колонка с информацией (занимает всё доступное место)
+            Column(
+                modifier = Modifier
+                    .weight(1f) // ← Ключевое: позволяет тексту переноситься, не толкая индикатор
+                    .padding(end = 12.dp), // ← Отступ от индикатора
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = donation.title,
                     color = colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                    // Текст автоматически переносится, так как Column имеет weight(1f)
                 )
+
                 Text(
-                    text = when (donation.status) {
-                        DonationStatus.ACTIVE -> "Активен"
-                        DonationStatus.COMPLETED -> "Завершён"
-                        DonationStatus.CLOSED -> "Закрыт"
-                    },
-                    color = colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .background(
-                            color = when (donation.status) {
-                                DonationStatus.ACTIVE -> colorScheme.primary
-                                else -> colorScheme.secondary
-                            },
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-            Text(
-                text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽",
-                color = colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            ProgressBar(
-                progress = (donation.collectedAmount.toFloat() / donation.targetAmount.toFloat()).coerceIn(0f, 1f),
-                color = when (donation.status) {
-                    DonationStatus.CLOSED -> colorScheme.secondary
-                    else -> colorScheme.primary
-                }
-            )
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = when (donation.paymentStatus) {
-                        DonationPaymentStatus.PAID -> "Оплачено"
-                        DonationPaymentStatus.NOT_PAID -> "Не оплачено"
-                    },
-                    color = when (donation.paymentStatus) {
-                        DonationPaymentStatus.PAID -> colorScheme.onSurface
-                        DonationPaymentStatus.NOT_PAID -> colorScheme.error
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                            .background(
-                            color = colorScheme.secondary,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-                Text(
-                    text = "Оплатили: ${donation.paidParticipants} из ${donation.totalParticipants}",
+                    text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽",
                     color = colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                // Статус оплаты в «чипсе»
+                val statusText = when (donation.paymentStatus) {
+                    DonationPaymentStatus.PAID -> "Оплачено"
+                    DonationPaymentStatus.NOT_PAID -> "Не оплачено"
+                }
+                val statusColor = when (donation.paymentStatus) {
+                    DonationPaymentStatus.PAID -> colorScheme.primary
+                    DonationPaymentStatus.NOT_PAID -> colorScheme.onSurface
+                }
+                val statusBgColor = when (donation.paymentStatus) {
+                    DonationPaymentStatus.PAID -> colorScheme.primary.copy(alpha = 0.2f)
+                    DonationPaymentStatus.NOT_PAID -> colorScheme.secondary.copy(alpha = 0.4f)
+                }
+
+                Text(
+                    text = statusText,
+                    color = statusColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .background(
+                            color = statusBgColor,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                )
             }
+
+            // 📊 Индикатор прогресса (фиксированный размер, не сжимается)
+            CustomCircularPercentIndicator(
+                progress = if (donation.targetAmount > 0) {
+                    donation.collectedAmount.toFloat() / donation.targetAmount
+                } else 0f,
+                size = 80.dp, // ← Чуть компактнее для карточки
+                strokeWidth = 6.dp,
+                showPercent = true,
+                modifier = Modifier
+                    .align(Alignment.Top) // ← Явное выравнивание по верху
+            )
         }
     }
 }
 
 @Composable
-fun ProgressBar(
+fun CustomCircularPercentIndicator(
     progress: Float,
-    color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Dp = 80.dp,
+    strokeWidth: Dp = 7.dp,
+    progressColor: Color = MaterialTheme.colorScheme.primary,
+    progressGradient: Brush? = null, // опциональный градиент
+    trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    showPercent: Boolean = true,
+    strokeLineCap: StrokeCap = StrokeCap.Round,
+    animationDuration: Int = 500
 ) {
+    val clampedProgress = progress.coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = clampedProgress,
+        animationSpec = tween(durationMillis = animationDuration, easing = LinearOutSlowInEasing),
+        label = "customProgress"
+    )
+
+    val sweepAngle = animatedProgress * 360f
+
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(12.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(colorScheme.surfaceVariant)
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(16.dp))
-                .background(color)
-        )
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val diameter = size.toPx() - strokeWidth.toPx()
+            val radius = diameter / 2f
+            val center = Offset(size.toPx() / 2f, size.toPx() / 2f)
+
+            // 📍 Фон (трек)
+            drawCircle(
+                color = trackColor,
+                radius = radius,
+                center = center,
+                style = Stroke(width = strokeWidth.toPx(), cap = strokeLineCap)
+            )
+
+            // 📍 Прогресс
+            if (progressGradient != null) {
+                drawArc(
+                    brush = progressGradient,
+                    startAngle = -90f, // начинаем с 12 часов
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    size = Size(diameter, diameter),
+                    topLeft = Offset(
+                        center.x - radius,
+                        center.y - radius
+                    ),
+                    style = Stroke(width = strokeWidth.toPx(), cap = strokeLineCap)
+                )
+            } else {
+                drawArc(
+                    color = progressColor,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    size = Size(diameter, diameter),
+                    topLeft = Offset(
+                        center.x - radius,
+                        center.y - radius
+                    ),
+                    style = Stroke(width = strokeWidth.toPx(), cap = strokeLineCap)
+                )
+            }
+        }
+
+        // 🔢 Текст в центре
+        if (showPercent) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "${(animatedProgress * 100).toInt()}%",
+                    color = textColor
+                )
+                // Опционально: подпись под процентом
+                // Text("заполнено", style = MaterialTheme.typography.bodySmall, color = textColor.copy(alpha = 0.7f))
+            }
+        }
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +48,8 @@ import com.example.shabasher.R
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearOutSlowInEasing
 
 // Модели данных (без изменений)
 data class Suggestion(
@@ -85,11 +88,11 @@ fun SuggestionsScreen(
     val listState = rememberLazyListState()
 
     // Эффект для скролла вверх при изменении списка предложений
-    LaunchedEffect(suggestions) {
+    LaunchedEffect(suggestions.size) {
         if (suggestions.isNotEmpty()) {
-            // Ждем немного, чтобы композиция обновилась
-            kotlinx.coroutines.delay(100)
-            // Скроллим к первому элементу
+            // 🔥 Увеличиваем задержку — даём интерфейсу "дышать"
+            delay(200) // Было 50, стало 150 — анимация будет восприниматься плавнее
+
             listState.animateScrollToItem(0)
         }
     }
@@ -97,7 +100,7 @@ fun SuggestionsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Предложения") },
+                title = { Text("Идеи") },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -206,7 +209,7 @@ fun SuggestionCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { /* Handle card click */ },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -219,10 +222,22 @@ fun SuggestionCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Avatar(
-                    avatarText = suggestion.avatar,
-                    modifier = Modifier.size(36.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = "Add photo",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -246,7 +261,7 @@ fun SuggestionCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Текст предложения
             Text(
@@ -256,7 +271,7 @@ fun SuggestionCard(
                 lineHeight = 24.sp
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Кнопки голосования
             Row(
@@ -287,16 +302,19 @@ fun Avatar(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(AvatarGradientBrush),
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = CircleShape
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = avatarText,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
+        Icon(
+            Icons.Default.Person,
+            contentDescription = "Add photo",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -317,13 +335,13 @@ fun VoteButton(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         color = buttonColor,
         onClick = onClick
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 14.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
                 .height(36.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically

@@ -61,17 +61,17 @@ fun ServiceCard(navController: NavController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             ServiceButton(
-                title = "Предложения",
+                title = "Идеи",
                 iconVector = Icons.Default.Lightbulb,
                 onClick = {
                     navController.navigate(Routes.SUGGESTIONS)
                 }
             )
             ServiceButton(
-                title = "Сбор средств",
+                title = "Сбор денег",
                 painter = painterResource(id = com.example.shabasher.R.drawable.ruble),
                 onClick = {
-                    navController.navigate(Routes.DONATION)
+                    navController.navigate(Routes.DONATION_LIST)
                 }
             )
         }

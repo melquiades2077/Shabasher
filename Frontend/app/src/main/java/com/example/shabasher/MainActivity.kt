@@ -51,6 +51,7 @@ import com.example.shabasher.ViewModels.ProfileViewModel
 import com.example.shabasher.ViewModels.RegisterViewModel
 import com.example.shabasher.ViewModels.ShareEventViewModel
 import com.example.shabasher.ViewModels.ShareEventViewModelFactory
+import com.example.shabasher.ViewModels.SuggestionsViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.ViewModels.ViewModelFactory
 import com.example.shabasher.data.local.TokenManager
@@ -70,6 +71,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         window.setBackgroundDrawableResource(android.R.color.transparent)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+        }
 
         setContent {
             val context = LocalContext.current
@@ -209,7 +213,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(Routes.SUGGESTIONS) {
-
+                        val vm: SuggestionsViewModel = viewModel()
 
                         SuggestionsScreen(navController = navController)
 

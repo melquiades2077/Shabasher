@@ -13,5 +13,15 @@ data class Donation(
     val paidParticipants: Int,
     val totalParticipants: Int,
     val paymentDetails: String,
-    val organizerName: String
+    val organizerName: String,
+    val participants: List<ParticipantOfDonation> = emptyList()
+)
+
+data class ParticipantOfDonation(
+    val id: String,
+    val userId: String,
+    val name: String,
+    val avatar: String, // инициалы или URL
+    val paidAmount: Int,
+    val role: String = "участник"
 )

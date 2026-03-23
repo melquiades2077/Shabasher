@@ -27,6 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,9 @@ fun LoginPage(
               viewModel: LoginViewModel = viewModel()) {
 
     val focusRequester = remember { FocusRequester() }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -123,7 +129,11 @@ fun LoginPage(
                         value = viewModel.email.value,
                         onValueChange = { viewModel.email.value = it },
                         keyboardType = KeyboardType.Email,
-                        modifier = Modifier.focusRequester(focusRequester)
+                        modifier = Modifier.focusRequester(focusRequester),
+                        imeAction = ImeAction.Next,
+                        onImeAction = {
+                            // просто передаём управление системе (перейдёт к следующему полю)
+                        }
                     )
 
                     InputField(
@@ -131,7 +141,16 @@ fun LoginPage(
                         value = viewModel.password.value,
                         onValueChange = { viewModel.password.value = it },
                         isPassword = true,
-                        keyboardType = KeyboardType.Password
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                        onImeAction = {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+
+                            if (!viewModel.loading.value) {
+                                viewModel.login()
+                            }
+                        }
                     )
 
                     viewModel.error.value?.let { error ->
