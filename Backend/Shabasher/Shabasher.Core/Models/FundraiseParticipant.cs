@@ -18,7 +18,7 @@ namespace Shabasher.Core.Models
             Id = Guid.NewGuid().ToString();
             FundraiseId = fundraiseId;
             UserId = userId;
-            Status = FundraiseParticipantStatus.Pending;
+            Status = FundraiseParticipantStatus.NotPaid;
             PaidAt = DateTime.UtcNow;
             Amount = amount;
         }

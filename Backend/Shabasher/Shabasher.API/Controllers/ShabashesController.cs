@@ -14,12 +14,14 @@ namespace Shabasher.API.Controllers
     public class ShabashesController : ControllerBase
     {
         private readonly IShabashesManageService _shabashesManageService;
-        private readonly ISuggestionsManageService _suggestions;
+        private readonly ISuggestionsManageService _suggestionsManageService;
+        private readonly IFundraisesManageService _fundraisesManageService;
 
-        public ShabashesController(IShabashesManageService shabashesManageService, ISuggestionsManageService suggestions)
+        public ShabashesController(IShabashesManageService shabashesManageService, ISuggestionsManageService suggestionsManageService, IFundraisesManageService fundraisesManageService)
         {
             _shabashesManageService = shabashesManageService;
-            _suggestions = suggestions;
+            _suggestionsManageService = suggestionsManageService;
+            _fundraisesManageService = fundraisesManageService;
         }
 
         private string GetUserId()
@@ -144,7 +146,7 @@ namespace Shabasher.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("Не удалось определить пользователя");
 
-            var result = await _suggestions.GetSuggestionsAsync(shabashId, userId);
+            var result = await _suggestionsManageService.GetSuggestionsAsync(shabashId, userId);
             if (result.IsFailure)
                 return BadRequest(result.Error);
 
@@ -158,7 +160,35 @@ namespace Shabasher.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("Не удалось определить пользователя");
 
-            var result = await _suggestions.CreateSuggestionAsync(shabashId, userId, createSuggestionText);
+            var result = await _suggestionsManageService.CreateSuggestionAsync(shabashId, userId, createSuggestionText);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
+        }
+
+        [HttpGet("{shabashId}/fundraises")]
+        public async Task<ActionResult<FundraisesListResponse>> GetAllFundraises(string shabashId)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _fundraisesManageService.GetAllFundraisesAsync(shabashId, userId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
+        }
+
+        [HttpPost("{shabashId}/fundraises")]
+        public async Task<ActionResult<FundraiseDetailsResponse>> CreateFundraise(string shabashId, [FromBody] CreateFundraiseRequest request)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _fundraisesManageService.CreateFundraiseAsync(shabashId, userId, request);
             if (result.IsFailure)
                 return BadRequest(result.Error);
 

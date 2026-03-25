@@ -76,6 +76,7 @@ if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Development
 builder.Services.AddScoped<IUsersManageService, UsersManageService>();
 builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
 builder.Services.AddScoped<ISuggestionsManageService, SuggestionsManageService>();
+builder.Services.AddScoped<IFundraisesManageService, FundraisesManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddDbContext<ShabasherDbContext>(options =>

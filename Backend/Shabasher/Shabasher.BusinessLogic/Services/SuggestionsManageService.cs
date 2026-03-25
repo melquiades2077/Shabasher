@@ -10,11 +10,11 @@ namespace Shabasher.BusinessLogic.Services
 {
     public class SuggestionsManageService : ISuggestionsManageService
     {
-        private readonly ShabasherDbContext _db;
+        private readonly ShabasherDbContext _dbcontext;
 
-        public SuggestionsManageService(ShabasherDbContext db)
+        public SuggestionsManageService(ShabasherDbContext dbcontext)
         {
-            _db = db;
+            _dbcontext = dbcontext;
         }
 
         private static SuggestionResponse ToResponse(SuggestionEntity s, Vote? myVote, string userName) =>
@@ -30,7 +30,7 @@ namespace Shabasher.BusinessLogic.Services
                 myVote == Vote.Dislike);
 
         private async Task<bool> IsParticipantAsync(string shabashId, string userId) =>
-            await _db.ShabashParticipants.AnyAsync(p => p.ShabashId == shabashId && p.UserId == userId);
+            await _dbcontext.ShabashParticipants.AnyAsync(p => p.ShabashId == shabashId && p.UserId == userId);
 
         public async Task<Result<SuggestionsListResponse>> GetSuggestionsAsync(string eventId, string userId)
         {
@@ -40,7 +40,7 @@ namespace Shabasher.BusinessLogic.Services
             if (!await IsParticipantAsync(eventId, userId))
                 return Result.Failure<SuggestionsListResponse>("Нет доступа к событию");
 
-            var suggestions = await _db.Suggestions
+            var suggestions = await _dbcontext.Suggestions
                 .AsNoTracking()
                 .Where(s => s.ShabashId == eventId)
                 .OrderByDescending(s => s.CreatedAt)
@@ -51,13 +51,13 @@ namespace Shabasher.BusinessLogic.Services
 
             var userIds = suggestions.Select(s => s.UserId).Distinct().ToList();
 
-            var users = await _db.Users
+            var users = await _dbcontext.Users
                 .AsNoTracking()
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, u => u.Name);
 
             var ids = suggestions.Select(s => s.Id).ToList();
-            var myVotes = await _db.SuggestionVotes
+            var myVotes = await _dbcontext.SuggestionVotes
                 .AsNoTracking()
                 .Where(v => v.UserId == userId && ids.Contains(v.SuggestionId))
                 .ToDictionaryAsync(v => v.SuggestionId, v => v.Vote);
@@ -96,10 +96,10 @@ namespace Shabasher.BusinessLogic.Services
                 CreatedAt = s.CreatedAt
             };
 
-            _db.Suggestions.Add(entity);
-            await _db.SaveChangesAsync();
+            _dbcontext.Suggestions.Add(entity);
+            await _dbcontext.SaveChangesAsync();
 
-            var userName = await _db.Users
+            var userName = await _dbcontext.Users
                 .AsNoTracking()
                 .Where(u => u.Id == userId)
                 .Select(u => u.Name)
@@ -117,16 +117,16 @@ namespace Shabasher.BusinessLogic.Services
             if (normalized != "like" && normalized != "dislike")
                 return Result.Failure<SuggestionVoteResultResponse>("action должен быть \"like\" или \"dislike\"");
 
-            await using var tx = await _db.Database.BeginTransactionAsync();
+            await using var tx = await _dbcontext.Database.BeginTransactionAsync();
 
-            var suggestion = await _db.Suggestions.FirstOrDefaultAsync(s => s.Id == suggestionId);
+            var suggestion = await _dbcontext.Suggestions.FirstOrDefaultAsync(s => s.Id == suggestionId);
             if (suggestion == null)
                 return Result.Failure<SuggestionVoteResultResponse>("Предложение не найдено");
 
             if (!await IsParticipantAsync(suggestion.ShabashId, userId))
                 return Result.Failure<SuggestionVoteResultResponse>("Нет доступа к событию");
 
-            var existing = await _db.SuggestionVotes
+            var existing = await _dbcontext.SuggestionVotes
                 .FirstOrDefaultAsync(v => v.SuggestionId == suggestionId && v.UserId == userId);
 
             Vote? current = existing?.Vote;
@@ -136,7 +136,7 @@ namespace Shabasher.BusinessLogic.Services
             {
                 if (current == null)
                 {
-                    _db.SuggestionVotes.Add(new SuggestionVoteEntity
+                    _dbcontext.SuggestionVotes.Add(new SuggestionVoteEntity
                     {
                         Id = Guid.NewGuid().ToString(),
                         SuggestionId = suggestionId,
@@ -148,7 +148,7 @@ namespace Shabasher.BusinessLogic.Services
                 }
                 else if (current == Vote.Like)
                 {
-                    _db.SuggestionVotes.Remove(existing!);
+                    _dbcontext.SuggestionVotes.Remove(existing!);
                     suggestion.LikesCount--;
                 }
                 else
@@ -162,7 +162,7 @@ namespace Shabasher.BusinessLogic.Services
             {
                 if (current == null)
                 {
-                    _db.SuggestionVotes.Add(new SuggestionVoteEntity
+                    _dbcontext.SuggestionVotes.Add(new SuggestionVoteEntity
                     {
                         Id = Guid.NewGuid().ToString(),
                         SuggestionId = suggestionId,
@@ -174,7 +174,7 @@ namespace Shabasher.BusinessLogic.Services
                 }
                 else if (current == Vote.Dislike)
                 {
-                    _db.SuggestionVotes.Remove(existing!);
+                    _dbcontext.SuggestionVotes.Remove(existing!);
                     suggestion.DislikesCount--;
                 }
                 else
@@ -185,10 +185,10 @@ namespace Shabasher.BusinessLogic.Services
                 }
             }
 
-            await _db.SaveChangesAsync();
+            await _dbcontext.SaveChangesAsync();
             await tx.CommitAsync();
 
-            var voteRow = await _db.SuggestionVotes
+            var voteRow = await _dbcontext.SuggestionVotes
                 .AsNoTracking()
                 .FirstOrDefaultAsync(v => v.SuggestionId == suggestionId && v.UserId == userId);
             Vote? myVote = voteRow?.Vote;
@@ -205,13 +205,13 @@ namespace Shabasher.BusinessLogic.Services
             if (string.IsNullOrEmpty(userId))
                 return Result.Failure("Пользователь не определён");
 
-            var suggestion = await _db.Suggestions.FirstOrDefaultAsync(s => s.Id == suggestionId);
+            var suggestion = await _dbcontext.Suggestions.FirstOrDefaultAsync(s => s.Id == suggestionId);
             if (suggestion == null)
                 return Result.Failure("Предложение не найдено");
 
             if (suggestion.UserId != userId)
             {
-                var role = await _db.ShabashParticipants
+                var role = await _dbcontext.ShabashParticipants
                     .AsNoTracking()
                     .Where(p => p.ShabashId == suggestion.ShabashId && p.UserId == userId)
                     .Select(p => p.Role)
@@ -221,8 +221,8 @@ namespace Shabasher.BusinessLogic.Services
                     return Result.Failure("Недостаточно прав для удаления");
             }
 
-            _db.Suggestions.Remove(suggestion);
-            await _db.SaveChangesAsync();
+            _dbcontext.Suggestions.Remove(suggestion);
+            await _dbcontext.SaveChangesAsync();
 
             return Result.Success();
         }
