@@ -18,6 +18,7 @@ namespace Shabasher.Core.Models
         public decimal CurrentAmount { get; }
         public FundStatus FundStatus { get; }
         public DateTime CreatedAt { get; }
+        public List<FundraiseParticipant> Participants { get; }
 
         private Fundraise(string name, string eventId, 
             string creatorId, string creatorPhone, string creatorName, 
@@ -34,6 +35,7 @@ namespace Shabasher.Core.Models
             CurrentAmount = 0;
             FundStatus = FundStatus.Active;
             CreatedAt = DateTime.UtcNow;
+            Participants = [];
         }
 
         public static Result<Fundraise> Create(string name, string eventId,
