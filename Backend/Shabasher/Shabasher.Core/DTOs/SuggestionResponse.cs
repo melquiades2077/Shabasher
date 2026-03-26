@@ -1,4 +1,5 @@
 using Shabasher.Core;
+using Shabasher.Core.Models;
 
 namespace Shabasher.Core.DTOs
 {
@@ -11,6 +12,7 @@ namespace Shabasher.Core.DTOs
         int Dislikes,
         DateTime CreatedAt,
         bool Liked,
-        bool Disliked
+        bool Disliked,
+        ShabashRole UserRole
         );
 }
