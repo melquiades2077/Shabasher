@@ -29,6 +29,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +47,8 @@ import com.example.shabasher.ViewModels.RegisterViewModel
 fun RegisterPage(
     navController: NavController,
     viewModel: RegisterViewModel = viewModel()) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     val focusRequester = remember { FocusRequester() }
 
@@ -143,7 +148,13 @@ fun RegisterPage(
                         value = viewModel.repeatPassword.value,
                         onValueChange = { viewModel.repeatPassword.value = it },
                         isPassword = true,
-                        keyboardType = KeyboardType.Password
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                        onImeAction = {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            viewModel.register()
+                        }
                     )
 
                     viewModel.error.value?.let { error ->

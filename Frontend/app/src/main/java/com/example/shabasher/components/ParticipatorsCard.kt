@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.shabasher.Model.Participant
@@ -94,16 +95,16 @@ fun ParticipatorElem(
     status: String = "Придет"
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
     ) {
+
+        // ЛЕВАЯ ЧАСТЬ (Аватар + имя)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surface
-                )
+            modifier = Modifier.weight(1f) // 👈 ключ
         ) {
             Box(
                 modifier = Modifier
@@ -116,7 +117,7 @@ fun ParticipatorElem(
             ) {
                 Icon(
                     Icons.Default.Person,
-                    contentDescription = "Add photo",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
@@ -125,10 +126,20 @@ fun ParticipatorElem(
             Spacer(Modifier.width(16.dp))
 
             Text(
-                name,
-                style = MaterialTheme.typography.titleMedium)
+                text = name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1, // 👈 важно
+                overflow = TextOverflow.Ellipsis // 👈 обрезка
+            )
         }
 
-        Text(status, color = MaterialTheme.colorScheme.error)
+        Spacer(Modifier.width(8.dp))
+
+        // ПРАВАЯ ЧАСТЬ (статус)
+        Text(
+            text = status,
+            color = MaterialTheme.colorScheme.error,
+            maxLines = 1 // 👈 чтобы не переносился
+        )
     }
 }

@@ -13,7 +13,20 @@ object Routes {
     const val PARTICIPANTS = "participants"
     const val PROFILE_WITH_ID = "profile/{userId}"
     const val EDIT_PROFILE = "edit_profile"
-    const val SUGGESTIONS = "suggestions"
-    const val DONATION = "donation"
+    const val DONATION_LIST = "donation_list/{eventId}"
+
+    fun donationList(eventId: String) = "donation_list/$eventId"
+    const val DONATION = "donation/{donationId}"
+
+    // ✅ Хелпер для навигации
+    fun donation(donationId: String) = "donation/$donationId"
     const val EDITEVENT = "edit_event/{eventId}"
+
+    const val SUGGESTIONS = "suggestions/{eventId}"
+
+    fun suggestions(eventId: String) = "suggestions/$eventId"
+
+    const val CREATE_FUNDRAISE = "create_fundraise/{eventId}"
+
+    fun createFundraise(eventId: String) = "create_fundraise/$eventId"
 }
