@@ -22,13 +22,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -61,8 +65,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.shabasher.Model.Donation
 import com.example.shabasher.Model.DonationPaymentStatus
 import com.example.shabasher.Model.DonationStatus
+import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.DonationListViewModel
+import com.example.shabasher.data.dto.Fundraise
 import com.example.shabasher.ui.theme.ShabasherTheme
 import java.time.format.TextStyle
 
@@ -97,6 +103,23 @@ fun DonationListScreen(
                     containerColor = colorScheme.background
                 )
             )
+        },
+
+        // 🔥 ВОТ ОН FAB
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    SafeNavigation.navigate {
+                        navController.navigate(
+                            Routes.createFundraise(viewModel.eventId)
+                        )
+                    }
+                },
+                containerColor = colorScheme.primary,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Создать сбор")
+            }
         }
     ) { innerPadding ->
         Column(
@@ -110,19 +133,33 @@ fun DonationListScreen(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState.donations.isEmpty()) {
+            if (uiState.isLoading) {
+                // 🔥 Загрузка
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = colorScheme.primary,
+                        strokeWidth = 4.dp
+                    )
+                }
+            }
+            else if (uiState.donations.isEmpty()) {
+                // 🔥 Пустой список
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = modifier
-                        .fillMaxSize()
-                        .weight(4f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f) // 🔥 тоже исправлено
                 ) {
                     Image(
                         painter = painterResource(id = com.example.shabasher.R.drawable.manulnotlogin),
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(280.dp)
+                        modifier = Modifier.size(280.dp)
                     )
                     Text(
                         text = "В этом событии пока нет сборов",
@@ -130,9 +167,12 @@ fun DonationListScreen(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
-            } else {
+            }
+            else {
+                // 🔥 Список
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f) // 🔥 список тоже занимает доступное место
                 ) {
                     items(uiState.donations) { donation ->
                         DonationCard(
@@ -145,7 +185,8 @@ fun DonationListScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            // 🔥 Футер остаётся внизу
+            Spacer(modifier = Modifier.weight(0.3f)) // чуть меньше, чтобы не давил
 
             Text(
                 text = "Приложение не принимает платежи, оно лишь фиксирует факт оплаты",
@@ -160,7 +201,7 @@ fun DonationListScreen(
 
 @Composable
 fun DonationCard(
-    donation: Donation,
+    donation: Fundraise,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -174,43 +215,51 @@ fun DonationCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // ← Общий паддинг карточки
-            horizontalArrangement = Arrangement.SpaceBetween, // ← Текст слева, индикатор справа
-            verticalAlignment = Alignment.Top // ← Выравнивание по верху для корректного переноса
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            // 📝 Левая колонка с информацией (занимает всё доступное место)
+
+            // 📝 Левая часть
             Column(
                 modifier = Modifier
-                    .weight(1f) // ← Ключевое: позволяет тексту переноситься, не толкая индикатор
-                    .padding(end = 12.dp), // ← Отступ от индикатора
+                    .weight(1f)
+                    .padding(end = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
+                // 📌 Название
                 Text(
                     text = donation.title,
                     color = colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
-                    // Текст автоматически переносится, так как Column имеет weight(1f)
                 )
 
+                // 💰 Прогресс (🔥 используем модель!)
                 Text(
-                    text = "Собрано ${donation.collectedAmount} ₽ из ${donation.targetAmount} ₽",
+                    text = donation.getProgressText(),
                     color = colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                // Статус оплаты в «чипсе»
-                val statusText = when (donation.paymentStatus) {
-                    DonationPaymentStatus.PAID -> "Оплачено"
-                    DonationPaymentStatus.NOT_PAID -> "Не оплачено"
+                // 🏷 Статус
+                val statusText = when {
+                    donation.isPaymentConfirmed() -> "Оплачено"
+                    donation.isPendingConfirmation() -> "На проверке"
+                    else -> "Не оплачено"
                 }
-                val statusColor = when (donation.paymentStatus) {
-                    DonationPaymentStatus.PAID -> colorScheme.primary
-                    DonationPaymentStatus.NOT_PAID -> colorScheme.onSurface
+
+                val statusColor = when {
+                    donation.isPaymentConfirmed() -> colorScheme.primary
+                    donation.isPendingConfirmation() -> colorScheme.tertiary
+                    else -> colorScheme.onSurface
                 }
-                val statusBgColor = when (donation.paymentStatus) {
-                    DonationPaymentStatus.PAID -> colorScheme.primary.copy(alpha = 0.2f)
-                    DonationPaymentStatus.NOT_PAID -> colorScheme.secondary.copy(alpha = 0.4f)
+
+                val statusBgColor = when {
+                    donation.isPaymentConfirmed() -> colorScheme.primary.copy(alpha = 0.2f)
+                    donation.isPendingConfirmation() -> colorScheme.tertiary.copy(alpha = 0.2f)
+                    else -> colorScheme.secondary.copy(alpha = 0.4f)
                 }
 
                 Text(
@@ -226,16 +275,13 @@ fun DonationCard(
                 )
             }
 
-            // 📊 Индикатор прогресса (фиксированный размер, не сжимается)
+            // 📊 Индикатор прогресса
             CustomCircularPercentIndicator(
-                progress = if (donation.targetAmount > 0) {
-                    donation.collectedAmount.toFloat() / donation.targetAmount
-                } else 0f,
-                size = 80.dp, // ← Чуть компактнее для карточки
+                progress = donation.progressPercent / 100f, // 🔥 готовое поле
+                size = 80.dp,
                 strokeWidth = 6.dp,
                 showPercent = true,
-                modifier = Modifier
-                    .align(Alignment.Top) // ← Явное выравнивание по верху
+                modifier = Modifier.align(Alignment.Top)
             )
         }
     }

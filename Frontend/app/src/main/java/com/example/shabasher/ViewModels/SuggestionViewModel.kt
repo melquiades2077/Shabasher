@@ -3,100 +3,189 @@ package com.example.shabasher.ViewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.Suggestion
-import com.example.shabasher.data.network.FakeSuggestionsRepository
 import com.example.shabasher.data.network.SuggestionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
-data class SuggestionsUiState(
-    val suggestions: List<Suggestion> = emptyList(),
-    val isLoading: Boolean = false,
-    val inputText: String = "",
-    val currentUserId: String = "user_1",
-    val isAdmin: Boolean = false
-)
+import java.util.Date
 
 class SuggestionsViewModel(
-    private val repository: SuggestionsRepository = FakeSuggestionsRepository()
+    private val repository: SuggestionsRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SuggestionsUiState())
-    val uiState: StateFlow<SuggestionsUiState> = _uiState
+    private val _suggestions = MutableStateFlow<List<Suggestion>>(emptyList())
+    val suggestions: StateFlow<List<Suggestion>> = _suggestions
 
-    private val eventId = "event_1"
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading
 
-    init {
-        loadSuggestions()
-    }
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
-    fun loadSuggestions() {
+    // ✅ Метод для получения ID текущего пользователя (для UI)
+    fun getCurrentUserId(): String? = repository.getCurrentUserId()
+
+    fun load(eventId: String) {
         viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
 
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            val result = repository.getSuggestions(eventId)
 
-            val suggestions = repository.getSuggestions(eventId)
-
-            _uiState.value = _uiState.value.copy(
-                suggestions = suggestions,
-                isLoading = false
-            )
+            if (result.isSuccess) {
+                _suggestions.value = result.getOrNull() ?: emptyList()
+            } else {
+                _error.value = result.exceptionOrNull()?.message ?: "Ошибка загрузки"
+            }
+            _loading.value = false
         }
     }
 
-    fun onTextChanged(text: String) {
-        _uiState.value = _uiState.value.copy(inputText = text)
-    }
-
-    fun createSuggestion() {
-
-        val text = _uiState.value.inputText.trim()
-        if (text.isEmpty()) return
-
+    fun create(eventId: String, text: String, onSent: () -> Unit = {}) {
         viewModelScope.launch {
+            val trimmedText = text.trim()
+            if (trimmedText.isEmpty()) return@launch
 
-            val newSuggestion = repository.createSuggestion(eventId, text)
+            val tempId = "temp_${System.currentTimeMillis()}"
+            val currentUserId = repository.getCurrentUserId()
 
-            _uiState.value = _uiState.value.copy(
-                suggestions = listOf(newSuggestion) + _uiState.value.suggestions,
-                inputText = ""
+            val displayName = "Вы"
+            val timestamp = java.time.Instant.now().toString()
+
+            val tempSuggestion = Suggestion(
+                id = tempId,
+                userId = currentUserId ?: "",
+                userName = displayName,
+                text = trimmedText,
+                likes = 0,
+                dislikes = 0,
+                timestamp = timestamp,
+                liked = false,
+                disliked = false
             )
-        }
-    }
 
-    fun vote(suggestionId: Int, action: String) {
+            _suggestions.value = listOf(tempSuggestion) + _suggestions.value
+            onSent()
 
-        viewModelScope.launch {
+            val result = repository.createSuggestion(eventId, trimmedText)
 
-            val result = repository.vote(suggestionId, action)
-
-            _uiState.value = _uiState.value.copy(
-                suggestions = _uiState.value.suggestions.map {
-
-                    if (it.id == suggestionId) {
-                        it.copy(
-                            likes = result.likes,
-                            dislikes = result.dislikes,
-                            liked = result.liked,
-                            disliked = result.disliked
-                        )
-                    } else it
+            if (result.isSuccess) {
+                result.getOrNull()?.let { serverSuggestion ->
+                    _suggestions.value = _suggestions.value.map {
+                        if (it.id == tempId) serverSuggestion else it
+                    }
                 }
-            )
+            } else {
+                val errorMsg = result.exceptionOrNull()?.message
+                android.util.Log.e("SuggestionsVM", "Ошибка создания: $errorMsg")
+                _suggestions.value = _suggestions.value.filter { it.id != tempId }
+                _error.value = errorMsg?.takeIf { it.isNotBlank() } ?: "Не удалось отправить"
+            }
         }
     }
 
-    fun deleteSuggestion(suggestionId: Int) {
+    // ✅ ОБНОВЛЁННЫЙ МЕТОД: голосование с мгновенным визуальным откликом
+    fun vote(id: String, action: String) {
+        if (id.startsWith("temp_")) return
 
         viewModelScope.launch {
+            // 1️⃣ Сохраняем текущее состояние для возможного отката
+            val originalSuggestions = _suggestions.value
 
-            repository.deleteSuggestion(suggestionId)
+            // 2️⃣ Мгновенно обновляем UI (optimistic update)
+            val updatedSuggestions = originalSuggestions.map { suggestion ->
+                if (suggestion.id == id) {
+                    when (action) {
+                        "like" -> {
+                            // Переключаем лайк: если уже лайкнуто — убираем, иначе — ставим
+                            // При этом снимаем дизлайк, если он был
+                            val newLiked = !suggestion.liked
+                            val newDisliked = if (newLiked) false else suggestion.disliked
+                            val newLikes = if (newLiked) suggestion.likes + 1 else suggestion.likes - 1
+                            val newDislikes = if (suggestion.disliked && newDisliked) suggestion.dislikes - 1 else suggestion.dislikes
 
-            _uiState.value = _uiState.value.copy(
-                suggestions = _uiState.value.suggestions.filter {
-                    it.id != suggestionId
+                            suggestion.copy(
+                                likes = newLikes.coerceAtLeast(0),
+                                dislikes = newDislikes.coerceAtLeast(0),
+                                liked = newLiked,
+                                disliked = newDisliked
+                            )
+                        }
+                        "dislike" -> {
+                            // Переключаем дизлайк: если уже дизлайкнуто — убираем, иначе — ставим
+                            // При этом снимаем лайк, если он был
+                            val newDisliked = !suggestion.disliked
+                            val newLiked = if (newDisliked) false else suggestion.liked
+                            val newDislikes = if (newDisliked) suggestion.dislikes + 1 else suggestion.dislikes - 1
+                            val newLikes = if (suggestion.liked && newLiked) suggestion.likes - 1 else suggestion.likes
+
+                            suggestion.copy(
+                                likes = newLikes.coerceAtLeast(0),
+                                dislikes = newDislikes.coerceAtLeast(0),
+                                liked = newLiked,
+                                disliked = newDisliked
+                            )
+                        }
+                        else -> suggestion
+                    }
+                } else suggestion
+            }
+
+            // Применяем изменения к UI сразу
+            _suggestions.value = updatedSuggestions
+
+            // 3️⃣ Отправляем запрос на сервер
+            val result = repository.vote(id, action)
+
+            // 4️⃣ Если сервер вернул ошибку — откатываем изменения назад
+            if (result.isFailure) {
+                android.util.Log.e("SuggestionsVM", "Vote failed, rolling back: ${result.exceptionOrNull()?.message}")
+                _suggestions.value = originalSuggestions
+                _error.value = result.exceptionOrNull()?.message?.takeIf { it.isNotBlank() } ?: "Не удалось проголосовать"
+            }
+            // 5️⃣ Если успех — можно синхронизировать с точными данными с сервера (опционально)
+            else {
+                result.getOrNull()?.let { serverVote ->
+                    android.util.Log.d("SuggestionsVM", "✓ Vote synced: likes=${serverVote.likes}, liked=${serverVote.liked}")
+                    // Обновляем финальными значениями с сервера (на случай, если логика на бэке сложнее)
+                    _suggestions.value = _suggestions.value.map {
+                        if (it.id == id) {
+                            it.copy(
+                                likes = serverVote.likes,
+                                dislikes = serverVote.dislikes,
+                                liked = serverVote.liked,
+                                disliked = serverVote.disliked
+                            )
+                        } else it
+                    }
                 }
-            )
+            }
         }
+    }
+
+    // ✅ Удаление предложения с мгновенным обновлением UI
+    fun deleteSuggestion(suggestionId: String) {
+        viewModelScope.launch {
+            val originalSuggestions = _suggestions.value
+
+            // 1️⃣ Оптимистично удаляем из списка
+            _suggestions.value = originalSuggestions.filter { it.id != suggestionId }
+
+            // 2️⃣ Отправляем запрос на сервер
+            val result = repository.deleteSuggestion(suggestionId)
+
+            // 3️⃣ При ошибке — откатываем изменение
+            if (result.isFailure) {
+                android.util.Log.e("SuggestionsVM", "Delete failed: ${result.exceptionOrNull()?.message}")
+                _suggestions.value = originalSuggestions
+                _error.value = result.exceptionOrNull()?.message?.takeIf { it.isNotBlank() } ?: "Не удалось удалить предложение"
+            }
+        }
+    }
+
+
+
+    fun clearError() {
+        _error.value = null
     }
 }

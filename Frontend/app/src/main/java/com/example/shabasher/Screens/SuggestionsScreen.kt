@@ -1,6 +1,7 @@
 package com.example.shabasher.Screens
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,161 +51,227 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.shabasher.Model.Suggestion
+import com.example.shabasher.ViewModels.SuggestionsViewModel
+import com.example.shabasher.data.network.SuggestionsRepository
+import com.example.shabasher.utils.DateTimeUtils
 
-// Модели данных (без изменений)
-data class Suggestion(
-    val id: Int,
-    val userId: String,
-    val userName: String,
-    val avatar: String,
-    val text: String,
-    var likes: Int,
-    var dislikes: Int,
-    val timestamp: Date,
-    var liked: Boolean = false,
-    var disliked: Boolean = false
-)
 
-data class User(
-    val id: String,
-    val name: String,
-    val avatar: String
-)
-
-// UI компоненты
+// ========== ЭКРАН ==========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuggestionsScreen(
     navController: NavController,
-    onNavigateToProfile: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    viewModel: SuggestionsViewModel,
+    eventId: String,
+    isEventOrganizer: Boolean = false
 ) {
-    val currentUser = remember { User("57dd70f6-bca8-442c-855d-9488d4b59371", "pakapaka", "ПК") }
-    var suggestions by remember { mutableStateOf<List<Suggestion>>(getSampleSuggestions()) }
-    var newSuggestionText by remember { mutableStateOf("") }
+    val suggestions by viewModel.suggestions.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val currentUserId = viewModel.getCurrentUserId()
 
-    // Ключевое добавление: состояние для скролла LazyColumn
-    val listState = rememberLazyListState()
+    var inputText by remember { mutableStateOf("") }
+    var suggestionToDelete by remember { mutableStateOf<String?>(null) }
 
-    // Эффект для скролла вверх при изменении списка предложений
-    LaunchedEffect(suggestions.size) {
-        if (suggestions.isNotEmpty()) {
-            // 🔥 Увеличиваем задержку — даём интерфейсу "дышать"
-            delay(200) // Было 50, стало 150 — анимация будет восприниматься плавнее
+    // ✅ Диалог подтверждения удаления
+    suggestionToDelete?.let { suggestionId ->
+        AlertDialog(
+            onDismissRequest = { suggestionToDelete = null },
+            title = {
+                Text(
+                    "Удалить предложение?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "Это действие нельзя отменить. Вы уверены?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteSuggestion(suggestionId)
+                        suggestionToDelete = null
+                    }
+                ) {
+                    Text(
+                        "Удалить",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { suggestionToDelete = null }) {
+                    Text(
+                        "Отмена",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        )
+    }
 
-            listState.animateScrollToItem(0)
+    // ✅ Показ ошибок через Toast
+    error?.let { msg ->
+        LaunchedEffect(msg) {
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
         }
     }
 
+    // ✅ Загрузка данных
+    LaunchedEffect(eventId) {
+        viewModel.load(eventId)
+    }
+
+    // 🎨 Scaffold с TopAppBar и BottomBar для инпута
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Идеи") },
+                title = {
+                    Text(
+                        "Идеи",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            SafeNavigation.navigate { navController.popBackStack() }
-                        }
-                    ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Назад",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 },
+                actions = {
+                    // 🔧 Можно добавить действия для организатора
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = BackgroundColor,
+                    titleContentColor = TextPrimaryColor,
+                    navigationIconContentColor = TextPrimaryColor,
+                    actionIconContentColor = TextSecondaryColor
                 )
             )
         },
-        content = { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = innerPadding.calculateTopPadding(),
-                        start = 16.dp,
-                        end = 16.dp
-                    )
-                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+        // ✨ ПОЛЕ ВВОДА В BOTTOM BAR — клавиатура обрабатывается автоматически!
+        bottomBar = {
+            SuggestionInputArea(
+                text = inputText,
+                onTextChange = { inputText = it },
+                onSend = {
+                    if (inputText.trim().isNotEmpty()) {
+                        viewModel.create(eventId, inputText) {
+                            inputText = ""
+                        }
                         focusManager.clearFocus()
                     }
+                },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .imePadding().navigationBarsPadding()
+            )
+        },
+        containerColor = BackgroundColor
+    ) { paddingValues ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                // ❌ Убрали .background() — фон уже задан в Scaffold.containerColor
+                // ❌ Убрали .imePadding() — теперь это задача bottomBar
+                .padding(paddingValues)
+        ) {
+            // 📋 Список предложений / загрузка / пустое состояние
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth() // 👈 height управляется через weight
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .imePadding() // ← Весь контент сдвигается при клавиатуре
-                ) {
-                    // Список сжимается при открытии клавиатуры
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        state = listState, // ← Подключаем состояние скролла
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp),
-                        reverseLayout = false // Убедитесь, что reverseLayout = false
-                    ) {
-                        if (suggestions.isEmpty()) {
-                            item {
-                                EmptyState(Modifier.fillParentMaxSize())
-                            }
-                        } else {
-                            items(suggestions, key = { it.id }) { suggestion ->
-                                SuggestionCard(
-                                    suggestion = suggestion,
-                                    onVote = { id, action ->
-                                        handleVote(suggestions, id, action) { updated ->
-                                            suggestions = updated
-                                        }
-                                    },
-                                    onUserClick = onNavigateToProfile,
-                                    modifier = Modifier.fillParentMaxWidth()
-                                )
-                            }
+                if (loading && suggestions.isEmpty()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (suggestions.isEmpty()) {
+                    EmptyState(modifier = Modifier.align(Alignment.Center))
+                } else {
+                    val listState = rememberLazyListState()
+
+                    LaunchedEffect(suggestions.size) {
+                        if (suggestions.size > 1) {
+                            listState.animateScrollToItem(0)
                         }
                     }
 
-                    // Ключевое изменение: добавляем navigationBarsPadding()
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding().padding(bottom = 4.dp), // ← Защита от системных кнопок
-                        color = MaterialTheme.colorScheme.background,
-                        shadowElevation = 2.dp
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        SuggestionInputArea(
-                            text = newSuggestionText,
-                            onTextChange = { newSuggestionText = it },
-                            onSend = {
-                                if (newSuggestionText.trim().isNotEmpty()) {
-                                    val newSuggestion = createNewSuggestion(currentUser, newSuggestionText.trim())
-                                    suggestions = listOf(newSuggestion) + suggestions
-                                    newSuggestionText = ""
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        )
+                        items(suggestions, key = { it.id }) { suggestion ->
+                            if (suggestion.id.startsWith("temp_") && error != null) return@items
+
+                            SuggestionCard(
+                                suggestion = suggestion,
+                                onVote = viewModel::vote,
+                                onUserClick = { /* TODO: навигация на профиль */ },
+                                onDelete = { suggestionToDelete = it },
+                                currentUserId = currentUserId,
+                                isEventOrganizer = isEventOrganizer,
+                                modifier = Modifier.animateItem( // 👈 Анимация удаления/добавления
+                                    fadeInSpec = tween(durationMillis = 300, easing = LinearOutSlowInEasing),
+                                    fadeOutSpec = tween(durationMillis = 300, easing = LinearOutSlowInEasing)
+                                )
+                            )
+                        }
                     }
                 }
             }
         }
-    )
+    }
 }
 
-// Вспомогательный модификатор — устанавливает минимальную высоту = высоте клавиатуры
-@Composable
-fun Modifier.windowInsetsBottomHeight(windowInsets: WindowInsets): Modifier {
-    val density = LocalDensity.current
-    val bottom = with(density) { windowInsets.getBottom(density).toDp() }
-    return this.then(
-        Modifier.heightIn(min = bottom.coerceAtLeast(56.dp)) // 56.dp = высота поля ввода
-    )
-}
-
+// ========== КАРТОЧКА ПРЕДЛОЖЕНИЯ ==========
 @Composable
 fun SuggestionCard(
     suggestion: Suggestion,
-    onVote: (Int, String) -> Unit,
+    onVote: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onDelete: (String) -> Unit, // ← Новый параметр
+    modifier: Modifier = Modifier,
+    currentUserId: String?,
+    isEventOrganizer: Boolean = false // ← Новый параметр
 ) {
+    // Проверяем, можно ли показать кнопку удаления
+    val canDelete = currentUserId != null &&
+            (suggestion.userId == currentUserId || isEventOrganizer)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -218,50 +285,74 @@ fun SuggestionCard(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // Информация о пользователе
+            // 👤 Шапка карточки: аватар + имя + кнопка удаления
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = "Add photo",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Аватар
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = buildString {
+                                if (suggestion.userId == currentUserId) {
+                                    append("Вы")
+                                } else {
+                                    append(suggestion.userName)
+                                }
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimaryColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val relativeTime = rememberRelativeTime(suggestion.timestamp)
+                        Text(
+                            text = relativeTime,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryColor
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = suggestion.userName + if (suggestion.userId == "57dd70f6-bca8-442c-855d-9488d4b59371") " (вы)" else "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimaryColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Text(
-                        text = formatTimeAgo(suggestion.timestamp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondaryColor
-                    )
+                // 🗑️ Кнопка удаления (показывается только автору или организатору)
+                if (canDelete) {
+                    IconButton(
+                        onClick = { onDelete(suggestion.id) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline, // или Delete
+                            contentDescription = "Удалить предложение",
+                            tint = TextSecondaryColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Текст предложения
             Text(
@@ -271,7 +362,7 @@ fun SuggestionCard(
                 lineHeight = 24.sp
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Кнопки голосования
             Row(
@@ -283,7 +374,6 @@ fun SuggestionCard(
                     isActive = suggestion.liked,
                     onClick = { onVote(suggestion.id, "like") }
                 )
-
                 VoteButton(
                     icon = "👎",
                     count = suggestion.dislikes,
@@ -295,30 +385,33 @@ fun SuggestionCard(
     }
 }
 
-
 @Composable
-fun Avatar(
-    avatarText: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            Icons.Default.Person,
-            contentDescription = "Add photo",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
+fun rememberRelativeTime(timestamp: String): String {
+    var tick by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(timestamp) {
+        while (true) {
+            // Быстрее обновляем свежие предложения, реже — старые
+            val ageMinutes = java.time.temporal.ChronoUnit.MINUTES.between(
+                DateTimeUtils.parseIsoTimestamp(timestamp),
+                java.time.Instant.now()
+            )
+            val interval = when {
+                ageMinutes < 60 -> 30_000L      // Каждые 30 сек для < 1 часа
+                ageMinutes < 1440 -> 300_000L    // Каждые 5 мин для < 24 часов
+                else -> 1_800_000L               // Каждые 30 мин для старых
+            }
+            delay(interval)
+            tick++
+        }
+    }
+
+    return remember(timestamp, tick) {
+        DateTimeUtils.formatRelativeTime(timestamp)
     }
 }
 
+// ========== КНОПКА ГОЛОСОВАНИЯ ==========
 @Composable
 fun VoteButton(
     icon: String,
@@ -346,12 +439,7 @@ fun VoteButton(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = icon,
-                style = MaterialTheme.typography.bodyMedium,
-                color = textColor
-            )
-
+            Text(text = icon, style = MaterialTheme.typography.bodyMedium)
             Text(
                 text = count.toString(),
                 style = MaterialTheme.typography.bodyMedium,
@@ -362,6 +450,7 @@ fun VoteButton(
     }
 }
 
+// ========== ПОЛЕ ВВОДА ==========
 @Composable
 fun SuggestionInputArea(
     text: String,
@@ -369,14 +458,11 @@ fun SuggestionInputArea(
     onSend: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Добавляем флаг для отслеживания фокуса
-    val focusState = remember { mutableStateOf(false) }
+    val isInputNotEmpty = text.trim().isNotEmpty()
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            // Добавляем минимальную высоту для надежности
             .heightIn(min = 56.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -392,8 +478,7 @@ fun SuggestionInputArea(
                 onValueChange = onTextChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-                    .onFocusChanged { focusState.value = it.isFocused },
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
@@ -402,7 +487,7 @@ fun SuggestionInputArea(
                     imeAction = ImeAction.Send
                 ),
                 keyboardActions = KeyboardActions(
-                    onSend = { if (text.trim().isNotEmpty()) onSend() }
+                    onSend = { if (isInputNotEmpty) onSend() }
                 ),
                 maxLines = 3,
                 decorationBox = { innerTextField ->
@@ -420,12 +505,21 @@ fun SuggestionInputArea(
             )
         }
 
+        // FloatingActionButton без параметра enabled
         FloatingActionButton(
-            onClick = { if (text.trim().isNotEmpty()) onSend() },
+            onClick = { if (isInputNotEmpty) onSend() },
             modifier = Modifier.size(48.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+            // Меняем цвета в зависимости от состояния
+            containerColor = if (isInputNotEmpty) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            },
+            contentColor = if (isInputNotEmpty) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            }
         ) {
             Icon(
                 imageVector = Icons.Default.Send,
@@ -436,147 +530,57 @@ fun SuggestionInputArea(
     }
 }
 
+// ========== ПУСТОЕ СОСТОЯНИЕ ==========
 @Composable
 fun EmptyState(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier
+            .fillMaxSize()  // 👈 Обязательно: занимаем всё пространство
+            .padding(16.dp), // 👈 Отступы по краям для красоты
+        horizontalAlignment = Alignment.CenterHorizontally,  // 👈 Центр по горизонтали
+        verticalArrangement = Arrangement.Center  // 👈 Центр по вертикали
     ) {
         Text(
-            text = "Пока нет предложений",
+            text = "Пока нет идей",
             style = MaterialTheme.typography.titleMedium,
             color = TextSecondaryColor,
             textAlign = TextAlign.Center
         )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Изображение манула
         Box(
             modifier = Modifier.size(200.dp),
-            contentAlignment = Alignment.BottomCenter
+            contentAlignment = Alignment.Center
         ) {
             Image(
                 painter = painterResource(id = com.example.shabasher.R.drawable.manulsuggestions),
-                contentDescription = null,
+                contentDescription = "Манул ждёт идей",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
-
-            // Градиент снизу
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.scrim
-                            ),
-                            startY = 0f,
-                            endY = Float.POSITIVE_INFINITY
-                        )
-                    )
+                contentScale = ContentScale.Fit,
+                alpha = 0.9f
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Будьте первым, кто поделится идеей",
+            text = "Будьте первым, кто\nоставит предложение ✨",
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondaryColor.copy(alpha = 0.8f),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp) // 👈 Чтобы текст не прилипал к краям на узких экранах
         )
     }
 }
 
-// Вспомогательные функции (без изменений)
-fun getSampleSuggestions(): List<Suggestion> {
-    val now = Date()
-    return listOf(
-    )
-}
-fun handleVote(
-    suggestions: List<Suggestion>,
-    suggestionId: Int,
-    action: String,
-    onUpdate: (List<Suggestion>) -> Unit
-) {
-    val updatedSuggestions = suggestions.map { suggestion ->
-        if (suggestion.id == suggestionId) {
-            when (action) {
-                "like" -> {
-                    if (suggestion.liked) {
-                        suggestion.copy(
-                            likes = suggestion.likes - 1,
-                            liked = false
-                        )
-                    } else {
-                        suggestion.copy(
-                            likes = suggestion.likes + 1,
-                            liked = true,
-                            disliked = false,
-                            dislikes = if (suggestion.disliked) suggestion.dislikes - 1 else suggestion.dislikes
-                        )
-                    }
-                }
-                "dislike" -> {
-                    if (suggestion.disliked) {
-                        suggestion.copy(
-                            dislikes = suggestion.dislikes - 1,
-                            disliked = false
-                        )
-                    } else {
-                        suggestion.copy(
-                            dislikes = suggestion.dislikes + 1,
-                            disliked = true,
-                            liked = false,
-                            likes = if (suggestion.liked) suggestion.likes - 1 else suggestion.likes
-                        )
-                    }
-                }
-                else -> suggestion
-            }
-        } else {
-            suggestion
-        }
-    }
-
-    onUpdate(updatedSuggestions)
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+fun formatTimeAgo(timestamp: String): String {
+    return timestamp.takeIf { it.isNotBlank() } ?: "только что"
 }
 
-fun createNewSuggestion(currentUser: User, text: String): Suggestion {
-    return Suggestion(
-        id = (1..1000).random(),
-        userId = currentUser.id,
-        userName = currentUser.name,
-        avatar = currentUser.avatar,
-        text = text,
-        likes = 0,
-        dislikes = 0,
-        timestamp = Date(),
-        liked = false,
-        disliked = false
-    )
-}
-
-fun formatTimeAgo(date: Date): String {
-    val now = Date()
-    val diff = now.time - date.time
-    val minutes = (diff / 60000).toInt()
-    val hours = (diff / 3600000).toInt()
-    val days = (diff / 86400000).toInt()
-
-    return when {
-        minutes < 1 -> "только что"
-        minutes < 60 -> "$minutes мин назад"
-        hours < 24 -> "$hours ч назад"
-        else -> "$days дн. назад"
-    }
-}
-
-
-// Цветовые константы (без изменений)
+// ========== ЦВЕТОВЫЕ КОНСТАНТЫ ==========
 val BackgroundColor = Color(0xFF121212)
 val CardBackgroundColor = Color(0xFF1E1E1E)
 val TextPrimaryColor = Color(0xFFFFFFFF)

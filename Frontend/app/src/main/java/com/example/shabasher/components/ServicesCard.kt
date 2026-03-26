@@ -36,9 +36,14 @@ import androidx.navigation.NavController
 import android.widget.Toast
 import androidx.compose.ui.graphics.painter.Painter
 import com.example.shabasher.Model.Routes
+import com.example.shabasher.Model.UserRole
 
 @Composable
-fun ServiceCard(navController: NavController) {
+fun ServiceCard(
+    navController: NavController,
+    eventId: String,
+    currentUserRole: UserRole? = null // ← Новый параметр (опциональный)
+) {
     val context = LocalContext.current
 
     Column(
@@ -64,14 +69,22 @@ fun ServiceCard(navController: NavController) {
                 title = "Идеи",
                 iconVector = Icons.Default.Lightbulb,
                 onClick = {
-                    navController.navigate(Routes.SUGGESTIONS)
+                    // ✅ Определяем, является ли пользователь организатором
+                    val isOrganizer = currentUserRole == UserRole.ADMIN
+
+                    // ✅ Передаём флаг в маршруте
+                    navController.navigate(
+                        "${Routes.SUGGESTIONS}/$eventId?isOrganizer=$isOrganizer"
+                    ) {
+                        launchSingleTop = true
+                    }
                 }
             )
             ServiceButton(
                 title = "Сбор денег",
                 painter = painterResource(id = com.example.shabasher.R.drawable.ruble),
                 onClick = {
-                    navController.navigate(Routes.DONATION_LIST)
+                    navController.navigate(Routes.donationList(eventId))
                 }
             )
         }

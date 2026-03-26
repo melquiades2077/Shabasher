@@ -574,7 +574,11 @@ fun EventContent(
         }
 
         item {
-            ServiceCard(navController)
+            ServiceCard(
+                navController = navController,
+                eventId = event.id,
+                currentUserRole = event.currentUserRole // ← Передаём роль
+            )
         }
 
         /*item {
