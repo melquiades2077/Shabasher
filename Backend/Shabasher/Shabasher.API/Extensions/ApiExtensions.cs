@@ -12,8 +12,7 @@ namespace Shabasher.API.Extensions
         {
             var jwtOptions = new JwtOptions
             {
-                SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET"),
-                ExpiresHours = Convert.ToInt32(Environment.GetEnvironmentVariable("JWT_HOURS"))
+                SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET")
             };
 
             services

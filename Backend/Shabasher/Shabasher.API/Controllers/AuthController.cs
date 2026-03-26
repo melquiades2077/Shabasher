@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -9,10 +10,13 @@ namespace Shabasher.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUsersManageService _usersManageService;
+        private readonly IJwtProvider _jwtProvider;
 
-        public AuthController(IUsersManageService usersManageService)
+        public AuthController(IUsersManageService usersManageService, IJwtProvider jwtProvider)
         {
             _usersManageService = usersManageService;
+            _jwtProvider = jwtProvider;
+
         }
 
         [HttpPost("register")]
@@ -44,6 +48,20 @@ namespace Shabasher.API.Controllers
                 return BadRequest(token.Error);
 
             return Ok(token.Value);
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult> Refresh([FromBody] TokenRefreshRequest request)
+        {
+            var result = await _jwtProvider.RefreshTokens(
+                request.AccessToken,
+                request.RefreshToken
+            );
+
+            if (result.IsFailure)
+                return Unauthorized(result.Error);
+
+            return Ok(result.Value);
         }
     }
 }

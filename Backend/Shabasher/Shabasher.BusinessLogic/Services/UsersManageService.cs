@@ -59,19 +59,17 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success<UserResponse>(UserResponseMapper.DomainToResponse(user.Value));
         }
 
-        public async Task<Result<string>> LoginUserAsync(string email, string password)
+        public async Task<Result<TokenPair>> LoginUserAsync(string email, string password)
         {
             var userEntity = GetUserEntityByEmail(email).Result;
 
             if (userEntity == null)
-                return Result.Failure<string>("Пользователь с данным email не найден");
+                return Result.Failure<TokenPair>("Пользователь с данным email не найден");
 
             if (!_passwordHasher.VerifyPassword(password, userEntity.PasswordHash))
-                return Result.Failure<string>("Неверный пароль");
+                return Result.Failure<TokenPair>("Неверный пароль");
 
-            string jwtToken = _jwtProvider.GenerateToken(UserResponseMapper.EntityToResponse(userEntity));
-
-            return Result.Success<string>(jwtToken);
+            return await _jwtProvider.GenerateTokens(UserResponseMapper.EntityToResponse(userEntity));
         }
 
         public async Task<Result<UserResponse>> GetUserByIdAsync(string id)
