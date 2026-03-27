@@ -20,6 +20,7 @@ namespace Shabasher.DataManage
         public DbSet<SuggestionVoteEntity> SuggestionVotes { get; set; }
         public DbSet<FundraiseEntity> Fundraises { get; set; }
         public DbSet<FundraiseParticipantEntity> FundraiseParticipants { get; set; }
+        public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,6 +32,7 @@ namespace Shabasher.DataManage
             modelBuilder.ApplyConfiguration(new SuggestionVoteConfiguration());
             modelBuilder.ApplyConfiguration(new FundraiseConfiguration());
             modelBuilder.ApplyConfiguration(new FundraiseParticipantConfiguration());
+            modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
