@@ -1,20 +1,20 @@
-﻿using CSharpFunctionalExtensions;
+using Azure.Core;
+using CSharpFunctionalExtensions;
+using Microsoft.EntityFrameworkCore;
+using Shabasher.BusinessLogic.Mappings;
+using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
 using Shabasher.Core.Models;
-using Shabasher.Core.DTOs;
 using Shabasher.DataManage;
-using Shabasher.DataManage.Mappings;
 using Shabasher.DataManage.Entities;
-using Shabasher.BusinessLogic.Mappings;
-using Microsoft.EntityFrameworkCore;
+using Shabasher.DataManage.Mappings;
 
 namespace Shabasher.BusinessLogic.Services
 {
     public class ShabashesManageService : IShabashesManageService
     {
-        private const string BASE_URL = "http://213.171.27.237:5000";
-
         private readonly ShabasherDbContext _dbcontext;
+        private readonly string _baseUrl = Environment.GetEnvironmentVariable("BASE_URL")?.TrimEnd('/') ?? "https://shabasher.duckdns.org";
 
         public ShabashesManageService(ShabasherDbContext dbContext)
         {
@@ -68,7 +68,8 @@ namespace Shabasher.BusinessLogic.Services
                     ShabashId = shabashEntity.Id,
                     UserId = participant.User.Id,
                     Status = participant.Status,
-                    Role = participant.Role
+                    Role = participant.Role,
+                    CreatedAt = participant.CreatedAt
                 };
                 _dbcontext.ShabashParticipants.Add(participantEntity);
             }
@@ -81,9 +82,17 @@ namespace Shabasher.BusinessLogic.Services
         public async Task<Result<ShabashResponse>> UpdateShabashAsync(string shabashId, UpdateShabashRequest request, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);
-
             if (shabashEntity == null)
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
+
+            var actorEntity = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.ShabashId == shabashId && sp.UserId == userId);
+            if (actorEntity == null)
+                return Result.Failure<ShabashResponse>("Пользователь не найден");
+
+            if (actorEntity.Role == ShabashRole.Member)
+                return Result.Failure<ShabashResponse>("У пользователя недостаточно прав");
 
             shabashEntity.Name = request.Name;
             shabashEntity.Description = request.Description;
@@ -93,7 +102,7 @@ namespace Shabasher.BusinessLogic.Services
 
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
         }
 
         public async Task<Result<string>> DeleteShabashAsync(string shabashId, string userId)
@@ -117,14 +126,19 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success(shabashId);
         }
 
-        public async Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId)
+        public async Task<Result<ShabashResponse>> GetShabashByIdAsync(string shabashId, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);
-
             if (shabashEntity == null)
                 return Result.Failure<ShabashResponse>("Шабаш не найден");
 
-            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity));
+            var actorEntity = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.ShabashId == shabashId && sp.UserId == userId);
+            if (actorEntity == null)
+                return Result.Failure<ShabashResponse>("Пользователь не найден");
+
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
         }
 
         public async Task<Result<string>> CreateInviteAsync(string shabashId, string userId)
@@ -134,7 +148,7 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext.Invites.Add(InviteEntityMapper.ToEntity(invite));
             await _dbcontext.SaveChangesAsync();
 
-            var link = $"{BASE_URL}/api/invites/{invite.Id}";
+            var link = $"{_baseUrl}/api/invites/{invite.Id}";
 
             return Result.Success(link);
         }
@@ -168,7 +182,8 @@ namespace Shabasher.BusinessLogic.Services
                 User = userEntity,
                 UserId = userId,
                 Role = ShabashRole.Member,
-                Status = UserStatus.Invited
+                Status = UserStatus.Invited,
+                CreatedAt = DateTime.UtcNow
             };
 
             var alreadyParticipating = await _dbcontext.ShabashParticipants.AnyAsync(p => p.UserId == userId && p.ShabashId == shabashId);
@@ -178,23 +193,117 @@ namespace Shabasher.BusinessLogic.Services
             await _dbcontext.ShabashParticipants.AddAsync(sp);
             await _dbcontext.SaveChangesAsync();
 
-            return Result.Success(new UserShabashParticipationResponse(sp.ShabashId, sp.Shabash.Name, sp.Status));
+            return Result.Success(new UserShabashParticipationResponse(sp.ShabashId, sp.Shabash.Name, sp.Status, sp.Role));
         }
 
         public async Task<Result> LeaveShabashAsync(string userId, string shabashId)
         {
-            var shabashParticipant = await _dbcontext.ShabashParticipants
-                .Include(sp => sp.User)
-                .Include(sp => sp.Shabash)
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
 
-            if (shabashParticipant == null)
-                return Result.Failure("Пользователь не является участником шабаша");
+            try
+            {
+                var shabashParticipant = await _dbcontext.ShabashParticipants
+                    .Include(sp => sp.User)
+                    .Include(sp => sp.Shabash)
+                    .FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
 
-            _dbcontext.ShabashParticipants.Remove(shabashParticipant);
-            await _dbcontext.SaveChangesAsync();
+                if (shabashParticipant == null)
+                    return Result.Failure("Пользователь не является участником шабаша");
 
-            return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
+                var participantsCount = await _dbcontext.ShabashParticipants
+                    .CountAsync(p => p.ShabashId == shabashId);
+
+                _dbcontext.ShabashParticipants.Remove(shabashParticipant);
+
+                if (participantsCount == 1)
+                    _dbcontext.Shabashes.Remove(shabashParticipant.Shabash);
+
+                await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Result.Success($"{shabashParticipant.User.Name} покидает {shabashParticipant.Shabash.Name}");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure($"Ошибка при выходе из шабаша: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<string>> UpdateParticipantRoleAsync(string shabashId, string userId, string adminId, ShabashRole role)
+        {
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var spUser = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
+                var spAdmin = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == adminId && p.ShabashId == shabashId);
+
+                if (spUser == null || spAdmin == null)
+                    return Result.Failure<string>("Участник шабаша не найден");
+
+                if (spAdmin.Role != ShabashRole.Admin)
+                    return Result.Failure<string>("У участника недостаточно прав");
+
+                if (adminId == userId)
+                    return Result.Failure<string>("Нужен хотя бы один админ");
+
+                if (role == ShabashRole.Admin)
+                {
+                    spAdmin.Role = ShabashRole.CoAdmin;
+                }
+                else if (spUser.Role == ShabashRole.Admin)
+                {
+                    return Result.Failure<string>("Нельзя изменить роль администратора"); //скорее всего лишнее, но возможно это уместно в edge-case а-ля несколько одновременных запросов со сменами админки
+                }
+
+                spUser.Role = role;
+                await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Result.Success(spUser.UserId);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure<string>($"Ошибка при изменении ролей: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> KickFromShabashAsync(string targetUserId, string adminId, string shabashId)
+        {
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var targetShabashParticipant = await _dbcontext.ShabashParticipants
+                    .Include(sp => sp.User)
+                    .Include(sp => sp.Shabash)
+                    .FirstOrDefaultAsync(p => p.UserId == targetUserId && p.ShabashId == shabashId);
+                if (targetShabashParticipant == null)
+                    return Result.Failure("Пользователь не является участником шабаша");
+
+                var adminOrCoAdmin = await _dbcontext.ShabashParticipants
+                    .Include(sp => sp.User)
+                    .Include(sp => sp.Shabash)
+                    .FirstOrDefaultAsync(p => p.UserId == adminId && p.ShabashId == shabashId);
+                if (adminOrCoAdmin == null)
+                    return Result.Failure("Пользователь не является участником шабаша");
+
+                if (adminOrCoAdmin.Role == ShabashRole.Member)
+                    return Result.Failure("У пользователя недостаточно прав");
+
+                _dbcontext.ShabashParticipants.Remove(targetShabashParticipant);
+                await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Result.Success($"{targetShabashParticipant.User.Name} покидает {targetShabashParticipant.Shabash.Name}");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure($"Ошибка при кике участника {ex.Message}");
+            }
         }
     }
 }
