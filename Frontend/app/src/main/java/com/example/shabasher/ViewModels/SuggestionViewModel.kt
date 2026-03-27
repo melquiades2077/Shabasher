@@ -89,76 +89,63 @@ class SuggestionsViewModel(
         if (id.startsWith("temp_")) return
 
         viewModelScope.launch {
-            // 1️⃣ Сохраняем текущее состояние для возможного отката
-            val originalSuggestions = _suggestions.value
+            val original = _suggestions.value
 
-            // 2️⃣ Мгновенно обновляем UI (optimistic update)
-            val updatedSuggestions = originalSuggestions.map { suggestion ->
-                if (suggestion.id == id) {
-                    when (action) {
-                        "like" -> {
-                            // Переключаем лайк: если уже лайкнуто — убираем, иначе — ставим
-                            // При этом снимаем дизлайк, если он был
-                            val newLiked = !suggestion.liked
-                            val newDisliked = if (newLiked) false else suggestion.disliked
-                            val newLikes = if (newLiked) suggestion.likes + 1 else suggestion.likes - 1
-                            val newDislikes = if (suggestion.disliked && newDisliked) suggestion.dislikes - 1 else suggestion.dislikes
+            _suggestions.value = original.map { s ->
+                if (s.id != id) return@map s
 
-                            suggestion.copy(
-                                likes = newLikes.coerceAtLeast(0),
-                                dislikes = newDislikes.coerceAtLeast(0),
-                                liked = newLiked,
-                                disliked = newDisliked
-                            )
+                when (action) {
+                    "like" -> {
+                        when {
+                            s.liked -> {
+                                // убрать лайк
+                                s.copy(
+                                    liked = false,
+                                    likes = (s.likes - 1).coerceAtLeast(0)
+                                )
+                            }
+                            else -> {
+                                // поставить лайк и убрать дизлайк
+                                s.copy(
+                                    liked = true,
+                                    disliked = false,
+                                    likes = s.likes + 1,
+                                    dislikes = if (s.disliked) (s.dislikes - 1).coerceAtLeast(0) else s.dislikes
+                                )
+                            }
                         }
-                        "dislike" -> {
-                            // Переключаем дизлайк: если уже дизлайкнуто — убираем, иначе — ставим
-                            // При этом снимаем лайк, если он был
-                            val newDisliked = !suggestion.disliked
-                            val newLiked = if (newDisliked) false else suggestion.liked
-                            val newDislikes = if (newDisliked) suggestion.dislikes + 1 else suggestion.dislikes - 1
-                            val newLikes = if (suggestion.liked && newLiked) suggestion.likes - 1 else suggestion.likes
-
-                            suggestion.copy(
-                                likes = newLikes.coerceAtLeast(0),
-                                dislikes = newDislikes.coerceAtLeast(0),
-                                liked = newLiked,
-                                disliked = newDisliked
-                            )
-                        }
-                        else -> suggestion
                     }
-                } else suggestion
+
+                    "dislike" -> {
+                        when {
+                            s.disliked -> {
+                                // убрать дизлайк
+                                s.copy(
+                                    disliked = false,
+                                    dislikes = (s.dislikes - 1).coerceAtLeast(0)
+                                )
+                            }
+                            else -> {
+                                // поставить дизлайк и убрать лайк
+                                s.copy(
+                                    disliked = true,
+                                    liked = false,
+                                    dislikes = s.dislikes + 1,
+                                    likes = if (s.liked) (s.likes - 1).coerceAtLeast(0) else s.likes
+                                )
+                            }
+                        }
+                    }
+
+                    else -> s
+                }
             }
 
-            // Применяем изменения к UI сразу
-            _suggestions.value = updatedSuggestions
-
-            // 3️⃣ Отправляем запрос на сервер
             val result = repository.vote(id, action)
 
-            // 4️⃣ Если сервер вернул ошибку — откатываем изменения назад
             if (result.isFailure) {
-                android.util.Log.e("SuggestionsVM", "Vote failed, rolling back: ${result.exceptionOrNull()?.message}")
-                _suggestions.value = originalSuggestions
-                _error.value = result.exceptionOrNull()?.message?.takeIf { it.isNotBlank() } ?: "Не удалось проголосовать"
-            }
-            // 5️⃣ Если успех — можно синхронизировать с точными данными с сервера (опционально)
-            else {
-                result.getOrNull()?.let { serverVote ->
-                    android.util.Log.d("SuggestionsVM", "✓ Vote synced: likes=${serverVote.likes}, liked=${serverVote.liked}")
-                    // Обновляем финальными значениями с сервера (на случай, если логика на бэке сложнее)
-                    _suggestions.value = _suggestions.value.map {
-                        if (it.id == id) {
-                            it.copy(
-                                likes = serverVote.likes,
-                                dislikes = serverVote.dislikes,
-                                liked = serverVote.liked,
-                                disliked = serverVote.disliked
-                            )
-                        } else it
-                    }
-                }
+                _suggestions.value = original
+                _error.value = result.exceptionOrNull()?.message ?: "Ошибка голосования"
             }
         }
     }

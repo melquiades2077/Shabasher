@@ -3,6 +3,7 @@ package com.example.shabasher.Screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,7 +78,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -410,6 +413,9 @@ private fun PaymentRequisitesSection(
     recipient: String,
     description: String?
 ) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+
     OutlinedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -425,7 +431,6 @@ private fun PaymentRequisitesSection(
                 fontWeight = FontWeight.SemiBold
             )
 
-            // Описание сбора
             description?.takeIf { it.isNotBlank() }?.let {
                 Text(
                     text = it,
@@ -436,25 +441,32 @@ private fun PaymentRequisitesSection(
 
             Divider()
 
-            // Номер телефона
             RequisiteRow(
                 icon = Icons.Default.Phone,
                 label = "Телефон",
-                value = phone,
-                onCopy = { /* скопировать в буфер */ }
+                value = phone
             )
 
-            // Получатель
             RequisiteRow(
                 icon = Icons.Default.Person,
                 label = "Получатель",
-                value = recipient,
-                onCopy = { /* скопировать в буфер */ }
+                value = recipient
             )
 
-            // Кнопка копирования всех реквизитов
             TextButton(
-                onClick = { /* копировать все реквизиты */ },
+                onClick = {
+                    val fullText = buildString {
+                        append("Реквизиты для оплаты:\n")
+                        append("Телефон: $phone\n")
+                        append("Получатель: $recipient\n")
+                        description?.let {
+                            append("\nОписание: $it")
+                        }
+                    }
+
+                    clipboard.setText(AnnotatedString(fullText))
+                    Toast.makeText(context, "Все реквизиты скопированы", Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Icon(
@@ -473,9 +485,11 @@ private fun PaymentRequisitesSection(
 private fun RequisiteRow(
     icon: ImageVector,
     label: String,
-    value: String,
-    onCopy: () -> Unit
+    value: String
 ) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -486,7 +500,9 @@ private fun RequisiteRow(
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp)
         )
+
         Spacer(modifier = Modifier.width(12.dp))
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
@@ -499,7 +515,14 @@ private fun RequisiteRow(
                 fontWeight = FontWeight.Medium
             )
         }
-        IconButton(onClick = onCopy, modifier = Modifier.size(32.dp)) {
+
+        IconButton(
+            onClick = {
+                clipboard.setText(AnnotatedString(value))
+                Toast.makeText(context, "$label скопирован", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.size(32.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.ContentCopy,
                 contentDescription = "Копировать",
