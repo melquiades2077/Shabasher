@@ -17,7 +17,11 @@ namespace Shabasher.BusinessLogic.Services
             _dbcontext = dbcontext;
         }
 
-        private static SuggestionResponse ToResponse(SuggestionEntity s, Vote? myVote, string userName) =>
+        private static SuggestionResponse ToResponse(
+            SuggestionEntity s,
+            Vote? myVote,
+            string userName,
+            ShabashRole userRole) =>
             new(
                 s.Id,
                 s.UserId,
@@ -27,7 +31,8 @@ namespace Shabasher.BusinessLogic.Services
                 s.DislikesCount,
                 s.CreatedAt,
                 myVote == Vote.Like,
-                myVote == Vote.Dislike);
+                myVote == Vote.Dislike,
+                userRole);
 
         private async Task<bool> IsParticipantAsync(string shabashId, string userId) =>
             await _dbcontext.ShabashParticipants.AnyAsync(p => p.ShabashId == shabashId && p.UserId == userId);
@@ -62,11 +67,17 @@ namespace Shabasher.BusinessLogic.Services
                 .Where(v => v.UserId == userId && ids.Contains(v.SuggestionId))
                 .ToDictionaryAsync(v => v.SuggestionId, v => v.Vote);
 
+            var authorRole = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .Where(p => p.ShabashId == eventId && userIds.Contains(p.UserId))
+                .ToDictionaryAsync(p => p.UserId, p => p.Role);
+
             var list = suggestions
                 .Select(s => ToResponse(
                     s,
                     myVotes.TryGetValue(s.Id, out var v) ? v : null,
-                    users.TryGetValue(s.UserId, out var name) ? name : "Неизвестный пользователь"))
+                    users.TryGetValue(s.UserId, out var name) ? name : "Неизвестный пользователь",
+                    authorRole.TryGetValue(s.UserId, out var rs) ? rs : ShabashRole.Member))
                 .ToList();
 
             return Result.Success(new SuggestionsListResponse(list));
@@ -105,7 +116,15 @@ namespace Shabasher.BusinessLogic.Services
                 .Select(u => u.Name)
                 .FirstOrDefaultAsync() ?? "Неизвестный пользователь";
 
-            return Result.Success(ToResponse(entity, null, userName));
+            var authorParticipation = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ShabashId == eventId && p.UserId == userId);
+
+            return Result.Success(ToResponse(
+                entity,
+                null,
+                userName,
+                authorParticipation?.Role ?? ShabashRole.Member));
         }
 
         public async Task<Result<SuggestionVoteResultResponse>> VoteAsync(string suggestionId, string userId, string action)

@@ -262,7 +262,7 @@ namespace Shabasher.BusinessLogic.Services
 
             var role = await GetUserRoleInShabash(fundraise.EventId, adminId);
             if (role != ShabashRole.Admin && role != ShabashRole.CoAdmin)
-                return Result.Failure("Forbidden");
+                return Result.Failure("Недостаточно прав");
 
             var participant = await _dbcontext.FundraiseParticipants
                 .FirstOrDefaultAsync(p => p.FundraiseId == fundraiseId && p.UserId == targetUserId);
