@@ -43,6 +43,95 @@ namespace Shabasher.DataManage.Migrations
                     b.ToTable("Invites");
                 });
 
+            modelBuilder.Entity("Shabasher.DataManage.Entities.FundraiseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("CreatorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CreatorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CreatorPhone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("CurrentAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FundStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal?>("TargetAmount")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Fundraises");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.FundraiseParticipantEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FundraiseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PaidAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("FundraiseId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("FundraiseParticipants");
+                });
+
             modelBuilder.Entity("Shabasher.DataManage.Entities.ShabashEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -85,6 +174,11 @@ namespace Shabasher.DataManage.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
@@ -98,9 +192,87 @@ namespace Shabasher.DataManage.Migrations
                     b.ToTable("ShabashParticipants");
                 });
 
+            modelBuilder.Entity("Shabasher.DataManage.Entities.SuggestionEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("DislikesCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("LikesCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ShabashId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShabashId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Suggestions");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.SuggestionVoteEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("SuggestionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Vote")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SuggestionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SuggestionVotes");
+                });
+
             modelBuilder.Entity("Shabasher.DataManage.Entities.UserEntity", b =>
                 {
                     b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AboutMe")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -120,12 +292,30 @@ namespace Shabasher.DataManage.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Telegram")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.FundraiseParticipantEntity", b =>
+                {
+                    b.HasOne("Shabasher.DataManage.Entities.FundraiseEntity", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("FundraiseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shabasher.DataManage.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Shabasher.DataManage.Entities.ShabashParticipantEntity", b =>
@@ -147,9 +337,57 @@ namespace Shabasher.DataManage.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Shabasher.DataManage.Entities.SuggestionEntity", b =>
+                {
+                    b.HasOne("Shabasher.DataManage.Entities.ShabashEntity", "Shabash")
+                        .WithMany()
+                        .HasForeignKey("ShabashId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shabasher.DataManage.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Shabash");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.SuggestionVoteEntity", b =>
+                {
+                    b.HasOne("Shabasher.DataManage.Entities.SuggestionEntity", "Suggestion")
+                        .WithMany("Votes")
+                        .HasForeignKey("SuggestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shabasher.DataManage.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Suggestion");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.FundraiseEntity", b =>
+                {
+                    b.Navigation("Participants");
+                });
+
             modelBuilder.Entity("Shabasher.DataManage.Entities.ShabashEntity", b =>
                 {
                     b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("Shabasher.DataManage.Entities.SuggestionEntity", b =>
+                {
+                    b.Navigation("Votes");
                 });
 
             modelBuilder.Entity("Shabasher.DataManage.Entities.UserEntity", b =>
