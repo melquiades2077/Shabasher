@@ -1,47 +1,366 @@
 package com.example.shabasher
 
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.shabasher.Model.Routes
+import com.example.shabasher.Screens.CreateEventPage
+import com.example.shabasher.Screens.CreateFundraisePage
+import com.example.shabasher.Screens.DonationListScreen
+import com.example.shabasher.Screens.DonationScreen
+import com.example.shabasher.Screens.EditEventPage
+import com.example.shabasher.Screens.EditProfileScreen
+import com.example.shabasher.Screens.EventPage
+import com.example.shabasher.Screens.LoginPage
+import com.example.shabasher.Screens.MainPage
+import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.ParticipantsPage
+import com.example.shabasher.Screens.ProfileScreen
+import com.example.shabasher.Screens.ProfileViewModelFactory
+import com.example.shabasher.Screens.RegisterPage
+import com.example.shabasher.Screens.ShareEventPage
+import com.example.shabasher.Screens.SuggestionsScreen
+import com.example.shabasher.Screens.WelcomePage
+import com.example.shabasher.ViewModels.CreateEventViewModel
+import com.example.shabasher.ViewModels.CreateFundraiseViewModel
+import com.example.shabasher.ViewModels.DonationListViewModel
+import com.example.shabasher.ViewModels.DonationListViewModelFactory
+import com.example.shabasher.ViewModels.DonationViewModel
+import com.example.shabasher.ViewModels.EventViewModel
+import com.example.shabasher.ViewModels.FundraisesViewModel
+import com.example.shabasher.ViewModels.FundraisesViewModelFactory
+import com.example.shabasher.ViewModels.LoginViewModel
+import com.example.shabasher.ViewModels.MainPageViewModel
+import com.example.shabasher.ViewModels.ProfileViewModel
+import com.example.shabasher.ViewModels.RegisterViewModel
+import com.example.shabasher.ViewModels.ShareEventViewModel
+import com.example.shabasher.ViewModels.ShareEventViewModelFactory
+import com.example.shabasher.ViewModels.SuggestionsViewModel
+import com.example.shabasher.ViewModels.ThemeViewModel
+import com.example.shabasher.ViewModels.ViewModelFactory
+import com.example.shabasher.data.local.TokenManager
+import com.example.shabasher.data.network.FundraisesRepository
+import com.example.shabasher.data.network.InviteRepository
+import com.example.shabasher.data.network.SuggestionsRepository
 import com.example.shabasher.ui.theme.ShabasherTheme
 
+@Composable
+fun rememberViewModelFactory(context: Context): ViewModelFactory {
+    return remember { ViewModelFactory(context) }
+}
+
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+        }
+
         setContent {
-            ShabasherTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            val context = LocalContext.current
+            val themeViewModel: ThemeViewModel = viewModel(
+                factory = ViewModelProvider.AndroidViewModelFactory(application)
+            )
+            val viewModelFactory = rememberViewModelFactory(context)
+
+            val navController = rememberNavController()
+
+            val tokenManager = remember { TokenManager(context) }
+            val startDestination =
+                if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
+
+            ShabasherTheme(darkTheme = themeViewModel.isDarkTheme.value) {
+                // Handle Deep Link navigation
+                DeepLinkHandler(navController)
+
+                // Реализация NavigationGraph напрямую здесь
+                NavHost(
+                    navController = navController,
+                    startDestination = startDestination,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable(Routes.WELCOME) { WelcomePage(navController) }
+
+                    composable(Routes.REGISTER) {
+                        val vm: RegisterViewModel = viewModel(factory = viewModelFactory)
+                        RegisterPage(navController, vm)
+                    }
+
+                    composable(Routes.LOGIN) {
+                        val vm: LoginViewModel = viewModel(factory = viewModelFactory)
+                        LoginPage(navController, vm)
+                    }
+
+                    composable(
+                        route = "namePage?email={email}&password={password}",
+                        arguments = listOf(
+                            navArgument("email") { defaultValue = "" },
+                            navArgument("password") { defaultValue = "" }
+                        )
+                    ) { backStackEntry ->
+                        NamePage(
+                            navController,
+                            email = backStackEntry.arguments?.getString("email") ?: "",
+                            password = backStackEntry.arguments?.getString("password") ?: ""
+                        )
+                    }
+
+                    composable(Routes.MAIN) {
+                        val vm: MainPageViewModel = viewModel(factory = viewModelFactory)
+                        MainPage(navController, vm)
+                    }
+
+                    // Свой профиль (без ID)
+                    composable(Routes.PROFILE) {
+                        val vm: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = null
+                            )
+                        )
+                        ProfileScreen(navController, themeViewModel, null)
+                    }
+
+                    // Чужой профиль (с ID)
+                    composable(Routes.PROFILE_WITH_ID) { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId")
+                        if (userId == null) {
+                            // Ошибка — вернуть назад или показать ошибку
+                            navController.popBackStack()
+                            return@composable
+                        }
+
+                        val vm: ProfileViewModel = viewModel(
+                            key = "profile_$userId", // ← важно! иначе ViewModel будет кэшироваться
+                            factory = ProfileViewModelFactory(
+                                LocalContext.current,
+                                targetUserId = userId
+                            )
+                        )
+                        ProfileScreen(navController, themeViewModel, userId)
+                    }
+
+                    composable(
+                        route = "${Routes.EVENT}/{eventId}?inviteId={inviteId}",
+                        arguments = listOf(
+                            navArgument("eventId") { type = NavType.StringType },
+                            navArgument("inviteId") {
+                                type = NavType.StringType
+                                nullable = true
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val vm: EventViewModel = viewModel(factory = viewModelFactory)
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        // inviteId больше не используется в логике
+                        EventPage(navController, eventId, vm)
+                    }
+
+                    composable(Routes.CREATEEVENT) {
+                        val vm: CreateEventViewModel = viewModel(factory = viewModelFactory)
+                        CreateEventPage(navController = navController, viewModel = vm)
+                    }
+
+                    composable(
+                        route = "${Routes.SHAREEVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        val inviteRepository = InviteRepository(context = LocalContext.current)
+                        val vm: ShareEventViewModel = viewModel(
+                            factory = ShareEventViewModelFactory(inviteRepository)
+                        )
+                        ShareEventPage(
+                            navController = navController,
+                            viewModel = vm,
+                            eventId = eventId
+                        )
+                    }
+
+                    composable(
+                        route = "${Routes.PARTICIPANTS}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        ParticipantsPage(navController, eventId = eventId)
+                    }
+
+                    composable(Routes.EDIT_PROFILE) {
+
+
+                        EditProfileScreen(
+                            navController = navController
+                        )
+                    }
+
+                    composable(
+                        route = "${Routes.SUGGESTIONS}/{eventId}?isOrganizer={isOrganizer}",
+                        arguments = listOf(
+                            navArgument("eventId") { type = NavType.StringType },
+                            navArgument("isOrganizer") {
+                                type = NavType.BoolType
+                                defaultValue = false
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val context = LocalContext.current
+                        val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+                        val isOrganizer = backStackEntry.arguments?.getBoolean("isOrganizer") ?: false
+
+                        val vm: SuggestionsViewModel = viewModel(
+                            key = "suggestions_$eventId",
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return SuggestionsViewModel(
+                                        SuggestionsRepository(tokenManager)
+                                    ) as T
+                                }
+                            }
+                        )
+
+                        SuggestionsScreen(
+                            navController = navController,
+                            viewModel = vm,
+                            eventId = eventId,
+                            isEventOrganizer = isOrganizer // ← Передаём флаг
+                        )
+                    }
+
+                    composable(
+                        route = Routes.DONATION_LIST,
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+
+                        val context = LocalContext.current
+                        val eventId = backStackEntry.arguments?.getString("eventId")!!
+
+                        val vm: DonationListViewModel = viewModel(
+                            key = "donations_$eventId", // 🔥 важно!
+                            factory = DonationListViewModelFactory(
+                                FundraisesRepository(TokenManager(context)),
+                                eventId
+                            )
+                        )
+
+                        DonationListScreen(
+                            navController = navController,
+                            viewModel = vm
+                        )
+                    }
+
+                    composable(
+                        route = Routes.DONATION,
+                        arguments = listOf(navArgument("donationId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val donationId = backStackEntry.arguments?.getString("donationId")!!
+                        val context = LocalContext.current
+
+                        // ✅ Создаём ViewModel с зависимостями
+                        val viewModel: DonationViewModel = viewModel(
+                            key = "donation_$donationId", // 🔥 Важно: уникальный ключ для каждого сбора
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return DonationViewModel(
+                                        repository = FundraisesRepository(TokenManager(context))
+                                    ) as T
+                                }
+                            }
+                        )
+
+                        DonationScreen(
+                            navController = navController,
+                            viewModel = viewModel,
+                            donationId = donationId
+                        )
+                    }
+
+                    composable(
+                        route = "${Routes.EDITEVENT}/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId")!!
+                        EditEventPage(
+                            navController = navController,
+                            eventId = eventId
+                        )
+                    }
+
+                    composable(
+                        route = Routes.CREATE_FUNDRAISE,
+                        // ✅ Обязательно: объявляем тип аргумента
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val eventId = backStackEntry.arguments?.getString("eventId")!!
+
+                        val context = LocalContext.current
+
+                        val vm: CreateFundraiseViewModel = viewModel(
+                            key = "create_fundraise_$eventId",
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return CreateFundraiseViewModel(
+                                        FundraisesRepository(TokenManager(context)),
+                                        eventId // 🔥 Теперь здесь будет реальный UUID
+                                    ) as T
+                                }
+                            }
+                        )
+
+                        CreateFundraisePage(navController = navController, viewModel = vm)
+                    }
                 }
             }
         }
     }
+
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun DeepLinkHandler(navController: NavController) {
+    val context = LocalContext.current
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ShabasherTheme {
-        Greeting("Android")
+    // Handle Deep Link navigation
+    LaunchedEffect(context) {
+        val intent = (context as? ComponentActivity)?.intent
+        val uri = intent?.data
+        uri?.let {
+            if (it.scheme == "shabasher" && it.host == "event") {
+                val eventId = it.getQueryParameter("eventId")
+                eventId?.let { id ->
+                    // Navigate to the Event Page
+                    navController.navigate("${Routes.EVENT}/$id") {
+                        popUpTo(Routes.MAIN) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
     }
 }
