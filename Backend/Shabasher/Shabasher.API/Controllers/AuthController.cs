@@ -48,24 +48,6 @@ namespace Shabasher.API.Controllers
             return Ok(token.Value);
         }
 
-        [HttpPost("set-name")]
-        [Authorize]
-        public async Task<IActionResult> SetUserName([FromBody] SetNameRequest request)
-        {
-            // Искать по "userId" вместо ClaimTypes.NameIdentifier
-            var userId = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var result = await _usersManageService.UpdateUserNameAsync(userId, request.Name);
-
-            if (result.IsFailure)
-                return BadRequest(result.Error);
-
-            return Ok(new { message = "Имя установлено", name = result.Value });
-        }
-
         [HttpGet("profile")]
         [Authorize]
         public async Task<ActionResult<UserResponse>> GetProfile()
