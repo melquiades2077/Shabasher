@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -11,10 +10,13 @@ namespace Shabasher.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUsersManageService _usersManageService;
+        private readonly IJwtProvider _jwtProvider;
 
-        public AuthController(IUsersManageService usersManageService)
+        public AuthController(IUsersManageService usersManageService, IJwtProvider jwtProvider)
         {
             _usersManageService = usersManageService;
+            _jwtProvider = jwtProvider;
+
         }
 
         [HttpPost("register")]
@@ -48,39 +50,18 @@ namespace Shabasher.API.Controllers
             return Ok(token.Value);
         }
 
-        [HttpPost("set-name")]
-        [Authorize]
-        public async Task<IActionResult> SetUserName([FromBody] SetNameRequest request)
+        [HttpPost("refresh")]
+        public async Task<ActionResult> Refresh([FromBody] TokenRefreshRequest request)
         {
-            // Искать по "userId" вместо ClaimTypes.NameIdentifier
-            var userId = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var result = await _usersManageService.UpdateUserNameAsync(userId, request.Name);
+            var result = await _jwtProvider.RefreshTokens(
+                request.AccessToken,
+                request.RefreshToken
+            );
 
             if (result.IsFailure)
-                return BadRequest(result.Error);
+                return Unauthorized(result.Error);
 
-            return Ok(new { message = "Имя установлено", name = result.Value });
-        }
-
-        [HttpGet("profile")]
-        [Authorize]
-        public async Task<ActionResult<UserResponse>> GetProfile()
-        {
-            var userId = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var userResult = await _usersManageService.GetUserByIdAsync(userId);
-
-            if (userResult.IsFailure)
-                return BadRequest(userResult.Error);
-
-            return Ok(userResult.Value);
+            return Ok(result.Value);
         }
     }
 }

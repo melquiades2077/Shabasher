@@ -1,12 +1,14 @@
 using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
 using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
 using Shabasher.DataManage;
+using System.Text;
 using System.Text.Json.Serialization;
 
 Env.Load();
@@ -21,8 +23,20 @@ var jwtHours = Environment.GetEnvironmentVariable("JWT_HOURS");
 builder.Services.Configure<JwtOptions>(options =>
 {
     options.SecretKey = jwtSecret;
-    options.ExpiresHours = Convert.ToInt32(jwtHours);
+    options.AccessTokenExpiresMinutes = Convert.ToInt32(Environment.GetEnvironmentVariable("JWT_ACCESS_MINUTES"));
+    options.RefreshTokenExpirationDays = Convert.ToInt32(Environment.GetEnvironmentVariable("JWT_REFRESH_DAYS"));
 });
+var tokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuerSigningKey = true,
+    IssuerSigningKey = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(jwtSecret)),
+    ValidateIssuer = false,
+    ValidateAudience = false,
+    ValidateLifetime = true,
+    ClockSkew = TimeSpan.FromSeconds(30)
+};
+builder.Services.AddSingleton(tokenValidationParameters);
 builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.ConfigureHttpJsonOptions(options =>
