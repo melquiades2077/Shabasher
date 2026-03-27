@@ -1,9 +1,13 @@
-﻿using Shabasher.Core.DTOs;
+﻿using CSharpFunctionalExtensions;
+using Shabasher.Core.DTOs;
+using Shabasher.Core.Models;
 
 namespace Shabasher.Core.Interfaces
 {
     public interface IJwtProvider
     {
-        string GenerateToken(UserResponse user);
+        Task<Result<TokenPair>> GenerateTokens(UserResponse user);
+        Task<Result<TokenPair>> RefreshTokens(string accessToken, string refreshToken);
+        Task RevokeAllUserTokens(string userId);
     }
 }

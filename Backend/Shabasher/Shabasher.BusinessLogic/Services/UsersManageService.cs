@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Shabasher.Core.DTOs;
 using Shabasher.Core.Interfaces;
@@ -43,12 +43,12 @@ namespace Shabasher.BusinessLogic.Services
                 .ThenInclude(p => p.Shabash)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
-        public async Task<Result<UserResponse>> RegisterUserAsync(string name, string email, string password)
+        public async Task<Result<UserResponse>> RegisterUserAsync(string name, string email, string password, string? aboutMe = null, string? telegram = null)
         {
             if (await _dbcontext.Users.AnyAsync(x => x.Email == email))
                 return Result.Failure<UserResponse>("Пользователь с этим email уже существует");
 
-            var user = User.Create(name, email, password, _passwordHasher);
+            var user = User.Create(name, email, aboutMe ?? string.Empty, telegram ?? string.Empty, password, _passwordHasher);
 
             if (user.IsFailure)
                 return Result.Failure<UserResponse>(user.Error);
@@ -59,19 +59,17 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success<UserResponse>(UserResponseMapper.DomainToResponse(user.Value));
         }
 
-        public async Task<Result<string>> LoginUserAsync(string email, string password)
+        public async Task<Result<TokenPair>> LoginUserAsync(string email, string password)
         {
             var userEntity = GetUserEntityByEmail(email).Result;
 
             if (userEntity == null)
-                return Result.Failure<string>("Пользователь с данным email не найден");
+                return Result.Failure<TokenPair>("Пользователь с данным email не найден");
 
             if (!_passwordHasher.VerifyPassword(password, userEntity.PasswordHash))
-                return Result.Failure<string>("Неверный пароль");
+                return Result.Failure<TokenPair>("Неверный пароль");
 
-            string jwtToken = _jwtProvider.GenerateToken(UserResponseMapper.EntityToResponse(userEntity));
-
-            return Result.Success<string>(jwtToken);
+            return await _jwtProvider.GenerateTokens(UserResponseMapper.EntityToResponse(userEntity));
         }
 
         public async Task<Result<UserResponse>> GetUserByIdAsync(string id)
@@ -114,23 +112,56 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success<string>(userEntity.Id);
         }
 
-        public async Task<Result<string>> UpdateUserNameAsync(string userId, string newName)
+        public async Task<Result<UserResponse>> UpdateUserProfileAsync(string userId, string newName, string? aboutMe, string? telegram)
         {
-            var newNameResult = NameValidator.IsValidName(newName);
-            if (newNameResult.IsFailure)
-                return Result.Failure<string>(newNameResult.Error);
-            
-            var user = await _dbcontext.Users
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            using var transaction = await _dbcontext.Database.BeginTransactionAsync();
 
-            if (user == null)
-                return Result.Failure<string>("Пользователь не найден");
+            try
+            {
+                var user = await _dbcontext.Users
+                    .Include(u => u.Participations)
+                    .ThenInclude(p => p.Shabash)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
 
-            user.Name = newName;
-            
-            await _dbcontext.SaveChangesAsync();
+                if (user == null)
+                    return Result.Failure<UserResponse>("Пользователь не найден");
 
-            return Result.Success<string>(user.Name);
+                if (newName != null)
+                {
+                    var newNameResult = NameValidator.IsValidName(newName);
+                    if (newNameResult.IsFailure)
+                        return Result.Failure<UserResponse>(newNameResult.Error);
+                    user.Name = newName;
+                }
+                if (!string.IsNullOrWhiteSpace(aboutMe) || !string.IsNullOrWhiteSpace(user.AboutMe))
+                {
+                    if (aboutMe.Length > 400)
+                        return Result.Failure<UserResponse>("Длина секции 'Обо мне' не должна превышать 400 символов");
+                    user.AboutMe = aboutMe;
+                }
+
+                if (!string.IsNullOrWhiteSpace(telegram) && telegram.Trim() != "@")
+                {
+                    var telegramResult = TelegramValidator.IsValidTelegram(telegram);
+                    if (telegramResult.IsFailure)
+                        return Result.Failure<UserResponse>(telegramResult.Error);
+                    user.Telegram = telegram;
+                }
+                else if (!string.IsNullOrWhiteSpace(user.Telegram))
+                {
+                    user.Telegram = "";
+                }
+
+                await _dbcontext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Result.Success<UserResponse>(UserResponseMapper.EntityToResponse(user));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Result.Failure<UserResponse>($"Ошибка при редактировании профиля: {ex.Message}");
+            }
         }
 
         public async Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status)

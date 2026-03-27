@@ -15,6 +15,8 @@ namespace Shabasher.DataManage.Entities
         public UserStatus Status { get; set; }
 
         public ShabashRole Role { get; set; }
+
+        public DateTime CreatedAt { get; set; }
     }
 }
 

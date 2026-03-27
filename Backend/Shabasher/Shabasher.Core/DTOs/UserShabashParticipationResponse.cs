@@ -5,7 +5,8 @@ namespace Shabasher.Core.DTOs
     public record UserShabashParticipationResponse(
         string ShabashId,
         string ShabashName,
-        UserStatus Status
+        UserStatus Status,
+        ShabashRole Role
     );
 }
 

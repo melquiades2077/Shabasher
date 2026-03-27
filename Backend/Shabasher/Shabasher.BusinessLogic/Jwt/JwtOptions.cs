@@ -4,6 +4,7 @@
     {
         public string SecretKey { get; set; } = string.Empty;
 
-        public int ExpiresHours { get; set; }
+        public int AccessTokenExpiresMinutes { get; set; } = 15;
+        public int RefreshTokenExpirationDays { get; set; } = 7;
     }
 }
