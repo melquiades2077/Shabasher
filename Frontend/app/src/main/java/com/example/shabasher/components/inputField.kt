@@ -2,6 +2,7 @@ package com.example.shabasher.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -36,8 +37,10 @@ fun InputField(
     readOnly: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     placeholder: String? = null,
-    prefix: @Composable (() -> Unit)? = null, // 👈 НОВОЕ
-    trailing: @Composable (() -> Unit)? = null
+    prefix: @Composable (() -> Unit)? = null,
+    trailing: @Composable (() -> Unit)? = null,
+    imeAction: ImeAction = ImeAction.Next, // 👈 добавили
+    onImeAction: (() -> Unit)? = null // 👈 добавили
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
@@ -53,7 +56,12 @@ fun InputField(
         shape = RoundedCornerShape(20.dp),
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
-            imeAction = if (singleLine) ImeAction.Next else ImeAction.Default
+            imeAction = imeAction
+        ),
+
+        keyboardActions = KeyboardActions(
+            onNext = { onImeAction?.invoke() },
+            onDone = { onImeAction?.invoke() }
         ),
         visualTransformation =
             if (isPassword && !isPasswordVisible) PasswordVisualTransformation()

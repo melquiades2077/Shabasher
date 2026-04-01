@@ -5,6 +5,8 @@ import QRCode
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,15 +15,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,30 +51,47 @@ import com.example.shabasher.components.ShabasherSecondaryButton
 import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.ui.theme.Typography
 
+
+fun shareToTelegram(context: Context, text: String) {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = Uri.parse("https://t.me/share/url?url=$text")
+    }
+    context.startActivity(intent)
+}
+
+fun shareToVK(context: Context, text: String) {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = Uri.parse("https://vk.com/share.php?url=$text")
+    }
+    context.startActivity(intent)
+}
+
 @Composable
 fun ShareEventPage(
     navController: NavController,
     eventId: String,
-    viewModel: ShareEventViewModel = viewModel(factory = ShareEventViewModelFactory(
-        InviteRepository(LocalContext.current)
-    ))
+    viewModel: ShareEventViewModel = viewModel(
+        factory = ShareEventViewModelFactory(
+            InviteRepository(LocalContext.current)
+        )
+    )
 ) {
-    // Инициализация ViewModel с контекстом
     val context = LocalContext.current
 
-    // Инициализируем данные внутри LaunchedEffect
     LaunchedEffect(eventId) {
-        viewModel.init(eventId, context) // Передаем контекст прямо в init
+        viewModel.init(eventId, context)
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -74,10 +99,11 @@ fun ShareEventPage(
                     .padding(16.dp)
                     .align(Alignment.Center)
             ) {
-                // Карточка с информацией
+
+                // Карточка
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(40.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                     modifier = Modifier
                         .background(
                             color = MaterialTheme.colorScheme.surface,
@@ -86,19 +112,71 @@ fun ShareEventPage(
                         .padding(vertical = 32.dp, horizontal = 16.dp)
                         .fillMaxWidth()
                 ) {
+
                     Text(
                         text = "Поделитесь событием",
                         style = Typography.headlineMedium
                     )
 
-                    // QR-код с ссылкой
-                    QRCode(viewModel.link.value.trim('"'))
+
+                        QRCode(viewModel.link.value.trim('"'))
+
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Отображение ссылки
+
+                        // 🔥 ИКОНКИ ШАРИНГА (МИНИМАЛИЗМ)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(24.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .wrapContentWidth()
+                        ) {
+
+                            IconButton(
+                                onClick = {
+                                    shareToTelegram(context, viewModel.link.value.trim('"'))
+                                },
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.tg),
+                                    contentDescription = "Telegram",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    shareToVK(context, viewModel.link.value.trim('"'))
+                                },
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.vk),
+                                    contentDescription = "VK",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Ссылка + копирование
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -110,7 +188,9 @@ fun ShareEventPage(
                                 .fillMaxWidth()
                         ) {
                             Row(
-                                modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState())
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .horizontalScroll(rememberScrollState())
                             ) {
                                 Text(
                                     text = viewModel.link.value.trim('"'),
@@ -120,19 +200,28 @@ fun ShareEventPage(
 
                             IconButton(onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                clipboard.setPrimaryClip(ClipData.newPlainText("invite", viewModel.link.value.trim('"')))
+                                clipboard.setPrimaryClip(
+                                    ClipData.newPlainText(
+                                        "invite",
+                                        viewModel.link.value.trim('"')
+                                    )
+                                )
                                 Toast.makeText(context, "Ссылка скопирована", Toast.LENGTH_SHORT).show()
                             }) {
                                 Icon(
                                     painter = painterResource(R.drawable.content_copy),
-                                    contentDescription = "copy"
+                                    contentDescription = null
                                 )
                             }
                         }
+
+
+
+
                     }
                 }
 
-                // Кнопка "Продолжить"
+                // Кнопка
                 ShabasherSecondaryButton(
                     text = "Продолжить",
                     onClick = {

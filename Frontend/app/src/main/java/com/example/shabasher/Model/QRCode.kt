@@ -1,10 +1,14 @@
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
@@ -26,8 +30,12 @@ fun QRCode(
         Image(
             bitmap = it.asImageBitmap(),
             contentDescription = "QR code",
-            modifier = modifier.size(sizeDp),
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Fit,
+            modifier = modifier
+                .size(sizeDp)
+                .clip(RoundedCornerShape(20.dp)) // 👈 ВОТ ЭТО
+                //.background(Color.WHITE) // 👈 чтобы углы выглядели красиво
+                .padding(8.dp) // 👈 небольшой внутренний отступ (премиум ощущение)
         )
     }
 }
