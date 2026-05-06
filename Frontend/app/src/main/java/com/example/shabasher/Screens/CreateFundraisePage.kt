@@ -52,7 +52,6 @@ import com.example.shabasher.ViewModels.FundraiseEvent
 import com.example.shabasher.ViewModels.FundraiseUiState
 import com.example.shabasher.ViewModels.FundraisesViewModel
 import com.example.shabasher.components.InputField
-import io.ktor.websocket.Frame
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +109,7 @@ fun CreateFundraisePage(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Frame.Text("Создать сбор") },
+                title = { Text("Создать сбор") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null)
