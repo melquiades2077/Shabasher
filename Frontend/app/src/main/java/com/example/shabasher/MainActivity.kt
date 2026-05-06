@@ -48,6 +48,7 @@ import com.example.shabasher.ViewModels.CreateFundraiseViewModel
 import com.example.shabasher.ViewModels.DonationListViewModel
 import com.example.shabasher.ViewModels.DonationListViewModelFactory
 import com.example.shabasher.ViewModels.DonationViewModel
+import com.example.shabasher.ViewModels.DonationViewModelFactory
 import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.ViewModels.FundraisesViewModel
 import com.example.shabasher.ViewModels.FundraisesViewModelFactory
@@ -61,6 +62,7 @@ import com.example.shabasher.ViewModels.SuggestionsViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.ViewModels.ViewModelFactory
 import com.example.shabasher.data.local.TokenManager
+import com.example.shabasher.data.network.EventsRepository
 import com.example.shabasher.data.network.FundraisesRepository
 import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.data.network.SuggestionsRepository
@@ -265,6 +267,7 @@ class MainActivity : ComponentActivity() {
                             key = "donations_$eventId", // 🔥 важно!
                             factory = DonationListViewModelFactory(
                                 FundraisesRepository(TokenManager(context)),
+                                EventsRepository(context),
                                 eventId
                             )
                         )
@@ -282,16 +285,12 @@ class MainActivity : ComponentActivity() {
                         val donationId = backStackEntry.arguments?.getString("donationId")!!
                         val context = LocalContext.current
 
-                        // ✅ Создаём ViewModel с зависимостями
                         val viewModel: DonationViewModel = viewModel(
-                            key = "donation_$donationId", // 🔥 Важно: уникальный ключ для каждого сбора
-                            factory = object : ViewModelProvider.Factory {
-                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    return DonationViewModel(
-                                        repository = FundraisesRepository(TokenManager(context))
-                                    ) as T
-                                }
-                            }
+                            key = "donation_$donationId",
+                            factory = DonationViewModelFactory(
+                                repository = FundraisesRepository(TokenManager(context)),
+                                eventsRepository = EventsRepository(context)
+                            )
                         )
 
                         DonationScreen(

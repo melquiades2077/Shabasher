@@ -105,20 +105,22 @@ fun DonationListScreen(
             )
         },
 
-        // 🔥 ВОТ ОН FAB
+        // FAB только для админов/модераторов события
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    SafeNavigation.navigate {
-                        navController.navigate(
-                            Routes.createFundraise(viewModel.eventId)
-                        )
-                    }
-                },
-                containerColor = colorScheme.primary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Создать сбор")
+            if (uiState.canCreateFundraise) {
+                FloatingActionButton(
+                    onClick = {
+                        SafeNavigation.navigate {
+                            navController.navigate(
+                                Routes.createFundraise(viewModel.eventId)
+                            )
+                        }
+                    },
+                    containerColor = colorScheme.primary,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Создать сбор")
+                }
             }
         }
     ) { innerPadding ->

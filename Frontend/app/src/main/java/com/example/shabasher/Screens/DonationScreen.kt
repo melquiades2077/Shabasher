@@ -82,8 +82,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.shabasher.Model.SafeNavigation
+import com.example.shabasher.Model.UserRole
 import com.example.shabasher.ViewModels.DonationUiState
 import com.example.shabasher.ViewModels.DonationViewModel
+import com.example.shabasher.ViewModels.canManageFundraise
 import com.example.shabasher.data.dto.FundStatus
 import com.example.shabasher.data.dto.Fundraise
 import com.example.shabasher.data.dto.FundraiseParticipant
@@ -154,6 +156,7 @@ fun DonationScreen(
             is DonationUiState.Success -> DonationContent(
                 donation = state.donation,
                 currentUserId = currentUserId,
+                currentUserRole = state.currentUserRole,
                 isProcessing = actionState.isLoading,
                 onMarkPaid = viewModel::markPaid,
                 onConfirmPayment = { userId, amount -> viewModel.confirmPayment(userId, amount) },
@@ -213,6 +216,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier 
 private fun DonationContent(
     donation: Fundraise,
     currentUserId: String?,
+    currentUserRole: UserRole,
     isProcessing: Boolean,
     onMarkPaid: () -> Unit,
     onConfirmPayment: (String, BigDecimal?) -> Unit,
@@ -222,6 +226,7 @@ private fun DonationContent(
 ) {
     var participantToConfirm by remember { mutableStateOf<FundraiseParticipant?>(null) }
     var showCloseDialog by remember { mutableStateOf(false) }
+    val isAdmin = currentUserRole.canManageFundraise()
 
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -244,7 +249,8 @@ private fun DonationContent(
             recipient = donation.paymentRecipient
         )
 
-        if (donation.canConfirmPayments() && donation.participants != null) {
+        // Список участников отдаётся бэкендом только админам
+        if (isAdmin && donation.participants != null) {
             ParticipantsSection(
                 participants = donation.participants,
                 currentUserId = currentUserId,
@@ -255,7 +261,7 @@ private fun DonationContent(
             )
         }
 
-        if (donation.canCloseFundraise() && donation.isActive) {
+        if (isAdmin && donation.isActive) {
             CloseFundraiseButton(onClick = { showCloseDialog = true })
         }
 
