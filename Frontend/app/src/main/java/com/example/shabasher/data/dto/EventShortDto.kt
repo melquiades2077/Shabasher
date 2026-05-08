@@ -7,5 +7,6 @@ data class EventShortDto(
     val id: String,
     val title: String,
     val dateTime: String,
-    val status: String
+    val status: String,
+    val avatarUrl: String? = null
 )

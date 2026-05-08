@@ -9,6 +9,7 @@ data class GetEventResponse(
     val name: String? = null,
     val description: String? = null,
     val address: String? = null,
+    val avatarUrl: String? = null,
     val startDate: String? = null,
     val startTime: String? = null,
     val dateTime: String? = null,

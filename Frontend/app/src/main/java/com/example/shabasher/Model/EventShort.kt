@@ -4,5 +4,6 @@ data class EventShort(
     val id: String,
     val title: String,
     val date: String,
-    val status: String
+    val status: String,
+    val avatarUrl: String? = null
 )

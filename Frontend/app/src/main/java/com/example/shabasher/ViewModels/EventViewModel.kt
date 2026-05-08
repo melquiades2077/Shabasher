@@ -270,6 +270,7 @@ class EventViewModel(
             date = dto.startDate ?: "",
             time = dto.startTime?.take(5) ?: "",
             place = dto.address ?: "",
+            avatarUrl = dto.avatarUrl,
             participants = participants,
             userStatus = userStatus,
             currentUserRole = myRole
@@ -313,7 +314,8 @@ class EventViewModel(
                     "Admin" -> UserRole.ADMIN
                     "CoAdmin", "Moderator" -> UserRole.MODERATOR
                     else -> UserRole.MEMBER
-                }
+                },
+                avatarUrl = dto.user.avatarUrl
             )
         }
     }

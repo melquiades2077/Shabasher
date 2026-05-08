@@ -10,6 +10,8 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -76,6 +78,64 @@ class ProfileRepository(private val tokenManager: TokenManager) {
         } else {
             val errorText = response.bodyAsText()
             return Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+        }
+    }
+
+    suspend fun uploadAvatar(
+        bytes: ByteArray,
+        fileName: String,
+        contentType: String
+    ): Result<ProfileResponse> {
+        return try {
+            val rawToken = tokenManager.getToken()
+                ?: return Result.failure(Exception("Не авторизован"))
+            val cleanToken = rawToken.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.post("$baseUrl/api/Users/avatar") {
+                header("Authorization", "Bearer $cleanToken")
+                setBody(MultiPartFormDataContent(
+                    formData {
+                        append(
+                            key = "file",
+                            value = bytes,
+                            headers = Headers.build {
+                                append(HttpHeaders.ContentType, contentType)
+                                append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                            }
+                        )
+                    }
+                ))
+                timeout { requestTimeoutMillis = 60_000 }
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception(response.bodyAsText().ifBlank { "Ошибка загрузки: ${response.status}" }))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAvatar(): Result<ProfileResponse> {
+        return try {
+            val rawToken = tokenManager.getToken()
+                ?: return Result.failure(Exception("Не авторизован"))
+            val cleanToken = rawToken.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.delete("$baseUrl/api/Users/avatar") {
+                header("Authorization", "Bearer $cleanToken")
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception(response.bodyAsText().ifBlank { "Ошибка удаления: ${response.status}" }))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

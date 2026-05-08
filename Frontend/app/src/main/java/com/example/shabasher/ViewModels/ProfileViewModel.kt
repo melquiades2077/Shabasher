@@ -67,7 +67,7 @@ class ProfileViewModel(
                     email = p.email,
                     aboutMe = p.aboutMe,
                     telegram = p.telegram,
-                    avatarUrl = null, // TODO
+                    avatarUrl = p.avatarUrl,
                     eventsCount = p.participations.size,
                     organizedCount = organizedCount,
                     participatingCount = participatingCount,

@@ -1,14 +1,18 @@
 package com.example.shabasher.ViewModels
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.data.network.EventsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.withContext
 
 class EditEventViewModel(
     context: Context
@@ -26,6 +30,7 @@ class EditEventViewModel(
             address = event.place,
             date = event.date,
             time = event.time,
+            avatarUrl = event.avatarUrl,
             isLoading = false
         )
     }
@@ -49,6 +54,65 @@ class EditEventViewModel(
     fun setTime(hour: Int, minute: Int) {
         val formattedTime = String.format("%02d:%02d", hour, minute)
         _uiState.value = _uiState.value.copy(time = formattedTime)
+    }
+
+    fun uploadAvatar(context: Context, uri: Uri) {
+        val eventId = _uiState.value.eventId ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isAvatarBusy = true, error = null)
+
+            val payload = withContext(Dispatchers.IO) {
+                runCatching {
+                    val resolver: ContentResolver = context.contentResolver
+                    val type = resolver.getType(uri) ?: "image/jpeg"
+                    val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
+                        ?: error("Не удалось прочитать файл")
+                    Triple(bytes, fileNameFromUri(uri, type), type)
+                }
+            }
+
+            val (bytes, fileName, type) = payload.getOrElse {
+                _uiState.value = _uiState.value.copy(
+                    isAvatarBusy = false,
+                    error = it.message ?: "Не удалось прочитать файл"
+                )
+                return@launch
+            }
+
+            val result = repository.uploadEventAvatar(eventId, bytes, fileName, type)
+            if (result.isSuccess) {
+                _uiState.value = _uiState.value.copy(
+                    isAvatarBusy = false,
+                    avatarUrl = result.getOrNull()?.avatarUrl,
+                    error = null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isAvatarBusy = false,
+                    error = result.exceptionOrNull()?.message ?: "Ошибка загрузки"
+                )
+            }
+        }
+    }
+
+    fun deleteAvatar() {
+        val eventId = _uiState.value.eventId ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isAvatarBusy = true, error = null)
+            val result = repository.deleteEventAvatar(eventId)
+            if (result.isSuccess) {
+                _uiState.value = _uiState.value.copy(
+                    isAvatarBusy = false,
+                    avatarUrl = null,
+                    error = null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isAvatarBusy = false,
+                    error = result.exceptionOrNull()?.message ?: "Ошибка удаления"
+                )
+            }
+        }
     }
 
     fun saveEvent() {
@@ -100,6 +164,7 @@ class EditEventViewModel(
                     address = dto.address ?: "",
                     date = dto.startDate ?: "",
                     time = timeFormatted,
+                    avatarUrl = dto.avatarUrl,
 
                     // Сохраняем оригинальные значения для сравнения
                     originalTitle = dto.name ?: "",
@@ -139,6 +204,8 @@ data class EditEventUiState(
     val address: String = "",
     val date: String = "",
     val time: String = "",
+    val avatarUrl: String? = null,
+    val isAvatarBusy: Boolean = false,
 
     // Оригинальные значения для сравнения
     val originalTitle: String = "",
@@ -156,4 +223,15 @@ data class EditEventUiState(
                 address != originalAddress ||
                 date != originalDate ||
                 time != originalTime
+}
+
+private fun fileNameFromUri(uri: Uri, mimeType: String): String {
+    val ext = when (mimeType) {
+        "image/png" -> "png"
+        "image/webp" -> "webp"
+        else -> "jpg"
+    }
+    val raw = uri.lastPathSegment?.substringAfterLast('/') ?: "event"
+    val cleaned = raw.replace("[^A-Za-z0-9_.-]".toRegex(), "_").take(40)
+    return if (cleaned.contains('.')) cleaned else "$cleaned.$ext"
 }

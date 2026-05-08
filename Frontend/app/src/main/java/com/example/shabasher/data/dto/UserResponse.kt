@@ -8,5 +8,6 @@ data class UserResponse(
      val name: String,
      val email: String,
      val createdAt: String,
+     val avatarUrl: String? = null,
      val participations: List<UserShabashParticipationResponse>
 )

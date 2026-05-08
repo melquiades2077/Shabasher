@@ -555,7 +555,11 @@ fun EventContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            EventInfo(event.title, event.description)
+            EventInfo(
+                title = event.title,
+                description = event.description,
+                avatarUrl = event.avatarUrl
+            )
         }
 
         item {

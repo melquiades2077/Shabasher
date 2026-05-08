@@ -23,6 +23,9 @@ data class ProfileResponse(
     @SerialName("telegram")
     val telegram: String? = null,
 
+    @SerialName("avatarUrl")
+    val avatarUrl: String? = null,
+
     @SerialName("participations")
     val participations: List<ParticipationDto> = emptyList()
 )

@@ -98,12 +98,13 @@ object OfflineCache {
         val id: String,
         val title: String,
         val date: String,
-        val status: String
+        val status: String,
+        val avatarUrl: String? = null
     ) {
-        fun toDomain() = EventShort(id = id, title = title, date = date, status = status)
+        fun toDomain() = EventShort(id = id, title = title, date = date, status = status, avatarUrl = avatarUrl)
     }
 
     private fun EventShort.toCache() = EventShortCache(
-        id = id, title = title, date = date, status = status
+        id = id, title = title, date = date, status = status, avatarUrl = avatarUrl
     )
 }

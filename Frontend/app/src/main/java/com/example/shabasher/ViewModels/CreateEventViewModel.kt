@@ -1,11 +1,15 @@
 package com.example.shabasher.ViewModels
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.data.network.EventsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class CreateEventUiState(
     val title: String = "",
@@ -13,6 +17,7 @@ data class CreateEventUiState(
     val address: String = "",
     val date: String = "",
     val time: String = "",
+    val pendingAvatarUri: Uri? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val successEventId: String? = null
@@ -49,6 +54,10 @@ class CreateEventViewModel(
         uiState.value = uiState.value.copy(time = "%02d:%02d".format(h, m))
     }
 
+    fun setPendingAvatar(uri: Uri?) {
+        uiState.value = uiState.value.copy(pendingAvatarUri = uri)
+    }
+
     fun createEvent() {
         val s = uiState.value
 
@@ -74,14 +83,31 @@ class CreateEventViewModel(
             )
 
             if (result.isSuccess) {
+                val newEventId = result.getOrNull() ?: ""
+
+                // Если пользователь выбрал фото при создании — загружаем его до перехода
+                val pendingUri = s.pendingAvatarUri
+                if (pendingUri != null && newEventId.isNotEmpty()) {
+                    runCatching {
+                        val payload = withContext(Dispatchers.IO) {
+                            val resolver: ContentResolver = sharedContext.contentResolver
+                            val type = resolver.getType(pendingUri) ?: "image/jpeg"
+                            val bytes = resolver.openInputStream(pendingUri)?.use { it.readBytes() }
+                                ?: error("Не удалось прочитать файл")
+                            Triple(bytes, fileNameFromUri(pendingUri, type), type)
+                        }
+                        repository.uploadEventAvatar(newEventId, payload.first, payload.second, payload.third)
+                    }
+                }
+
                 uiState.value = s.copy(
                     isLoading = false,
-                    successEventId = result.getOrNull()
+                    successEventId = newEventId
                 )
 
                 onEventCreated?.invoke()
 
-                saveLastCreatedEventId(result.getOrNull() ?: "")
+                saveLastCreatedEventId(newEventId)
             } else {
                 uiState.value = s.copy(
                     isLoading = false,
@@ -98,3 +124,15 @@ class CreateEventViewModel(
             .apply()
     }
 }
+
+private fun fileNameFromUri(uri: Uri, mimeType: String): String {
+    val ext = when (mimeType) {
+        "image/png" -> "png"
+        "image/webp" -> "webp"
+        else -> "jpg"
+    }
+    val raw = uri.lastPathSegment?.substringAfterLast('/') ?: "event"
+    val cleaned = raw.replace("[^A-Za-z0-9_.-]".toRegex(), "_").take(40)
+    return if (cleaned.contains('.')) cleaned else "$cleaned.$ext"
+}
+

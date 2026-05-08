@@ -20,6 +20,8 @@ namespace Shabasher.API.Services
                 ?? string.Empty;
             _publicBaseUrl = (Environment.GetEnvironmentVariable("S3_PUBLIC_BASE_URL")
                 ?? configuration["S3_PUBLIC_BASE_URL"]
+                ?? Environment.GetEnvironmentVariable("ENDPOINT")
+                ?? configuration["ENDPOINT"]
                 ?? string.Empty).TrimEnd('/');
         }
 
@@ -42,7 +44,8 @@ namespace Shabasher.API.Services
                 Key = objectKey,
                 InputStream = stream,
                 ContentType = contentType,
-                AutoCloseStream = false
+                AutoCloseStream = false,
+                CannedACL = S3CannedACL.PublicRead
             };
 
             try

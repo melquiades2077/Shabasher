@@ -1,11 +1,16 @@
 package com.example.shabasher.Screens
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +24,9 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddAPhoto
@@ -161,24 +169,62 @@ fun CreateEventPage(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // Фото (пока заглушка)
+            // Фото обложки (выбираем перед созданием — загрузится сразу после создания события)
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .aspectRatio(1f)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            RoundedCornerShape(20.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                val pickAvatarLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.PickVisualMedia()
+                ) { uri ->
+                    if (uri != null) viewModel.setPendingAvatar(uri)
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
-                    Icon(
-                        Icons.Default.Image,
-                        contentDescription = "Add photo",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(80.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                RoundedCornerShape(20.dp)
+                            )
+                            .clickable {
+                                pickAvatarLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (ui.pendingAvatarUri != null) {
+                            AsyncImage(
+                                model = ui.pendingAvatarUri,
+                                contentDescription = "Обложка",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.AddAPhoto,
+                                contentDescription = "Добавить фото",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(80.dp)
+                            )
+                        }
+                    }
+                    if (ui.pendingAvatarUri != null) {
+                        Row(horizontalArrangement = Arrangement.Center) {
+                            androidx.compose.material3.TextButton(
+                                onClick = { viewModel.setPendingAvatar(null) }
+                            ) {
+                                Text(
+                                    "Убрать фото",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
                 }
             }
 

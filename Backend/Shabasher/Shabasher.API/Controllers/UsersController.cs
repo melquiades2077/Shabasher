@@ -98,6 +98,25 @@ namespace Shabasher.API.Controllers
             return Ok(update.Value);
         }
 
+        [HttpDelete("avatar")]
+        public async Task<ActionResult<UserResponse>> DeleteAvatar()
+        {
+            var cancellationToken = HttpContext.RequestAborted;
+
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _usersManageService.RemoveUserAvatarAsync(userId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            if (!string.IsNullOrWhiteSpace(result.Value.OldObjectKey))
+                await _filesManageService.DeleteFileAsync(result.Value.OldObjectKey!, cancellationToken);
+
+            return Ok(result.Value.User);
+        }
+
         [HttpDelete]
         public async Task<ActionResult> DeleteUser([FromQuery] string userId)
         {

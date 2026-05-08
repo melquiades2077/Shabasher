@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -73,7 +76,8 @@ fun ParticipatorsCard(
             showList.forEach { participant ->
                 ParticipatorElem(
                     name = participant.name,
-                    status = ParticipantToString(participant.status)
+                    status = ParticipantToString(participant.status),
+                    avatarUrl = participant.avatarUrl
                 )
             }
 
@@ -92,7 +96,8 @@ fun ParticipatorsCard(
 @Composable
 fun ParticipatorElem(
     name: String = "Участник",
-    status: String = "Придет"
+    status: String = "Придет",
+    avatarUrl: String? = null
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -109,18 +114,28 @@ fun ParticipatorElem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(CircleShape)
                     .background(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
+                if (avatarUrl != null) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.width(16.dp))

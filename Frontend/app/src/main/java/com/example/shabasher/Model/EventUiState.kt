@@ -9,6 +9,7 @@ data class EventData(
     val date: String,
     val time: String,
     val place: String,
+    val avatarUrl: String? = null,
     val participants: List<Participant>,
     val userStatus: ParticipationStatus,
     val currentUserRole: UserRole = UserRole.MEMBER // ← заглушка

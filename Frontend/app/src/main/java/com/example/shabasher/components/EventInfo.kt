@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Bedtime
@@ -49,7 +53,8 @@ fun String.formatAsRussianDate(): String {
 @Composable
 fun EventInfo(
     title: String = "Заголовок",
-    description: String = "Описание Описание ОписаниеОписание ОписаниеОписание ОписаниеОписание Описание Описание Описание ОписаниеОписаниеОписание Описание Описание Описание Описание"
+    description: String = "Описание Описание ОписаниеОписание ОписаниеОписание ОписаниеОписание Описание Описание Описание ОписаниеОписаниеОписание Описание Описание Описание Описание",
+    avatarUrl: String? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -66,19 +71,28 @@ fun EventInfo(
         Box(
             modifier = Modifier
                 .size(340.dp)
+                .clip(RoundedCornerShape(20.dp))
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(20.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                Icons.Default.Image,
-                contentDescription = "Add photo",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(100.dp)
-            )
-
+            if (avatarUrl != null) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Обложка события",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Default.Image,
+                    contentDescription = "Add photo",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
         }
 
         Text(title,

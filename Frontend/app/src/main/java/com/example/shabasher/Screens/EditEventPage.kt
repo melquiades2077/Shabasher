@@ -2,22 +2,34 @@ package com.example.shabasher.Screens
 
 import android.content.Context
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,12 +48,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.ViewModels.EditEventViewModel
@@ -58,6 +74,12 @@ fun EditEventPage(
     viewModel: EditEventViewModel = viewModel(factory = EditEventViewModelFactory(context))
 ) {
     val ui = viewModel.uiState.value
+
+    val pickAvatarLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) viewModel.uploadAvatar(context, uri)
+    }
 
     LaunchedEffect(eventId) {
         viewModel.loadEventById(eventId)
@@ -123,6 +145,18 @@ fun EditEventPage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            item {
+                EventAvatarPicker(
+                    avatarUrl = ui.avatarUrl,
+                    isBusy = ui.isAvatarBusy,
+                    onPick = {
+                        pickAvatarLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onDelete = { viewModel.deleteAvatar() }
+                )
+            }
             item {
                 InputField(
                     label = "Название события",
@@ -199,6 +233,70 @@ fun EditEventPage(
             }
             item {
                 Spacer(modifier = Modifier.height(50.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventAvatarPicker(
+    avatarUrl: String?,
+    isBusy: Boolean,
+    onPick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    androidx.compose.foundation.layout.Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(0.85f)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(enabled = !isBusy) { onPick() },
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                isBusy -> CircularProgressIndicator()
+                avatarUrl == null -> Icon(
+                    Icons.Default.Image,
+                    contentDescription = "Добавить фото",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(80.dp)
+                )
+                else -> AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Обложка события",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = onPick, enabled = !isBusy) {
+                Icon(
+                    Icons.Default.AddAPhoto,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(6.dp))
+                Text(if (avatarUrl == null) "Загрузить фото" else "Изменить")
+            }
+            if (avatarUrl != null) {
+                TextButton(onClick = onDelete, enabled = !isBusy) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    Text("Удалить", color = MaterialTheme.colorScheme.error)
+                }
             }
         }
     }

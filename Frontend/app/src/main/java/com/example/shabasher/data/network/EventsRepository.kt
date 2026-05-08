@@ -13,6 +13,8 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -176,7 +178,8 @@ class EventsRepository(context: Context) {
                             id = participation.shabashId,
                             title = title,
                             dateTime = dateTime,
-                            status = getEventStatus(dateTime)
+                            status = getEventStatus(dateTime),
+                            avatarUrl = event?.avatarUrl
                         )
                     )
 
@@ -529,6 +532,65 @@ class EventsRepository(context: Context) {
             } else {
                 val errorText = response.body<String>()
                 Result.failure(Exception(errorText))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadEventAvatar(
+        shabashId: String,
+        bytes: ByteArray,
+        fileName: String,
+        contentType: String
+    ): Result<GetEventResponse> {
+        return try {
+            val token = tokenManager.getToken()
+                ?: return Result.failure(Exception("Не авторизован"))
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.post("$baseUrl/api/Shabashes/$shabashId/avatar") {
+                header("Authorization", "Bearer $cleanToken")
+                setBody(MultiPartFormDataContent(
+                    formData {
+                        append(
+                            key = "file",
+                            value = bytes,
+                            headers = Headers.build {
+                                append(HttpHeaders.ContentType, contentType)
+                                append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                            }
+                        )
+                    }
+                ))
+                timeout { requestTimeoutMillis = 60_000 }
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception(response.bodyAsText().ifBlank { "Ошибка загрузки: ${response.status}" }))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteEventAvatar(shabashId: String): Result<GetEventResponse> {
+        return try {
+            val token = tokenManager.getToken()
+                ?: return Result.failure(Exception("Не авторизован"))
+            val cleanToken = token.trim().removeSurrounding("\"")
+
+            val response: HttpResponse = client.delete("$baseUrl/api/Shabashes/$shabashId/avatar") {
+                header("Authorization", "Bearer $cleanToken")
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception(response.bodyAsText().ifBlank { "Ошибка удаления: ${response.status}" }))
             }
         } catch (e: Exception) {
             Result.failure(e)

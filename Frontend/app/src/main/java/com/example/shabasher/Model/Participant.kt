@@ -26,5 +26,6 @@ data class Participant(
     val id: String,
     val name: String,
     val status: ParticipationStatus,
-    val role: UserRole = UserRole.MODERATOR // ← пока по умолчанию MEMBER
+    val role: UserRole = UserRole.MODERATOR, // ← пока по умолчанию MEMBER
+    val avatarUrl: String? = null
 )

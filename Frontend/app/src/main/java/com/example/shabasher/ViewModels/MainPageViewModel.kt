@@ -57,7 +57,8 @@ class MainPageViewModel(
                         id = dto.id,
                         title = dto.title,
                         date = formatDate(dto.dateTime),
-                        status = dto.status
+                        status = dto.status,
+                        avatarUrl = dto.avatarUrl
                     )
                 }
                 // Кешируем для следующих запусков

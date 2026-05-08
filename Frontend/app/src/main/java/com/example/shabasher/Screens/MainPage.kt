@@ -357,7 +357,8 @@ fun EventsList(
                 title = event.title,
                 description = event.date,
                 status = event.status,
-                onClick = { onClick(event.id) }
+                onClick = { onClick(event.id) },
+                avatarUrl = event.avatarUrl
             )
         }
     }
