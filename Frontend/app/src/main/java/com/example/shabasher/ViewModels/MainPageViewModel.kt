@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.shabasher.Model.EventShort
+import com.example.shabasher.data.local.OfflineCache
 import com.example.shabasher.data.network.EventsRepository
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -30,12 +31,22 @@ class MainPageViewModel(
     val uiState = mutableStateOf(MainUiState())
 
     init {
+        // Мгновенно показываем кеш, если он есть (offline-first)
+        OfflineCache.loadEvents()?.takeIf { it.isNotEmpty() }?.let { cached ->
+            uiState.value = uiState.value.copy(events = cached)
+        }
         loadEvents()
     }
 
     fun loadEvents() {
         viewModelScope.launch {
-            uiState.value = uiState.value.copy(isLoading = true, error = null)
+            // Если уже что-то показано из кеша — не сбрасываем UI в loading=true,
+            // только мягкий refresh (PullToRefresh покажет индикатор сам).
+            val hasCachedData = uiState.value.events.isNotEmpty()
+            uiState.value = uiState.value.copy(
+                isLoading = true,
+                error = if (hasCachedData) uiState.value.error else null
+            )
 
             val result = repository.getEvents()
 
@@ -49,16 +60,23 @@ class MainPageViewModel(
                         status = dto.status
                     )
                 }
-                // Сохраняем несортированный список, сортируем при отображении
+                // Кешируем для следующих запусков
+                OfflineCache.saveEvents(eventList)
                 uiState.value = uiState.value.copy(
                     events = eventList,
-                    isLoading = false
+                    isLoading = false,
+                    error = null
                 )
             } else {
-                uiState.value = uiState.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить события"
-                )
+                // Сеть упала. Если есть кеш — оставляем его и НЕ показываем error.
+                if (hasCachedData) {
+                    uiState.value = uiState.value.copy(isLoading = false)
+                } else {
+                    uiState.value = uiState.value.copy(
+                        isLoading = false,
+                        error = "Не удалось загрузить события"
+                    )
+                }
             }
         }
     }

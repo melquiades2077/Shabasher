@@ -75,6 +75,10 @@ import com.example.shabasher.ViewModels.LoginViewModel
 import com.example.shabasher.ViewModels.MainPageViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.components.EventCard
+import com.example.shabasher.components.EventCardSkeleton
+import com.example.shabasher.components.NotificationsBell
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -117,6 +121,12 @@ fun MainPage(
                     }
                 },
                 actions = {
+                    NotificationsBell(
+                        onClick = {
+                            SafeNavigation.navigate { navController.navigate(Routes.NOTIFICATIONS) }
+                        }
+                    )
+
                     var expanded by remember { mutableStateOf(false) }
 
                     Box {
@@ -207,14 +217,24 @@ fun MainPage(
             }
         }
     ) { innerPadding ->
-        Box(
+        com.example.shabasher.components.AppPullToRefreshBox(
+            isRefreshing = uiState.isLoading && uiState.events.isNotEmpty(),
+            onRefresh = { viewModel.loadEvents() },
+            state = rememberPullToRefreshState(),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             when {
-                uiState.isLoading -> {
-                    MainLoadingScreen()
+                // Первая загрузка — skeletons
+                uiState.isLoading && uiState.events.isEmpty() -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(5) { EventCardSkeleton() }
+                    }
                 }
 
                 uiState.error != null -> {
@@ -318,7 +338,7 @@ fun MainLoadingScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 

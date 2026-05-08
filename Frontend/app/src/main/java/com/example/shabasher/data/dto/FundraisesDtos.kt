@@ -37,6 +37,9 @@ data class FundraisingItemResponseDto(
     @SerialName("createdAt")
     @Serializable(with = InstantSerializer::class)
     val createdAt: Instant = Instant.EPOCH,
+    @SerialName("closedAt")
+    @Serializable(with = InstantNullableSerializer::class)
+    val closedAt: Instant? = null,
     @SerialName("myPaymentStatus")
     @Serializable(with = FundraiseParticipantStatusNullableSerializer::class)
     val myPaymentStatus: FundraiseParticipantStatus? = null
@@ -74,6 +77,17 @@ data class FundraisesListResponseDto(
 
 @Serializable
 data class CreateFundraiseRequestDto(
+    @SerialName("title") val title: String,
+    @SerialName("description") val description: String?,
+    @SerialName("targetAmount")
+    @Serializable(with = BigDecimalNullableSerializer::class)
+    val targetAmount: BigDecimal?,
+    @SerialName("paymentPhone") val paymentPhone: String,
+    @SerialName("paymentRecipient") val paymentRecipient: String
+)
+
+@Serializable
+data class UpdateFundraiseRequestDto(
     @SerialName("title") val title: String,
     @SerialName("description") val description: String?,
     @SerialName("targetAmount")
@@ -334,6 +348,16 @@ data class FundraiseParticipant(
 // DTO → Domain
 // ═══════════════════════════════════════════════════════
 
+/**
+ * Если бэкенд вернул closedAt (сбор был закрыт когда-то), но при этом
+ * fundStatus всё ещё Active — это известная несогласованность бэка.
+ * Доверяем closedAt и считаем сбор закрытым.
+ */
+private fun reconcileFundStatus(fundStatus: FundStatus, closedAt: Instant?): FundStatus {
+    return if (closedAt != null && fundStatus == FundStatus.Active) FundStatus.Closed
+    else fundStatus
+}
+
 fun FundraisingItemResponseDto.toDomain(currentUserId: String): Fundraise {
     return Fundraise(
         id = id,
@@ -345,7 +369,7 @@ fun FundraisingItemResponseDto.toDomain(currentUserId: String): Fundraise {
         description = description,
         targetAmount = targetAmount,
         currentAmount = currentAmount,
-        fundStatus = fundStatus,
+        fundStatus = reconcileFundStatus(fundStatus, closedAt),
         createdAt = createdAt,
         isCreator = creatorId == currentUserId,
         myPaymentStatus = myPaymentStatus,
@@ -366,7 +390,7 @@ fun FundraiseDetailsResponseDto.toDomain(currentUserId: String): Fundraise {
         description = fundraising.description,
         targetAmount = fundraising.targetAmount,
         currentAmount = fundraising.currentAmount,
-        fundStatus = fundraising.fundStatus,
+        fundStatus = reconcileFundStatus(fundraising.fundStatus, fundraising.closedAt),
         createdAt = fundraising.createdAt,
         isCreator = fundraising.creatorId == currentUserId,
         myPaymentStatus = fundraising.myPaymentStatus,

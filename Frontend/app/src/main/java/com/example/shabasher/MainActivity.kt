@@ -31,11 +31,13 @@ import com.example.shabasher.Screens.CreateFundraisePage
 import com.example.shabasher.Screens.DonationListScreen
 import com.example.shabasher.Screens.DonationScreen
 import com.example.shabasher.Screens.EditEventPage
+import com.example.shabasher.Screens.EditFundraisePage
 import com.example.shabasher.Screens.EditProfileScreen
 import com.example.shabasher.Screens.EventPage
 import com.example.shabasher.Screens.LoginPage
 import com.example.shabasher.Screens.MainPage
 import com.example.shabasher.Screens.NamePage
+import com.example.shabasher.Screens.NotificationsScreen
 import com.example.shabasher.Screens.ParticipantsPage
 import com.example.shabasher.Screens.ProfileScreen
 import com.example.shabasher.Screens.ProfileViewModelFactory
@@ -49,6 +51,8 @@ import com.example.shabasher.ViewModels.DonationListViewModel
 import com.example.shabasher.ViewModels.DonationListViewModelFactory
 import com.example.shabasher.ViewModels.DonationViewModel
 import com.example.shabasher.ViewModels.DonationViewModelFactory
+import com.example.shabasher.ViewModels.EditFundraiseViewModel
+import com.example.shabasher.ViewModels.EditFundraiseViewModelFactory
 import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.ViewModels.FundraisesViewModel
 import com.example.shabasher.ViewModels.FundraisesViewModelFactory
@@ -61,9 +65,13 @@ import com.example.shabasher.ViewModels.ShareEventViewModelFactory
 import com.example.shabasher.ViewModels.SuggestionsViewModel
 import com.example.shabasher.ViewModels.ThemeViewModel
 import com.example.shabasher.ViewModels.ViewModelFactory
+import com.example.shabasher.data.local.OfflineCache
 import com.example.shabasher.data.local.TokenManager
 import com.example.shabasher.data.network.EventsRepository
+import com.example.shabasher.data.network.FundraiseLocalState
 import com.example.shabasher.data.network.FundraisesRepository
+import com.example.shabasher.notifications.NotificationCenter
+import com.example.shabasher.notifications.SystemNotifier
 import com.example.shabasher.data.network.InviteRepository
 import com.example.shabasher.data.network.SuggestionsRepository
 import com.example.shabasher.ui.theme.ShabasherTheme
@@ -78,6 +86,20 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Инициализируем центр уведомлений (создаёт каналы Android, грузит сохранённые)
+        NotificationCenter.init(applicationContext)
+        // Offline-кеш для событий и сборов (мгновенный показ при отсутствии связи)
+        OfflineCache.init(applicationContext)
+        // Локальный override-кеш закрытых сборов и платежей (cross-session)
+        FundraiseLocalState.init(applicationContext)
+        // Запросить разрешение на уведомления (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
         enableEdgeToEdge()
         window.setBackgroundDrawableResource(android.R.color.transparent)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -95,6 +117,11 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val tokenManager = remember { TokenManager(context) }
+            // Singleton-репозитории на уровне Activity — переживают смерть ViewModel,
+            // чтобы pending HTTP-запросы (markPaid/confirm/close) не обрывались
+            // при back-навигации.
+            val fundraisesRepository = remember { FundraisesRepository(tokenManager) }
+            val eventsRepository = remember { EventsRepository(context) }
             val startDestination =
                 if (tokenManager.getToken() != null) Routes.MAIN else Routes.WELCOME
 
@@ -137,6 +164,10 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.MAIN) {
                         val vm: MainPageViewModel = viewModel(factory = viewModelFactory)
                         MainPage(navController, vm)
+                    }
+
+                    composable(Routes.NOTIFICATIONS) {
+                        NotificationsScreen(navController = navController)
                     }
 
                     // Свой профиль (без ID)
@@ -264,10 +295,10 @@ class MainActivity : ComponentActivity() {
                         val eventId = backStackEntry.arguments?.getString("eventId")!!
 
                         val vm: DonationListViewModel = viewModel(
-                            key = "donations_$eventId", // 🔥 важно!
+                            key = "donations_$eventId",
                             factory = DonationListViewModelFactory(
-                                FundraisesRepository(TokenManager(context)),
-                                EventsRepository(context),
+                                fundraisesRepository,
+                                eventsRepository,
                                 eventId
                             )
                         )
@@ -288,8 +319,8 @@ class MainActivity : ComponentActivity() {
                         val viewModel: DonationViewModel = viewModel(
                             key = "donation_$donationId",
                             factory = DonationViewModelFactory(
-                                repository = FundraisesRepository(TokenManager(context)),
-                                eventsRepository = EventsRepository(context)
+                                repository = fundraisesRepository,
+                                eventsRepository = eventsRepository
                             )
                         )
 
@@ -325,14 +356,32 @@ class MainActivity : ComponentActivity() {
                             factory = object : ViewModelProvider.Factory {
                                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                     return CreateFundraiseViewModel(
-                                        FundraisesRepository(TokenManager(context)),
-                                        eventId // 🔥 Теперь здесь будет реальный UUID
+                                        fundraisesRepository,
+                                        eventId
                                     ) as T
                                 }
                             }
                         )
 
                         CreateFundraisePage(navController = navController, viewModel = vm)
+                    }
+
+                    composable(
+                        route = Routes.EDIT_FUNDRAISE,
+                        arguments = listOf(navArgument("fundraiseId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val fundraiseId = backStackEntry.arguments?.getString("fundraiseId")!!
+
+                        val vm: EditFundraiseViewModel = viewModel(
+                            key = "edit_fundraise_$fundraiseId",
+                            factory = EditFundraiseViewModelFactory(fundraisesRepository)
+                        )
+
+                        EditFundraisePage(
+                            navController = navController,
+                            fundraiseId = fundraiseId,
+                            viewModel = vm
+                        )
                     }
                 }
             }
@@ -345,15 +394,30 @@ class MainActivity : ComponentActivity() {
 fun DeepLinkHandler(navController: NavController) {
     val context = LocalContext.current
 
-    // Handle Deep Link navigation
     LaunchedEffect(context) {
-        val intent = (context as? ComponentActivity)?.intent
-        val uri = intent?.data
+        val intent = (context as? ComponentActivity)?.intent ?: return@LaunchedEffect
+
+        // 1) Deep link от пуш-уведомления (extras)
+        val targetRoute = intent.getStringExtra(SystemNotifier.EXTRA_TARGET_ROUTE)
+        val notifId = intent.getStringExtra(SystemNotifier.EXTRA_NOTIFICATION_ID)
+        if (!targetRoute.isNullOrBlank()) {
+            notifId?.let { NotificationCenter.markAsRead(it) }
+            navController.navigate(targetRoute) {
+                popUpTo(Routes.MAIN) { inclusive = false }
+                launchSingleTop = true
+            }
+            // очищаем чтобы не сработало повторно
+            intent.removeExtra(SystemNotifier.EXTRA_TARGET_ROUTE)
+            intent.removeExtra(SystemNotifier.EXTRA_NOTIFICATION_ID)
+            return@LaunchedEffect
+        }
+
+        // 2) Стандартный deep link на событие
+        val uri = intent.data
         uri?.let {
             if (it.scheme == "shabasher" && it.host == "event") {
                 val eventId = it.getQueryParameter("eventId")
                 eventId?.let { id ->
-                    // Navigate to the Event Page
                     navController.navigate("${Routes.EVENT}/$id") {
                         popUpTo(Routes.MAIN) { inclusive = false }
                         launchSingleTop = true

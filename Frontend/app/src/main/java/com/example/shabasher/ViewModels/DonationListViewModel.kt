@@ -3,10 +3,15 @@ package com.example.shabasher.ViewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.shabasher.Model.NotificationCategory
+import com.example.shabasher.Model.Routes
 import com.example.shabasher.Model.UserRole
 import com.example.shabasher.data.dto.Fundraise
 import com.example.shabasher.data.network.EventsRepository
+import com.example.shabasher.data.network.FundraiseLocalState
 import com.example.shabasher.data.network.FundraisesRepository
+import com.example.shabasher.notifications.FundraiseSnapshots
+import com.example.shabasher.notifications.NotificationCenter
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -59,11 +64,30 @@ class DonationListViewModel(
                 donations.await() to resolvedRole.await()
             }
 
+            val currentUserId = eventsRepository.getCurrentUserId()
+
             donationsResult
                 .onSuccess { data ->
+                    // Применяем локальные оверрайды чтобы закрытые/оплаченные оставались таковыми
+                    val withOverrides = data.map { FundraiseLocalState.applyToListItem(it, currentUserId) }
+
+                    // Детект новых сборов с момента прошлой загрузки
+                    val newIds = FundraiseSnapshots.diffList(eventId, withOverrides.map { it.id })
+                    withOverrides
+                        .filter { it.id in newIds }
+                        .forEach { fresh ->
+                            NotificationCenter.notify(
+                                category = NotificationCategory.Fundraise,
+                                title = "Новый сбор",
+                                body = "В вашем событии создан новый сбор: «${fresh.title}»",
+                                targetRoute = Routes.donation(fresh.id),
+                                sourceKey = "new:${fresh.id}"
+                            )
+                        }
+
                     _uiState.update {
                         it.copy(
-                            donations = data,
+                            donations = withOverrides,
                             isLoading = false,
                             currentUserRole = role
                         )

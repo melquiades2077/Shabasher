@@ -65,8 +65,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.shabasher.Model.Participant
 import com.example.shabasher.ViewModels.EventViewModel
+import com.example.shabasher.components.AddToCalendarButton
 import com.example.shabasher.components.EventInfo
 import com.example.shabasher.components.EventMoreInfo
+import com.example.shabasher.components.OpenInNavigatorButton
 import com.example.shabasher.components.GamesCard
 import com.example.shabasher.components.ParticipationSelector
 import com.example.shabasher.components.ParticipatorsCard
@@ -76,6 +78,9 @@ import com.example.shabasher.Model.SafeNavigation
 import com.example.shabasher.Model.UserRole
 import com.example.shabasher.R
 import com.example.shabasher.ViewModels.EventUiState
+import com.example.shabasher.components.EventDetailsSkeleton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -443,9 +448,16 @@ fun EventPage(
             )
         }
     ) { innerPadding ->
-        when {
-            ui.isLoading -> {
-                LoadingScreen()
+        com.example.shabasher.components.AppPullToRefreshBox(
+            isRefreshing = ui.isLoading && ui.event != null,
+            onRefresh = { viewModel.loadEvent(eventId) },
+            state = rememberPullToRefreshState(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) { when {
+            ui.isLoading && ui.event == null -> {
+                EventDetailsSkeleton()
             }
 
             ui.event != null -> {
@@ -454,7 +466,6 @@ fun EventPage(
                     navController = navController,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
                         .padding(horizontal = 20.dp),
                     vm = viewModel
                 )
@@ -509,14 +520,13 @@ fun EventPage(
             else -> {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                        .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Событие не найдено")
                 }
             }
-        }
+        } }
     }
 }
 
@@ -526,7 +536,7 @@ fun LoadingScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -549,7 +559,21 @@ fun EventContent(
         }
 
         item {
-            EventMoreInfo(event.date, event.place, event.time)
+            EventMoreInfo(
+                date = event.date,
+                place = event.place,
+                time = event.time,
+                actions = {
+                    AddToCalendarButton(
+                        title = event.title,
+                        description = event.description,
+                        location = event.place,
+                        dateIso = event.date,
+                        timeIso = event.time
+                    )
+                    OpenInNavigatorButton(address = event.place)
+                }
+            )
         }
 
         item {

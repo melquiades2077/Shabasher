@@ -5,7 +5,9 @@ import com.example.shabasher.data.dto.CreateFundraiseRequestDto
 import com.example.shabasher.data.dto.Fundraise
 import com.example.shabasher.data.dto.FundraiseDetailsResponseDto
 import com.example.shabasher.data.dto.FundraisesListResponseDto
+import com.example.shabasher.data.dto.UpdateFundraiseRequestDto
 import com.example.shabasher.data.dto.toDomain
+import com.example.shabasher.data.local.OfflineCache
 import com.example.shabasher.data.local.TokenManager
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -16,6 +18,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import java.math.BigDecimal
 import java.time.Instant
@@ -40,6 +44,13 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
     }
 
     private val baseUrl = Config.BASE_URL
+
+    /** JSON-парсер для работы с кешированным телом ответов. */
+    private val jsonForCache = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
 
     private companion object {
         // ✅ Два базовых пути!
@@ -80,9 +91,15 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
     // ⚠️ Эндпоинт: GET /api/Shabashes/{shabashId}/fundraises
     suspend fun getAllFundraises(shabashId: String): Result<List<Fundraise>> {
         return try {
-            val rawToken = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
+            val rawToken = tokenManager.getToken() ?: return loadCachedFundraisesOr(
+                shabashId,
+                Exception("Не авторизован")
+            )
             val token = cleanToken(rawToken)
-            val userId = decodeUserId(token) ?: return Result.failure(Exception("Не удалось извлечь userId"))
+            val userId = decodeUserId(token) ?: return loadCachedFundraisesOr(
+                shabashId,
+                Exception("Не удалось извлечь userId")
+            )
 
             val url = "$baseUrl$SHABASHES_BASE/$shabashId/fundraises"
             Log.d(TAG, "GET $url")
@@ -93,7 +110,12 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
 
             when {
                 response.status.isSuccess() -> {
-                    val body: FundraisesListResponseDto = response.body()
+                    val rawBody = response.bodyAsText()
+                    val body: FundraisesListResponseDto = jsonForCache.decodeFromString(
+                        FundraisesListResponseDto.serializer(), rawBody
+                    )
+                    // Кешируем сырое тело для оффлайна
+                    OfflineCache.saveFundraisesJson(shabashId, rawBody)
                     Result.success(body.fundraisings.map { it.toDomain(userId) })
                 }
                 response.status == HttpStatusCode.Forbidden ->
@@ -103,22 +125,47 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 else -> {
                     val errorText = response.bodyAsText()
                     Log.e(TAG, "GET failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    loadCachedFundraisesOr(
+                        shabashId,
+                        Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" })
+                    )
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Network error in getAllFundraises", e)
-            Result.failure(e)
+            Log.e(TAG, "Network error in getAllFundraises — пробую кеш", e)
+            loadCachedFundraisesOr(shabashId, e)
         }
+    }
+
+    private fun loadCachedFundraisesOr(shabashId: String, fallbackError: Throwable): Result<List<Fundraise>> {
+        val rawToken = tokenManager.getToken()?.let(::cleanToken)
+        val userId = rawToken?.let(::decodeUserId)
+        val cached = OfflineCache.loadFundraisesJson(shabashId)
+        if (cached != null && userId != null) {
+            return try {
+                val dto = jsonForCache.decodeFromString(FundraisesListResponseDto.serializer(), cached)
+                Result.success(dto.fundraisings.map { it.toDomain(userId) })
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to parse cached fundraises", e)
+                Result.failure(fallbackError)
+            }
+        }
+        return Result.failure(fallbackError)
     }
 
     // ✅ 2. Получение деталей сбора
     // ⚠️ Эндпоинт: GET /api/fundraises/{fundraiseId}
     suspend fun getFundraiseDetails(fundraiseId: String): Result<Fundraise> {
         return try {
-            val rawToken = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
+            val rawToken = tokenManager.getToken() ?: return loadCachedDetailsOr(
+                fundraiseId,
+                Exception("Не авторизован")
+            )
             val token = cleanToken(rawToken)
-            val userId = decodeUserId(token) ?: return Result.failure(Exception("Не удалось извлечь userId"))
+            val userId = decodeUserId(token) ?: return loadCachedDetailsOr(
+                fundraiseId,
+                Exception("Не удалось извлечь userId")
+            )
 
             val url = "$baseUrl$FUNDRAISES_BASE/$fundraiseId"
             Log.d(TAG, "GET $url")
@@ -129,7 +176,11 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
 
             when {
                 response.status.isSuccess() -> {
-                    val body: FundraiseDetailsResponseDto = response.body()
+                    val rawBody = response.bodyAsText()
+                    val body: FundraiseDetailsResponseDto = jsonForCache.decodeFromString(
+                        FundraiseDetailsResponseDto.serializer(), rawBody
+                    )
+                    OfflineCache.saveFundraiseDetailsJson(fundraiseId, rawBody)
                     Result.success(body.toDomain(userId))
                 }
                 response.status == HttpStatusCode.Forbidden ->
@@ -139,13 +190,32 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 else -> {
                     val errorText = response.bodyAsText()
                     Log.e(TAG, "GET failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    loadCachedDetailsOr(
+                        fundraiseId,
+                        Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" })
+                    )
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Network error in getFundraiseDetails", e)
-            Result.failure(e)
+            Log.e(TAG, "Network error in getFundraiseDetails — пробую кеш", e)
+            loadCachedDetailsOr(fundraiseId, e)
         }
+    }
+
+    private fun loadCachedDetailsOr(fundraiseId: String, fallbackError: Throwable): Result<Fundraise> {
+        val rawToken = tokenManager.getToken()?.let(::cleanToken)
+        val userId = rawToken?.let(::decodeUserId)
+        val cached = OfflineCache.loadFundraiseDetailsJson(fundraiseId)
+        if (cached != null && userId != null) {
+            return try {
+                val dto = jsonForCache.decodeFromString(FundraiseDetailsResponseDto.serializer(), cached)
+                Result.success(dto.toDomain(userId))
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to parse cached details", e)
+                Result.failure(fallbackError)
+            }
+        }
+        return Result.failure(fallbackError)
     }
 
     // ✅ 3. Создание нового сбора
@@ -251,16 +321,25 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 header("Authorization", "Bearer $token")
             }
 
+            val statusCode = response.status.value
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "closeFundraise status=$statusCode body='$cleanedBody'")
+
             when {
                 response.status.isSuccess() -> Result.success(Unit)
-                response.status == HttpStatusCode.Forbidden ->
+                statusCode == 403 ->
                     Result.failure(SecurityException("Только администраторы могут закрывать сборы"))
-                response.status == HttpStatusCode.NotFound ->
+                statusCode == 404 ->
                     Result.failure(NoSuchElementException("Сбор не найден"))
+                // Сбор уже закрыт — для UI это успех (наше состояние совпадает)
+                statusCode == 409 ||
+                    cleanedBody.contains("закрыт", ignoreCase = true) ||
+                    cleanedBody.contains("already", ignoreCase = true) ->
+                    Result.failure(IllegalStateException("Сбор уже закрыт"))
                 else -> {
-                    val errorText = response.bodyAsText()
-                    Log.e(TAG, "POST failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    Log.e(TAG, "closeFundraise failed: ${response.status} - $cleanedBody")
+                    Result.failure(Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" }))
                 }
             }
         } catch (e: Exception) {
@@ -284,22 +363,33 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 header("Authorization", "Bearer $token")
             }
 
+            val statusCode = response.status.value
+            // bodyAsText() читает stream — читаем один раз и переиспользуем
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "markPaid status=$statusCode body='$cleanedBody'")
+
             when {
                 response.status.isSuccess() -> Result.success(Unit)
-                response.status == HttpStatusCode.Conflict ->
+
+                // 409 Conflict ИЛИ любой другой статус с body "Conflict"/"уже" —
+                // означает «пользователь уже отметил оплату»
+                statusCode == 409 ||
+                    cleanedBody.equals("Conflict", ignoreCase = true) ||
+                    cleanedBody.contains("уже", ignoreCase = true) ||
+                    cleanedBody.contains("already", ignoreCase = true) ->
                     Result.failure(IllegalStateException("Вы уже отметили оплату"))
-                response.status == HttpStatusCode.Forbidden ->
+
+                statusCode == 403 ->
                     Result.failure(SecurityException("Нет доступа к событию"))
-                response.status == HttpStatusCode.NotFound ->
+                statusCode == 404 ->
                     Result.failure(NoSuchElementException("Сбор не найден"))
-                response.status == HttpStatusCode.BadRequest -> {
-                    val errorText = response.bodyAsText()
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка: ${response.status}" }))
-                }
+
                 else -> {
-                    val errorText = response.bodyAsText()
-                    Log.e(TAG, "POST failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    Log.e(TAG, "markPaid failed: ${response.status} - $cleanedBody")
+                    Result.failure(
+                        Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" })
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -329,23 +419,39 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 contentType(ContentType.Application.Json)
                 // ✅ КРИТИЧНО: отправляем голый примитив, не объект!
                 // Бэкенд: [FromBody] decimal? amount
-                setBody(amount?.toDouble()?.let { JsonPrimitive(it) } ?: JsonPrimitive(null))
+                val body: JsonElement = if (amount == null) JsonNull
+                else JsonPrimitive(amount.toDouble())
+                setBody(body)
             }
+
+            val statusCode = response.status.value
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "confirmPayment URL=$url targetUserId=$targetUserId amount=$amount → status=$statusCode body='$cleanedBody'")
 
             when {
                 response.status.isSuccess() -> Result.success(Unit)
-                response.status == HttpStatusCode.Forbidden ->
-                    Result.failure(SecurityException("Только администраторы могут подтверждать оплаты"))
-                response.status == HttpStatusCode.NotFound ->
-                    Result.failure(NoSuchElementException("Участник или сбор не найден"))
-                response.status == HttpStatusCode.BadRequest -> {
-                    val errorText = response.bodyAsText()
-                    Result.failure(IllegalArgumentException(errorText.ifBlank { "Неверные данные" }))
-                }
+                statusCode == 403 ->
+                    Result.failure(
+                        SecurityException(
+                            cleanedBody.ifBlank {
+                                "Сервер не считает вас администратором этого события. " +
+                                    "Проверьте свою роль или попросите бэк-разработчика."
+                            }
+                        )
+                    )
+                statusCode == 404 ->
+                    Result.failure(NoSuchElementException(cleanedBody.ifBlank { "Участник или сбор не найден" }))
+                // Уже подтверждено — для UI это успех
+                statusCode == 409 ||
+                    cleanedBody.contains("уже", ignoreCase = true) ||
+                    cleanedBody.contains("already", ignoreCase = true) ->
+                    Result.failure(IllegalStateException("Оплата уже подтверждена"))
+                statusCode == 400 ->
+                    Result.failure(IllegalArgumentException(cleanedBody.ifBlank { "Неверные данные" }))
                 else -> {
-                    val errorText = response.bodyAsText()
-                    Log.e(TAG, "POST failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    Log.e(TAG, "confirmPayment failed: ${response.status} - $cleanedBody")
+                    Result.failure(Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" }))
                 }
             }
         } catch (e: Exception) {
@@ -369,20 +475,129 @@ class FundraisesRepository(private val tokenManager: TokenManager) {
                 header("Authorization", "Bearer $token")
             }
 
+            val statusCode = response.status.value
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "revertPayment status=$statusCode body='$cleanedBody'")
+
             when {
                 response.status.isSuccess() -> Result.success(Unit)
-                response.status == HttpStatusCode.Forbidden ->
+                statusCode == 403 ->
                     Result.failure(SecurityException("Только администраторы могут отменять подтверждения"))
-                response.status == HttpStatusCode.NotFound ->
+                statusCode == 404 ->
                     Result.failure(NoSuchElementException("Участник или сбор не найден"))
+                statusCode == 409 ||
+                    cleanedBody.contains("уже", ignoreCase = true) ||
+                    cleanedBody.contains("already", ignoreCase = true) ->
+                    Result.failure(IllegalStateException("Подтверждение уже отменено"))
                 else -> {
-                    val errorText = response.bodyAsText()
-                    Log.e(TAG, "POST failed: ${response.status} - $errorText")
-                    Result.failure(Exception(errorText.ifBlank { "Ошибка сервера: ${response.status}" }))
+                    Log.e(TAG, "revertPayment failed: ${response.status} - $cleanedBody")
+                    Result.failure(Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" }))
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Network error in revertPayment", e)
+            Result.failure(e)
+        }
+    }
+
+    // ✅ 8. Обновление сбора (админ)
+    // ⚠️ Эндпоинт: PUT /api/fundraises/{fundraiseId}
+    // 🔐 Только Admin/CoAdmin
+    suspend fun updateFundraise(
+        fundraiseId: String,
+        title: String,
+        description: String?,
+        targetAmount: BigDecimal?,
+        paymentPhone: String,
+        paymentRecipient: String
+    ): Result<Unit> {
+        return try {
+            if (title.isBlank()) return Result.failure(IllegalArgumentException("Название не может быть пустым"))
+            if (paymentPhone.isBlank()) return Result.failure(IllegalArgumentException("Телефон не может быть пустым"))
+
+            val rawToken = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
+            val token = cleanToken(rawToken)
+
+            val url = "$baseUrl$FUNDRAISES_BASE/$fundraiseId"
+            Log.d(TAG, "PUT $url")
+
+            val requestDto = UpdateFundraiseRequestDto(
+                title = title.trim(),
+                description = description?.trim(),
+                targetAmount = targetAmount,
+                paymentPhone = paymentPhone.trim(),
+                paymentRecipient = paymentRecipient.trim()
+            )
+
+            val response = client.put(url) {
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(requestDto)
+            }
+
+            val statusCode = response.status.value
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "updateFundraise status=$statusCode body='$cleanedBody'")
+
+            when {
+                response.status.isSuccess() -> Result.success(Unit)
+                statusCode == 403 ->
+                    Result.failure(SecurityException("Только администраторы могут редактировать сбор"))
+                statusCode == 404 ->
+                    Result.failure(NoSuchElementException("Сбор не найден"))
+                statusCode == 400 ->
+                    Result.failure(IllegalArgumentException(cleanedBody.ifBlank { "Неверные данные" }))
+                statusCode == 405 || statusCode == 501 ->
+                    Result.failure(Exception("Сервер пока не поддерживает редактирование сборов"))
+                else -> {
+                    Log.e(TAG, "updateFundraise failed: ${response.status} - $cleanedBody")
+                    Result.failure(Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" }))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Network error in updateFundraise", e)
+            Result.failure(e)
+        }
+    }
+
+    // ✅ 9. Удаление сбора (админ)
+    // ⚠️ Эндпоинт: DELETE /api/fundraises/{fundraiseId}
+    // 🔐 Только Admin/CoAdmin
+    suspend fun deleteFundraise(fundraiseId: String): Result<Unit> {
+        return try {
+            val rawToken = tokenManager.getToken() ?: return Result.failure(Exception("Не авторизован"))
+            val token = cleanToken(rawToken)
+
+            val url = "$baseUrl$FUNDRAISES_BASE/$fundraiseId"
+            Log.d(TAG, "DELETE $url")
+
+            val response = client.delete(url) {
+                header("Authorization", "Bearer $token")
+            }
+
+            val statusCode = response.status.value
+            val errorText = if (response.status.isSuccess()) "" else response.bodyAsText()
+            val cleanedBody = errorText.trim().removeSurrounding("\"")
+            Log.d(TAG, "deleteFundraise status=$statusCode body='$cleanedBody'")
+
+            when {
+                response.status.isSuccess() -> Result.success(Unit)
+                statusCode == 403 ->
+                    Result.failure(SecurityException("Только администраторы могут удалять сборы"))
+                statusCode == 404 ->
+                    // Сбора уже нет — для UI это успех
+                    Result.success(Unit)
+                statusCode == 405 || statusCode == 501 ->
+                    Result.failure(Exception("Сервер пока не поддерживает удаление сборов"))
+                else -> {
+                    Log.e(TAG, "deleteFundraise failed: ${response.status} - $cleanedBody")
+                    Result.failure(Exception(cleanedBody.ifBlank { "Ошибка сервера: ${response.status}" }))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Network error in deleteFundraise", e)
             Result.failure(e)
         }
     }
