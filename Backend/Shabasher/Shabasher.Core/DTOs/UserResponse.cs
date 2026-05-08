@@ -6,6 +6,7 @@ namespace Shabasher.Core.DTOs
         string Email,
         string? AboutMe,
         string? Telegram,
+        string? AvatarUrl,
         DateTime CreatedAt,
         List<UserShabashParticipationResponse> Participations
         );

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -10,5 +10,4 @@
     <ProjectReference Include="..\Shabasher.Core\Shabasher.Core.csproj" />
     <ProjectReference Include="..\Shabasher.DataManage\Shabasher.DataManage.csproj" />
   </ItemGroup>
-
 </Project>

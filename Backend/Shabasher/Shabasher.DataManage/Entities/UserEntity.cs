@@ -1,4 +1,4 @@
-﻿namespace Shabasher.DataManage.Entities
+namespace Shabasher.DataManage.Entities
 {
     public class UserEntity
     {
@@ -11,6 +11,10 @@
         public string AboutMe { get; set; }
 
         public string Telegram { get; set; }
+
+        public string? AvatarUrl { get; set; }
+
+        public string? AvatarObjectKey { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

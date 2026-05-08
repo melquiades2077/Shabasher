@@ -14,6 +14,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 user.Email,
                 string.IsNullOrEmpty(user.AboutMe) ? null : user.AboutMe,
                 string.IsNullOrEmpty(user.Telegram) ? null : user.Telegram,
+                null,
                 user.CreatedAt,
                 new List<UserShabashParticipationResponse>());
 
@@ -27,6 +28,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 userEntity.Email,
                 string.IsNullOrEmpty(userEntity.AboutMe) ? null : userEntity.AboutMe,
                 string.IsNullOrEmpty(userEntity.Telegram) ? null : userEntity.Telegram,
+                string.IsNullOrEmpty(userEntity.AvatarUrl) ? null : userEntity.AvatarUrl,
                 userEntity.CreatedAt,
                 userEntity.Participations?
                     .Select(p => new UserShabashParticipationResponse(

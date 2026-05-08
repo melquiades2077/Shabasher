@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.DTOs;
@@ -16,12 +16,14 @@ namespace Shabasher.API.Controllers
         private readonly IShabashesManageService _shabashesManageService;
         private readonly ISuggestionsManageService _suggestionsManageService;
         private readonly IFundraisesManageService _fundraisesManageService;
+        private readonly IFilesManageService _filesManageService;
 
-        public ShabashesController(IShabashesManageService shabashesManageService, ISuggestionsManageService suggestionsManageService, IFundraisesManageService fundraisesManageService)
+        public ShabashesController(IShabashesManageService shabashesManageService, ISuggestionsManageService suggestionsManageService, IFundraisesManageService fundraisesManageService, IFilesManageService filesManageService)
         {
             _shabashesManageService = shabashesManageService;
             _suggestionsManageService = suggestionsManageService;
             _fundraisesManageService = fundraisesManageService;
+            _filesManageService = filesManageService;
         }
 
         private string GetUserId()
@@ -193,6 +195,48 @@ namespace Shabasher.API.Controllers
                 return BadRequest(result.Error);
 
             return Ok(result.Value);
+        }
+
+        [HttpPost("{shabashId}/avatar")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ShabashResponse>> UploadShabashAvatar([FromRoute] string shabashId, IFormFile file)
+        {
+            var cancellationToken = HttpContext.RequestAborted;
+
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            if (file == null || file.Length == 0)
+                return BadRequest("Файл не передан");
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest("Максимальный размер файла 5MB");
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+            if (!allowedTypes.Contains(file.ContentType))
+                return BadRequest("Поддерживаются только JPEG/PNG/WEBP");
+
+            await using var stream = file.OpenReadStream();
+            var uploaded = await _filesManageService.UploadImageAsync(
+                stream,
+                file.FileName,
+                file.ContentType,
+                $"shabashes/{shabashId}/avatar",
+                cancellationToken);
+            if (uploaded.IsFailure)
+                return BadRequest(uploaded.Error);
+
+            var update = await _shabashesManageService.UpdateShabashAvatarAsync(shabashId, userId, uploaded.Value.Url, uploaded.Value.ObjectKey);
+            if (update.IsFailure)
+            {
+                if (update.Error == "У пользователя недостаточно прав")
+                    return StatusCode(StatusCodes.Status403Forbidden);
+                if (update.Error == "Шабаш не найден")
+                    return NotFound(update.Error);
+                return BadRequest(update.Error);
+            }
+
+            return Ok(update.Value);
         }
     }
 }

@@ -164,6 +164,23 @@ namespace Shabasher.BusinessLogic.Services
             }
         }
 
+        public async Task<Result<UserResponse>> UpdateUserAvatarAsync(string userId, string avatarUrl, string avatarObjectKey)
+        {
+            var user = await _dbcontext.Users
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return Result.Failure<UserResponse>("Пользователь не найден");
+
+            user.AvatarUrl = avatarUrl;
+            user.AvatarObjectKey = avatarObjectKey;
+
+            await _dbcontext.SaveChangesAsync();
+            return Result.Success(UserResponseMapper.EntityToResponse(user));
+        }
+
         public async Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status)
         {
             var sp = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
