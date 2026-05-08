@@ -105,6 +105,28 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
         }
 
+        public async Task<Result<ShabashResponse>> UpdateShabashAvatarAsync(string shabashId, string userId, string avatarUrl, string avatarObjectKey)
+        {
+            var shabashEntity = await GetShabashEntity(shabashId);
+            if (shabashEntity == null)
+                return Result.Failure<ShabashResponse>("Шабаш не найден");
+
+            var actorEntity = await _dbcontext.ShabashParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sp => sp.ShabashId == shabashId && sp.UserId == userId);
+            if (actorEntity == null)
+                return Result.Failure<ShabashResponse>("Пользователь не найден");
+
+            if (actorEntity.Role == ShabashRole.Member)
+                return Result.Failure<ShabashResponse>("У пользователя недостаточно прав");
+
+            shabashEntity.AvatarUrl = avatarUrl;
+            shabashEntity.AvatarObjectKey = avatarObjectKey;
+
+            await _dbcontext.SaveChangesAsync();
+            return Result.Success(ShabashResponseMapper.EntityToResponse(shabashEntity, actorEntity.Role, actorEntity.Status));
+        }
+
         public async Task<Result<string>> DeleteShabashAsync(string shabashId, string userId)
         {
             var shabashEntity = await GetShabashEntity(shabashId);

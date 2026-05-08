@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shabasher.API.Extensions;
+using Shabasher.API.Services;
 using Shabasher.BusinessLogic.Jwt;
 using Shabasher.BusinessLogic.Services;
 using Shabasher.Core.Interfaces;
@@ -33,6 +34,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 builder.Services.AddSwaggerGen(options =>
 {
+    options.UseAllOfToExtendReferenceSchemas();
+    options.OperationFilter<FileUploadOperationFilter>();
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Shabasher API", Version = "v1" });
 
     var securityScheme = new OpenApiSecurityScheme 
@@ -78,6 +81,7 @@ builder.Services.AddScoped<IUsersManageService, UsersManageService>();
 builder.Services.AddScoped<IShabashesManageService, ShabashesManageService>();
 builder.Services.AddScoped<ISuggestionsManageService, SuggestionsManageService>();
 builder.Services.AddScoped<IFundraisesManageService, FundraisesManageService>();
+builder.Services.AddScoped<IFilesManageService, FilesManageService>();
 builder.Services.AddScoped<IPasswordHasher, Shabasher.Core.PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddDbContext<ShabasherDbContext>(options =>
@@ -87,16 +91,16 @@ builder.Services.AddDbContext<ShabasherDbContext>(options =>
 
 var keyId = Environment.GetEnvironmentVariable("KEY_ID");
 var keySecret = Environment.GetEnvironmentVariable("KEY_SECRET");
-var region = builder.Configuration["Region"];
-var endpoint = builder.Configuration["Endpoint"];
+var region = Environment.GetEnvironmentVariable("REGION");
+var endpoint = Environment.GetEnvironmentVariable("ENDPOINT");
 
 builder.Services.AddSingleton<IAmazonS3>(options =>
 {
     var config = new AmazonS3Config
     {
         ServiceURL = endpoint,
-        RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region),
-        ForcePathStyle = true
+        ForcePathStyle = true,
+        AuthenticationRegion = region
     };
 
     return new AmazonS3Client(keyId, keySecret, config);

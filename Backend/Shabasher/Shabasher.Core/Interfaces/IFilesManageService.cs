@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CSharpFunctionalExtensions;
+using Shabasher.Core.DTOs;
 
 namespace Shabasher.Core.Interfaces
 {
-    internal interface IFilesManageService
+    public interface IFilesManageService
     {
+        Task<Result<FileUploadResult>> UploadImageAsync(
+            Stream stream,
+            string fileName,
+            string contentType,
+            string folderPrefix,
+            CancellationToken cancellationToken = default);
+
+        Task<Result> DeleteFileAsync(string objectKey, CancellationToken cancellationToken = default);
     }
 }

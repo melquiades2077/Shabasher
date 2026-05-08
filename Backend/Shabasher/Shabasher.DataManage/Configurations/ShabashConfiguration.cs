@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shabasher.DataManage.Entities;
 
@@ -21,6 +21,12 @@ namespace Shabasher.DataManage.Configurations
 
             builder.Property(x => x.Address)
                    .HasDefaultValue("");
+
+            builder.Property(x => x.AvatarUrl)
+                   .IsRequired(false);
+
+            builder.Property(x => x.AvatarObjectKey)
+                   .IsRequired(false);
 
             builder.Property(x => x.StartDate)
                    .IsRequired();

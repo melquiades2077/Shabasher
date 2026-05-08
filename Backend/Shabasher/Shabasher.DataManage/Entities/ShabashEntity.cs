@@ -1,4 +1,4 @@
-﻿namespace Shabasher.DataManage.Entities
+namespace Shabasher.DataManage.Entities
 {
     public class ShabashEntity
     {
@@ -9,6 +9,10 @@
         public string Description { get; set; } = "";
 
         public string Address { get; set; } = "";
+
+        public string? AvatarUrl { get; set; }
+
+        public string? AvatarObjectKey { get; set; }
 
         public List<ShabashParticipantEntity> Participants { get; set; } = [];
 

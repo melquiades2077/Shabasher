@@ -1,4 +1,4 @@
-﻿using Shabasher.Core.DTOs;
+using Shabasher.Core.DTOs;
 using Shabasher.Core.Models;
 using Shabasher.DataManage.Entities;
 using Shabasher.DataManage.Mappings;
@@ -14,6 +14,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabash.Name,
                 shabash.Description,
                 shabash.Address,
+                null,
                 shabash.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.DomainToResponse(p.User),
@@ -31,6 +32,7 @@ namespace Shabasher.BusinessLogic.Mappings
             new ShabashShortResponse(
                 shabash.Id,
                 shabash.Name,
+                null,
                 DateOnly.FromDateTime(shabash.StartDate),
                 TimeOnly.FromDateTime(shabash.StartDate),
                 shabash.Status);
@@ -41,6 +43,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabashEntity.Name,
                 shabashEntity.Description,
                 shabashEntity.Address,
+                shabashEntity.AvatarUrl,
                 shabashEntity.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.EntityToResponse(p.User),
@@ -60,6 +63,7 @@ namespace Shabasher.BusinessLogic.Mappings
             new ShabashShortResponse(
                 shabashEntity.Id,
                 shabashEntity.Name,
+                shabashEntity.AvatarUrl,
                 DateOnly.FromDateTime(shabashEntity.StartDate),
                 TimeOnly.FromDateTime(shabashEntity.StartDate),
                 DateTime.UtcNow >= shabashEntity.StartDate

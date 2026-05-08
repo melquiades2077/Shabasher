@@ -35,6 +35,12 @@ namespace Shabasher.DataManage.Configurations
             builder.Property(x => x.Telegram)
                    .IsRequired(false);
 
+            builder.Property(x => x.AvatarUrl)
+                   .IsRequired(false);
+
+            builder.Property(x => x.AvatarObjectKey)
+                   .IsRequired(false);
+
             builder.HasMany(u => u.Participations)
                    .WithOne(sp => sp.User)
                    .HasForeignKey(sp => sp.UserId);
