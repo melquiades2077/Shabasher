@@ -135,6 +135,7 @@ namespace Shabasher.BusinessLogic.Jwt
                 user.Email,
                 null,
                 null,
+                user.AvatarUrl,
                 user.CreatedAt,
                 new List<UserShabashParticipationResponse>()
             );
