@@ -100,6 +100,31 @@ namespace Shabasher.API.Controllers
             return Ok(shabashId);
         }
 
+        [HttpDelete("{shabashId}/avatar")]
+        public async Task<ActionResult<ShabashResponse>> DeleteShabashAvatar([FromRoute] string shabashId)
+        {
+            var cancellationToken = HttpContext.RequestAborted;
+
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Не удалось определить пользователя");
+
+            var result = await _shabashesManageService.RemoveShabashAvatarAsync(shabashId, userId);
+            if (result.IsFailure)
+            {
+                if (result.Error == "У пользователя недостаточно прав")
+                    return StatusCode(StatusCodes.Status403Forbidden);
+                if (result.Error == "Шабаш не найден")
+                    return NotFound(result.Error);
+                return BadRequest(result.Error);
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Value.OldObjectKey))
+                await _filesManageService.DeleteFileAsync(result.Value.OldObjectKey!, cancellationToken);
+
+            return Ok(result.Value.Shabash);
+        }
+
         [HttpPatch("leave")]
         public async Task<ActionResult> LeaveShabash([FromQuery]string shabashId)
         {

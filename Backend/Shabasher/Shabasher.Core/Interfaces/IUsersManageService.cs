@@ -13,6 +13,7 @@ namespace Shabasher.Core.Interfaces
         Task<Result<UserResponse>> UpdateUserProfileAsync(string userId, string newName, string? aboutMe, string? telegram);
         Task<Result<UserResponse>> UpdateUserAvatarAsync(string userId, string avatarUrl, string avatarObjectKey);
         Task<Result<string>> DeleteUserAsync(string userId);
+        Task<Result<UserRemoveAvatarResponse>> RemoveUserAvatarAsync(string userId);
         Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status);
     }
 }

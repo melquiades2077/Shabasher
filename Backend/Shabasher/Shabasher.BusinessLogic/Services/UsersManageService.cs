@@ -183,6 +183,27 @@ namespace Shabasher.BusinessLogic.Services
             return Result.Success(UserResponseMapper.EntityToResponse(user));
         }
 
+        public async Task<Result<UserRemoveAvatarResponse>> RemoveUserAvatarAsync(string userId)
+        {
+            var user = await _dbcontext.Users
+                .Include(u => u.Participations)
+                .ThenInclude(p => p.Shabash)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return Result.Failure<UserRemoveAvatarResponse>("Пользователь не найден");
+
+            var oldKey = user.AvatarObjectKey;
+            user.AvatarUrl = null;
+            user.AvatarObjectKey = null;
+
+            await _dbcontext.SaveChangesAsync();
+
+            var result = new UserRemoveAvatarResponse(UserResponseMapper.EntityToResponse(user), oldKey);
+
+            return Result.Success<UserRemoveAvatarResponse>(result);
+        }
+
         public async Task<Result<string>> UpdatePastorStatusAsync(string userId, string shabashId, UserStatus status)
         {
             var sp = await _dbcontext.ShabashParticipants.FirstOrDefaultAsync(p => p.UserId == userId && p.ShabashId == shabashId);
