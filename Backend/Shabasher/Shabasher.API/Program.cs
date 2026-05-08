@@ -1,3 +1,4 @@
+using Amazon.S3;
 using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +84,23 @@ builder.Services.AddDbContext<ShabasherDbContext>(options =>
     {
         options.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
     });
+
+var keyId = Environment.GetEnvironmentVariable("KEY_ID");
+var keySecret = Environment.GetEnvironmentVariable("KEY_SECRET");
+var region = builder.Configuration["Region"];
+var endpoint = builder.Configuration["Endpoint"];
+
+builder.Services.AddSingleton<IAmazonS3>(options =>
+{
+    var config = new AmazonS3Config
+    {
+        ServiceURL = endpoint,
+        RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region),
+        ForcePathStyle = true
+    };
+
+    return new AmazonS3Client(keyId, keySecret, config);
+});
 
 var app = builder.Build();
 
