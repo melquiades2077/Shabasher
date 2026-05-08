@@ -61,6 +61,11 @@ import com.example.shabasher.Model.UserRole
 import com.example.shabasher.ViewModels.EventViewModel
 import com.example.shabasher.components.ParticipantToString
 import com.example.shabasher.components.ParticipatorElem
+import com.example.shabasher.components.ParticipantRowSkeleton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,60 +100,67 @@ fun ParticipantsPage(
             )
         }
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+        com.example.shabasher.components.AppPullToRefreshBox(
+            isRefreshing = uiState.isLoading && uiState.event != null,
+            onRefresh = { vm.loadEvent(eventId) },
+            state = rememberPullToRefreshState(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                // Skeleton-список при первой загрузке
+                uiState.isLoading && uiState.event == null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        repeat(6) { ParticipantRowSkeleton() }
+                    }
                 }
-            }
 
-            uiState.event != null -> {
-                ParticipantsList(
-                    participants = uiState.event.participants,
-                    currentUserRole = uiState.event.currentUserRole,
-                    currentUserId = currentUserId,
-                    onKick = { userId ->
-                        uiState.event?.id?.let { eventId ->
-                            vm.kickParticipant(eventId, userId)
-                        }
-                    },
-                    onMakeAdmin = { userId ->
-                        uiState.event?.id?.let { eventId ->
-                            vm.makeAdmin(eventId, userId)
-                        }
-                    },
-                    onMakeModerator = { userId ->
-                        uiState.event?.id?.let { eventId ->
-                            vm.makeModerator(eventId, userId)
-                        }
-                    },
-                    onRevokeRole = { userId ->
-                        uiState.event?.id?.let { eventId ->
-                            vm.revokeRole(eventId, userId)
-                        }
-                    },
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                    navController = navController
-                )
-            }
+                uiState.event != null -> {
+                    ParticipantsList(
+                        participants = uiState.event.participants,
+                        currentUserRole = uiState.event.currentUserRole,
+                        currentUserId = currentUserId,
+                        onKick = { userId ->
+                            uiState.event?.id?.let { evId ->
+                                vm.kickParticipant(evId, userId)
+                            }
+                        },
+                        onMakeAdmin = { userId ->
+                            uiState.event?.id?.let { evId ->
+                                vm.makeAdmin(evId, userId)
+                            }
+                        },
+                        onMakeModerator = { userId ->
+                            uiState.event?.id?.let { evId ->
+                                vm.makeModerator(evId, userId)
+                            }
+                        },
+                        onRevokeRole = { userId ->
+                            uiState.event?.id?.let { evId ->
+                                vm.revokeRole(evId, userId)
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        navController = navController
+                    )
+                }
 
-            uiState.error != null -> {
-                Text(
-                    uiState.error,
-                    modifier = Modifier.padding(innerPadding),
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+                uiState.error != null -> {
+                    Text(
+                        uiState.error,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
-            else -> {
-                Text("Нет данных", modifier = Modifier.padding(innerPadding))
+                else -> {
+                    Text("Нет данных")
+                }
             }
         }
     }

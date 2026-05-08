@@ -1,6 +1,5 @@
 package com.example.shabasher.data.dto
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,59 +12,67 @@ import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
 import java.time.Instant
 
+// ═══════════════════════════════════════════════════════
+// DTOs (контракт бэкенда)
+// ═══════════════════════════════════════════════════════
+
 @Serializable
 data class FundraisingItemResponseDto(
-
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("shabashId") val shabashId: String,
     @SerialName("creatorId") val creatorId: String,
     @SerialName("paymentPhone") val paymentPhone: String,
-    @SerialName("paymentRecipient") val paymentRecipient: String,
-    @SerialName("description") val description: String?,
+    @SerialName("paymentRecipient") val paymentRecipient: String? = null,
+    @SerialName("description") val description: String? = null,
     @SerialName("targetAmount")
-    @Serializable(with = BigDecimalSerializer::class)
-    val targetAmount: BigDecimal?,
+    @Serializable(with = BigDecimalNullableSerializer::class)
+    val targetAmount: BigDecimal? = null,
     @SerialName("currentAmount")
     @Serializable(with = BigDecimalSerializer::class)
-    val currentAmount: BigDecimal,
+    val currentAmount: BigDecimal = BigDecimal.ZERO,
     @SerialName("fundStatus")
-    @Serializable(with = FundStatusSerializer::class)  // ✅ Добавь это!
-    val fundStatus: FundStatus,
+    @Serializable(with = FundStatusSerializer::class)
+    val fundStatus: FundStatus = FundStatus.Active,
     @SerialName("createdAt")
     @Serializable(with = InstantSerializer::class)
-    val createdAt: Instant,
+    val createdAt: Instant = Instant.EPOCH,
+    @SerialName("closedAt")
+    @Serializable(with = InstantNullableSerializer::class)
+    val closedAt: Instant? = null,
     @SerialName("myPaymentStatus")
-    @Serializable(with = FundraiseParticipantStatusSerializer::class)  // ✅ Добавляем это!
-    val myPaymentStatus: FundraiseParticipantStatus?
+    @Serializable(with = FundraiseParticipantStatusNullableSerializer::class)
+    val myPaymentStatus: FundraiseParticipantStatus? = null
 )
 
 @Serializable
 data class FundraiseParticipantInfoResponseDto(
     @SerialName("userId") val userId: String,
-    @SerialName("status") val status: FundraiseParticipantStatus,
+    @SerialName("status")
+    @Serializable(with = FundraiseParticipantStatusSerializer::class)
+    val status: FundraiseParticipantStatus,
     @SerialName("amount")
-    @Serializable(with = BigDecimalSerializer::class)
-    val amount: BigDecimal,
+    @Serializable(with = BigDecimalNullableSerializer::class)
+    val amount: BigDecimal? = null,
     @SerialName("paidAt")
-    @Serializable(with = InstantSerializer::class)
-    val paidAt: Instant,
+    @Serializable(with = InstantNullableSerializer::class)
+    val paidAt: Instant? = null,
     @SerialName("checkedAt")
-    @Serializable(with = InstantSerializer::class)
-    val checkedAt: Instant?
+    @Serializable(with = InstantNullableSerializer::class)
+    val checkedAt: Instant? = null
 )
 
 @Serializable
 data class FundraiseDetailsResponseDto(
     @SerialName("fundraising") val fundraising: FundraisingItemResponseDto,
-    @SerialName("confirmedCount") val confirmedCount: Int,
-    @SerialName("participantsCount") val participantsCount: Int,
-    @SerialName("participants") val participants: List<FundraiseParticipantInfoResponseDto>?
+    @SerialName("confirmedCount") val confirmedCount: Int = 0,
+    @SerialName("participantsCount") val participantsCount: Int = 0,
+    @SerialName("participants") val participants: List<FundraiseParticipantInfoResponseDto>? = null
 )
 
 @Serializable
 data class FundraisesListResponseDto(
-    @SerialName("fundraisings") val fundraisings: List<FundraisingItemResponseDto>
+    @SerialName("fundraisings") val fundraisings: List<FundraisingItemResponseDto> = emptyList()
 )
 
 @Serializable
@@ -73,36 +80,34 @@ data class CreateFundraiseRequestDto(
     @SerialName("title") val title: String,
     @SerialName("description") val description: String?,
     @SerialName("targetAmount")
-    @Serializable(with = BigDecimalSerializer::class)
+    @Serializable(with = BigDecimalNullableSerializer::class)
     val targetAmount: BigDecimal?,
     @SerialName("paymentPhone") val paymentPhone: String,
     @SerialName("paymentRecipient") val paymentRecipient: String
 )
 
-// ⚠️ Внимание: этот DTO не используется в теле запроса!
-// Бэкенд ожидает голое decimal? (примитив), а не объект.
-// Оставляем файл для документации, но в репозитории отправляем JsonPrimitive
 @Serializable
-data class ConfirmFundraisePaymentRequestDto(
-    @Serializable(with = BigDecimalSerializer::class)
-    @SerialName("amount") val amount: BigDecimal?
+data class UpdateFundraiseRequestDto(
+    @SerialName("title") val title: String,
+    @SerialName("description") val description: String?,
+    @SerialName("targetAmount")
+    @Serializable(with = BigDecimalNullableSerializer::class)
+    val targetAmount: BigDecimal?,
+    @SerialName("paymentPhone") val paymentPhone: String,
+    @SerialName("paymentRecipient") val paymentRecipient: String
 )
 
-@Serializable
-enum class FundStatus {
-    @SerialName("Active") Active,
-    @SerialName("Closed") Closed,
-    @SerialName("Completed") Completed
-}
+// ═══════════════════════════════════════════════════════
+// Enums
+// ═══════════════════════════════════════════════════════
 
-@Serializable
-enum class FundraiseParticipantStatus {
-    @SerialName("NotPaid") NotPaid,
-    @SerialName("Paid") Paid,
-    @SerialName("Confirmed") Confirmed,
-    @SerialName("Reverted") Reverted,
-    @SerialName("Pending") Pending
-}
+enum class FundStatus { Active, Closed, Completed }
+
+enum class FundraiseParticipantStatus { NotPaid, Paid, Confirmed, Reverted, Pending }
+
+// ═══════════════════════════════════════════════════════
+// Serializers
+// ═══════════════════════════════════════════════════════
 
 object InstantSerializer : KSerializer<Instant> {
     override val descriptor: SerialDescriptor =
@@ -113,7 +118,47 @@ object InstantSerializer : KSerializer<Instant> {
     }
 
     override fun deserialize(decoder: Decoder): Instant {
-        return Instant.parse(decoder.decodeString())
+        return parseInstantOrEpoch(decoder.decodeString())
+    }
+}
+
+object InstantNullableSerializer : KSerializer<Instant?> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("InstantNullable", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Instant?) {
+        if (value == null) encoder.encodeString("") else encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): Instant? {
+        val raw = decoder.decodeString()
+        if (raw.isBlank()) return null
+        // .NET DateTime.MinValue → "0001-01-01T00:00:00"
+        if (raw.startsWith("0001-01-01")) return null
+        return parseInstantOrEpoch(raw).takeIf { it != Instant.EPOCH }
+    }
+}
+
+private fun parseInstantOrEpoch(raw: String): Instant {
+    if (raw.isBlank()) return Instant.EPOCH
+    return try {
+        // Прямой ISO-формат
+        Instant.parse(raw)
+    } catch (_: Exception) {
+        try {
+            // .NET-стиль "2026-01-15T10:30:00.1234567" (без зоны)
+            val withZ = if (raw.endsWith("Z") || raw.contains("+") || raw.matches(Regex(".*-\\d\\d:\\d\\d$"))) {
+                raw
+            } else {
+                "${raw}Z"
+            }
+            Instant.parse(withZ.take(30).let {
+                // обрезать «лишние» наносекунды до 9 знаков
+                it
+            })
+        } catch (_: Exception) {
+            Instant.EPOCH
+        }
     }
 }
 
@@ -126,64 +171,99 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
     }
 
     override fun deserialize(decoder: Decoder): BigDecimal {
-        return BigDecimal(decoder.decodeString())
+        val raw = decoder.decodeString()
+        return raw.toBigDecimalOrNull() ?: BigDecimal.ZERO
     }
 }
 
+object BigDecimalNullableSerializer : KSerializer<BigDecimal?> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("BigDecimalNullable", PrimitiveKind.STRING)
 
-fun FundraisingItemResponseDto.toDomain(currentUserId: String): Fundraise {
-    return Fundraise(
-        id = id,
-        title = title,
-        shabashId = shabashId,
-        creatorId = creatorId,
-        paymentPhone = paymentPhone,
-        paymentRecipient = paymentRecipient,
-        description = description,
-        targetAmount = targetAmount,
-        currentAmount = currentAmount,
-        fundStatus = fundStatus,
-        createdAt = createdAt,
-        isCreator = creatorId == currentUserId,
-        myPaymentStatus = myPaymentStatus,
-        // Для списка эти поля могут быть null
-        confirmedCount = null,
-        participantsCount = null,
-        participants = null
-    )
+    override fun serialize(encoder: Encoder, value: BigDecimal?) {
+        encoder.encodeString(value?.toPlainString() ?: "")
+    }
+
+    override fun deserialize(decoder: Decoder): BigDecimal? {
+        val raw = decoder.decodeString()
+        if (raw.isBlank()) return null
+        return raw.toBigDecimalOrNull()
+    }
 }
 
-fun FundraiseDetailsResponseDto.toDomain(currentUserId: String): Fundraise {
-    return Fundraise(
-        id = fundraising.id,
-        title = fundraising.title,
-        shabashId = fundraising.shabashId,
-        creatorId = fundraising.creatorId,
-        paymentPhone = fundraising.paymentPhone,
-        paymentRecipient = fundraising.paymentRecipient,
-        description = fundraising.description,
-        targetAmount = fundraising.targetAmount,
-        currentAmount = fundraising.currentAmount,
-        fundStatus = fundraising.fundStatus,
-        createdAt = fundraising.createdAt,
-        isCreator = fundraising.creatorId == currentUserId,
-        myPaymentStatus = fundraising.myPaymentStatus,
-        // Детали содержат полную информацию
-        confirmedCount = confirmedCount,
-        participantsCount = participantsCount,
-        participants = participants?.map { it.toDomain() }
-    )
+object FundStatusSerializer : KSerializer<FundStatus> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("FundStatus", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: FundStatus) {
+        encoder.encodeString(value.name)
+    }
+
+    override fun deserialize(decoder: Decoder): FundStatus = decodeFundStatus(decoder.decodeString())
 }
 
-fun FundraiseParticipantInfoResponseDto.toDomain(): FundraiseParticipant {
-    return FundraiseParticipant(
-        userId = userId,
-        status = status,
-        amount = amount,
-        paidAt = paidAt,
-        checkedAt = checkedAt
-    )
+private fun decodeFundStatus(value: String): FundStatus {
+    return when (value) {
+        "Active" -> FundStatus.Active
+        "Closed" -> FundStatus.Closed
+        "Completed" -> FundStatus.Completed
+        else -> when (value.toIntOrNull()) {
+            0, 1 -> FundStatus.Active
+            2 -> FundStatus.Closed
+            3 -> FundStatus.Completed
+            else -> throw SerializationException("Unknown FundStatus: $value")
+        }
+    }
 }
+
+object FundraiseParticipantStatusSerializer : KSerializer<FundraiseParticipantStatus> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("FundraiseParticipantStatus", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: FundraiseParticipantStatus) {
+        encoder.encodeString(value.name)
+    }
+
+    override fun deserialize(decoder: Decoder): FundraiseParticipantStatus =
+        decodeParticipantStatus(decoder.decodeString())
+}
+
+object FundraiseParticipantStatusNullableSerializer : KSerializer<FundraiseParticipantStatus?> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("FundraiseParticipantStatusNullable", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: FundraiseParticipantStatus?) {
+        encoder.encodeString(value?.name ?: "")
+    }
+
+    override fun deserialize(decoder: Decoder): FundraiseParticipantStatus? {
+        val raw = decoder.decodeString()
+        if (raw.isBlank()) return null
+        return decodeParticipantStatus(raw)
+    }
+}
+
+private fun decodeParticipantStatus(value: String): FundraiseParticipantStatus {
+    return when (value) {
+        "NotPaid" -> FundraiseParticipantStatus.NotPaid
+        "Paid" -> FundraiseParticipantStatus.Paid
+        "Confirmed" -> FundraiseParticipantStatus.Confirmed
+        "Reverted" -> FundraiseParticipantStatus.Reverted
+        "Pending" -> FundraiseParticipantStatus.Pending
+        else -> when (value.toIntOrNull()) {
+            0 -> FundraiseParticipantStatus.NotPaid
+            1 -> FundraiseParticipantStatus.Paid
+            2 -> FundraiseParticipantStatus.Confirmed
+            3 -> FundraiseParticipantStatus.Reverted
+            4 -> FundraiseParticipantStatus.Pending
+            else -> throw SerializationException("Unknown FundraiseParticipantStatus: $value")
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// Domain models
+// ═══════════════════════════════════════════════════════
 
 /**
  * Модель сбора средств на мероприятие
@@ -206,17 +286,9 @@ data class Fundraise(
     val participantsCount: Int? = null,
     val participants: List<FundraiseParticipant>? = null
 ) {
-    // ✅ Вычисленные свойства
-
-    /**
-     * Сколько ещё осталось собрать
-     */
     val remainingAmount: BigDecimal?
         get() = targetAmount?.minus(currentAmount)
 
-    /**
-     * Прогресс сбора в процентах (0-100)
-     */
     val progressPercent: Int
         get() = if (targetAmount == null || targetAmount.compareTo(BigDecimal.ZERO) == 0) {
             0
@@ -227,208 +299,113 @@ data class Fundraise(
                 .coerceIn(0, 100)
         }
 
-    /**
-     * Сбор активен (можно принимать оплаты)
-     */
-    val isActive: Boolean
-        get() = fundStatus == FundStatus.Active
+    val isActive: Boolean get() = fundStatus == FundStatus.Active
+    val isClosed: Boolean get() = fundStatus == FundStatus.Closed
+    val isCompleted: Boolean get() = fundStatus == FundStatus.Completed
 
-    /**
-     * Сбор закрыт (нельзя принимать новые оплаты)
-     */
-    val isClosed: Boolean
-        get() = fundStatus == FundStatus.Closed
-
-    /**
-     * Сбор завершён (цель достигнута или вручную закрыт)
-     */
-    val isCompleted: Boolean
-        get() = fundStatus == FundStatus.Completed
-
-    /**
-     * Текущий пользователь может подтвердить оплату (админ/создатель)
-     */
-    fun canConfirmPayments(): Boolean = isCreator
-
-    /**
-     * Текущий пользователь может закрыть сбор (админ/создатель)
-     */
-    fun canCloseFundraise(): Boolean = isCreator
-
-    /**
-     * Текущий пользователь может отметить оплату (участник, ещё не оплатил)
-     */
+    /** Может ли пользователь нажать «Я оплатил» */
     fun canMarkPaid(): Boolean {
         return isActive && (myPaymentStatus == null ||
                 myPaymentStatus == FundraiseParticipantStatus.NotPaid ||
                 myPaymentStatus == FundraiseParticipantStatus.Reverted)
     }
 
-    /**
-     * Текущий пользователь уже оплатил (ожидает подтверждения)
-     */
-    fun isPendingConfirmation(): Boolean {
-        return myPaymentStatus == FundraiseParticipantStatus.Pending
-    }
+    fun isPendingConfirmation(): Boolean =
+        myPaymentStatus == FundraiseParticipantStatus.Pending ||
+                myPaymentStatus == FundraiseParticipantStatus.Paid
 
-    /**
-     * Оплата текущего пользователя подтверждена
-     */
-    fun isPaymentConfirmed(): Boolean {
-        return myPaymentStatus == FundraiseParticipantStatus.Confirmed
-    }
+    fun isPaymentConfirmed(): Boolean =
+        myPaymentStatus == FundraiseParticipantStatus.Confirmed
 
-    /**
-     * Прогресс бар с текстом (например, "5000 из 10000 ₽")
-     */
-    fun getProgressText(): String {
-        return if (targetAmount != null) {
-            "${formatAmount(currentAmount)} из ${formatAmount(targetAmount)} ₽"
-        } else {
-            "${formatAmount(currentAmount)} ₽"
-        }
-    }
+    fun getProgressText(): String =
+        if (targetAmount != null) "${formatAmount(currentAmount)} из ${formatAmount(targetAmount)} ₽"
+        else "${formatAmount(currentAmount)} ₽"
 
-    /**
-     * Форматирование суммы (разделение тысяч)
-     */
-    private fun formatAmount(amount: BigDecimal): String {
-        return amount.toPlainString().replace(
-            Regex("(\\d)(?=(\\d{3})+(?!\\d))"),
-            "$1 "
-        )
-    }
+    private fun formatAmount(amount: BigDecimal): String =
+        amount.toPlainString().replace(Regex("(\\d)(?=(\\d{3})+(?!\\d))"), "$1 ")
 }
 
 /**
- * Участник сбора (кто оплатил или должен оплатить)
+ * Участник сбора
  */
 data class FundraiseParticipant(
     val userId: String,
     val status: FundraiseParticipantStatus,
     val amount: BigDecimal,
-    val paidAt: Instant,
+    val paidAt: Instant?,
     val checkedAt: Instant?
 ) {
-    // ✅ Вычисленные свойства
-
-    /**
-     * Оплата подтверждена админом
-     */
-    val isConfirmed: Boolean
-        get() = status == FundraiseParticipantStatus.Confirmed
-
-    /**
-     * Оплата ожидает подтверждения
-     */
+    val isConfirmed: Boolean get() = status == FundraiseParticipantStatus.Confirmed
     val isPending: Boolean
-        get() = status == FundraiseParticipantStatus.Pending
-
-    /**
-     * Оплата не подтверждена / отменена
-     */
+        get() = status == FundraiseParticipantStatus.Pending ||
+                status == FundraiseParticipantStatus.Paid
     val isNotPaid: Boolean
         get() = status == FundraiseParticipantStatus.NotPaid ||
                 status == FundraiseParticipantStatus.Reverted
-
-    /**
-     * Дата подтверждения (или null если не подтверждено)
-     */
-    val confirmedAt: Instant?
-        get() = if (isConfirmed) checkedAt else null
-}
-
-object FundStatusSerializer : KSerializer<FundStatus> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("FundStatus", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: FundStatus) {
-        // Отправляем на бэкенд в ожидаемом формате
-        when (value) {
-            FundStatus.Active -> encoder.encodeString("Active")
-            FundStatus.Closed -> encoder.encodeString("Closed")
-            FundStatus.Completed -> encoder.encodeString("Completed")
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): FundStatus {
-        // ✅ Принимаем ОБА формата: строки и числа
-        val value = decoder.decodeString()
-        return when (value) {
-            // Строковые значения (ожидаемые)
-            "Active" -> FundStatus.Active
-            "Closed" -> FundStatus.Closed
-            "Completed" -> FundStatus.Completed
-            // ✅ Числовые значения (реальность бэкенда)
-            "1", "0" -> FundStatus.Active      // 0 или 1 = Active
-            "2" -> FundStatus.Closed           // 2 = Closed
-            "3" -> FundStatus.Completed        // 3 = Completed
-            // Fallback: пробуем распарсить как Int и сопоставить
-            else -> try {
-                when (value.toIntOrNull()) {
-                    0, 1 -> FundStatus.Active
-                    2 -> FundStatus.Closed
-                    3 -> FundStatus.Completed
-                    else -> throw SerializationException("Unknown FundStatus: $value")
-                }
-            } catch (e: NumberFormatException) {
-                throw SerializationException("Unknown FundStatus: $value")
-            }
-        }
-    }
 }
 
 // ═══════════════════════════════════════════════════════
-// FundraiseParticipantStatusSerializer.kt
+// DTO → Domain
 // ═══════════════════════════════════════════════════════
 
-object FundraiseParticipantStatusSerializer : KSerializer<FundraiseParticipantStatus> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("FundraiseParticipantStatus", PrimitiveKind.STRING)
+/**
+ * Если бэкенд вернул closedAt (сбор был закрыт когда-то), но при этом
+ * fundStatus всё ещё Active — это известная несогласованность бэка.
+ * Доверяем closedAt и считаем сбор закрытым.
+ */
+private fun reconcileFundStatus(fundStatus: FundStatus, closedAt: Instant?): FundStatus {
+    return if (closedAt != null && fundStatus == FundStatus.Active) FundStatus.Closed
+    else fundStatus
+}
 
-    override fun serialize(encoder: Encoder, value: FundraiseParticipantStatus) {
-        // Отправляем на бэкенд в строковом формате
-        when (value) {
-            FundraiseParticipantStatus.NotPaid -> encoder.encodeString("NotPaid")
-            FundraiseParticipantStatus.Paid -> encoder.encodeString("Paid")
-            FundraiseParticipantStatus.Confirmed -> encoder.encodeString("Confirmed")
-            FundraiseParticipantStatus.Reverted -> encoder.encodeString("Reverted")
-            FundraiseParticipantStatus.Pending -> encoder.encodeString("Pending")
-        }
-    }
+fun FundraisingItemResponseDto.toDomain(currentUserId: String): Fundraise {
+    return Fundraise(
+        id = id,
+        title = title,
+        shabashId = shabashId,
+        creatorId = creatorId,
+        paymentPhone = paymentPhone,
+        paymentRecipient = paymentRecipient.orEmpty(),
+        description = description,
+        targetAmount = targetAmount,
+        currentAmount = currentAmount,
+        fundStatus = reconcileFundStatus(fundStatus, closedAt),
+        createdAt = createdAt,
+        isCreator = creatorId == currentUserId,
+        myPaymentStatus = myPaymentStatus,
+        confirmedCount = null,
+        participantsCount = null,
+        participants = null
+    )
+}
 
-    override fun deserialize(decoder: Decoder): FundraiseParticipantStatus {
-        // ✅ Принимаем ОБА формата: строки и числа
-        val value = decoder.decodeString()
-        return when (value) {
-            // 📝 Строковые значения (ожидаемые)
-            "NotPaid" -> FundraiseParticipantStatus.NotPaid
-            "Paid" -> FundraiseParticipantStatus.Paid
-            "Confirmed" -> FundraiseParticipantStatus.Confirmed
-            "Reverted" -> FundraiseParticipantStatus.Reverted
-            "Pending" -> FundraiseParticipantStatus.Pending
+fun FundraiseDetailsResponseDto.toDomain(currentUserId: String): Fundraise {
+    return Fundraise(
+        id = fundraising.id,
+        title = fundraising.title,
+        shabashId = fundraising.shabashId,
+        creatorId = fundraising.creatorId,
+        paymentPhone = fundraising.paymentPhone,
+        paymentRecipient = fundraising.paymentRecipient.orEmpty(),
+        description = fundraising.description,
+        targetAmount = fundraising.targetAmount,
+        currentAmount = fundraising.currentAmount,
+        fundStatus = reconcileFundStatus(fundraising.fundStatus, fundraising.closedAt),
+        createdAt = fundraising.createdAt,
+        isCreator = fundraising.creatorId == currentUserId,
+        myPaymentStatus = fundraising.myPaymentStatus,
+        confirmedCount = confirmedCount,
+        participantsCount = participantsCount,
+        participants = participants?.map { it.toDomain() }
+    )
+}
 
-            // 🔢 Числовые значения (реальность бэкенда)
-            // Предположительная маппинг-схема (уточните у бэкенда!)
-            "0" -> FundraiseParticipantStatus.NotPaid      // ⚠️ уточните!
-            "1" -> FundraiseParticipantStatus.Paid         // ⚠️ уточните!
-            "2" -> FundraiseParticipantStatus.Confirmed    // ⚠️ уточните!
-            "3" -> FundraiseParticipantStatus.Reverted     // ⚠️ уточните!
-            "4" -> FundraiseParticipantStatus.Pending      // ⚠️ уточните!
-
-            // 🔄 Fallback: пробуем распарсить как Int
-            else -> try {
-                when (value.toIntOrNull()) {
-                    0 -> FundraiseParticipantStatus.NotPaid
-                    1 -> FundraiseParticipantStatus.Paid
-                    2 -> FundraiseParticipantStatus.Confirmed
-                    3 -> FundraiseParticipantStatus.Reverted
-                    4 -> FundraiseParticipantStatus.Pending
-                    else -> throw SerializationException("Unknown FundraiseParticipantStatus: $value")
-                }
-            } catch (e: NumberFormatException) {
-                throw SerializationException("Unknown FundraiseParticipantStatus: $value")
-            }
-        }
-    }
+fun FundraiseParticipantInfoResponseDto.toDomain(): FundraiseParticipant {
+    return FundraiseParticipant(
+        userId = userId,
+        status = status,
+        amount = amount ?: BigDecimal.ZERO,
+        paidAt = paidAt,
+        checkedAt = checkedAt
+    )
 }

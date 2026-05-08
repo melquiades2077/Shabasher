@@ -1,27 +1,19 @@
 package com.example.shabasher.Screens
 
-import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,68 +22,56 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.shabasher.Model.EventData
 import com.example.shabasher.Model.SafeNavigation
-import com.example.shabasher.ViewModels.EditEventViewModel
-import com.example.shabasher.ViewModels.EditEventViewModelFactory
+import com.example.shabasher.ViewModels.EditFundraiseViewModel
 import com.example.shabasher.components.InputField
-import io.ktor.websocket.Frame
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditEventPage(
+fun EditFundraisePage(
     navController: NavController,
-    eventId: String,
-    context: Context = LocalContext.current,
-    viewModel: EditEventViewModel = viewModel(factory = EditEventViewModelFactory(context))
+    fundraiseId: String,
+    viewModel: EditFundraiseViewModel
 ) {
     val ui = viewModel.uiState.value
 
-    LaunchedEffect(eventId) {
-        viewModel.loadEventById(eventId)
+    LaunchedEffect(fundraiseId) { viewModel.loadFundraise(fundraiseId) }
+
+    LaunchedEffect(Unit) {
+        viewModel.saved.collect {
+            SafeNavigation.navigate { navController.popBackStack() }
+        }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Редактировать") },
+                title = { Text("Редактировать сбор") },
                 navigationIcon = {
                     IconButton(onClick = {
                         SafeNavigation.navigate { navController.popBackStack() }
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 },
                 actions = {
                     IconButton(
                         enabled = ui.isDirty && !ui.isLoading,
-                        onClick = {
-                            if (ui.isDirty) {
-                                SafeNavigation.navigate { viewModel.saveEvent() }
-                            }
-                        }
+                        onClick = { if (ui.isDirty) viewModel.save() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Сохранить",
-                            tint = if (ui.isDirty) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            }
+                            tint = if (ui.isDirty) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         )
                     }
                 },
@@ -104,7 +84,7 @@ fun EditEventPage(
             )
         }
     ) { innerPadding ->
-        if (ui.isLoading && ui.eventId == null) {
+        if (ui.isLoading && ui.fundraiseId == null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -118,75 +98,56 @@ fun EditEventPage(
 
         LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(innerPadding)
-                .fillMaxSize(),
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            item { Spacer(Modifier.height(8.dp)) }
             item {
                 InputField(
-                    label = "Название события",
+                    label = "Название сбора",
                     value = ui.title,
-                    onValueChange = { viewModel.updateTitle(it) }
+                    onValueChange = viewModel::updateTitle,
+                    imeAction = ImeAction.Next
                 )
             }
             item {
                 InputField(
                     label = "Описание",
                     value = ui.description,
-                    onValueChange = { viewModel.updateDescription(it) },
+                    onValueChange = viewModel::updateDescription,
                     singleLine = false,
-                    keyboardType = KeyboardType.Text,
-                    modifier = Modifier.height(150.dp)
+                    modifier = Modifier.height(120.dp),
+                    imeAction = ImeAction.Next
                 )
             }
             item {
                 InputField(
-                    label = "Адрес",
-                    value = ui.address,
-                    onValueChange = { viewModel.updateAddress(it) },
-                    keyboardType = KeyboardType.Text
+                    label = "Целевая сумма (необязательно)",
+                    value = ui.targetAmount,
+                    onValueChange = viewModel::updateTargetAmount,
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
                 )
             }
             item {
-                val showDatePicker = remember { mutableStateOf(false) }
                 InputField(
-                    label = "Дата",
-                    value = ui.date,
-                    onValueChange = { },
-                    readOnly = true,
-                    trailing = {
-                        IconButton(onClick = { showDatePicker.value = true }) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Дата")
-                        }
-                    }
+                    label = "Телефон для оплаты",
+                    value = ui.paymentPhone,
+                    onValueChange = viewModel::updatePaymentPhone,
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
                 )
-                if (showDatePicker.value) {
-                    DatePickerDialog(
-                        onDismissRequest = { showDatePicker.value = false },
-                        onDateSelected = { viewModel.setDate(it) }
-                    )
-                }
             }
             item {
-                val showTimePicker = remember { mutableStateOf(false) }
                 InputField(
-                    label = "Время",
-                    value = ui.time,
-                    onValueChange = { },
-                    readOnly = true,
-                    trailing = {
-                        IconButton(onClick = { showTimePicker.value = true }) {
-                            Icon(Icons.Default.AccessTime, contentDescription = "Время")
-                        }
-                    }
+                    label = "Получатель",
+                    value = ui.paymentRecipient,
+                    onValueChange = viewModel::updatePaymentRecipient,
+                    imeAction = ImeAction.Done
                 )
-                if (showTimePicker.value) {
-                    TimePickerDialog(
-                        onDismissRequest = { showTimePicker.value = false },
-                        onTimeSelected = { h, m -> viewModel.setTime(h, m) }
-                    )
-                }
             }
             item {
                 ui.error?.let {
@@ -197,9 +158,7 @@ fun EditEventPage(
                     )
                 }
             }
-            item {
-                Spacer(modifier = Modifier.height(50.dp))
-            }
+            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 }

@@ -29,4 +29,9 @@ object Routes {
     const val CREATE_FUNDRAISE = "create_fundraise/{eventId}"
 
     fun createFundraise(eventId: String) = "create_fundraise/$eventId"
+
+    const val NOTIFICATIONS = "notifications"
+
+    const val EDIT_FUNDRAISE = "edit_fundraise/{fundraiseId}"
+    fun editFundraise(fundraiseId: String) = "edit_fundraise/$fundraiseId"
 }

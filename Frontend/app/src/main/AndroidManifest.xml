@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Уведомления (Android 13+ требует runtime-разрешения) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -18,6 +20,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
 

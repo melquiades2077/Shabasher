@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -202,23 +204,27 @@ fun SuggestionsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // ❌ Убрали .background() — фон уже задан в Scaffold.containerColor
-                // ❌ Убрали .imePadding() — теперь это задача bottomBar
                 .padding(paddingValues)
         ) {
-            // 📋 Список предложений / загрузка / пустое состояние
-            Box(
+            com.example.shabasher.components.AppPullToRefreshBox(
+                isRefreshing = loading && suggestions.isNotEmpty(),
+                onRefresh = { viewModel.load(eventId) },
+                state = rememberPullToRefreshState(),
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth() // 👈 height управляется через weight
+                    .fillMaxWidth()
             ) {
                 if (loading && suggestions.isEmpty()) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 } else if (suggestions.isEmpty()) {
-                    EmptyState(modifier = Modifier.align(Alignment.Center))
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        EmptyState(modifier = Modifier.align(Alignment.Center))
+                    }
                 } else {
                     val listState = rememberLazyListState()
 
