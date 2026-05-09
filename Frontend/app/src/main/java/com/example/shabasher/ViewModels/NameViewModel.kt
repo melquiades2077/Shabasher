@@ -1,12 +1,18 @@
 package com.example.shabasher.ViewModels
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.shabasher.data.local.TokenManager
 import com.example.shabasher.data.network.AuthRepository
 import com.example.shabasher.data.network.NameRepository
+import com.example.shabasher.data.network.ProfileRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class NameViewModel(
@@ -24,6 +30,7 @@ class NameViewModel(
     var name = mutableStateOf("")
     var aboutMe = mutableStateOf("")               // ← новое поле
     var telegram = mutableStateOf("")              // ← новое поле
+    var avatarUri = mutableStateOf<Uri?>(null)     // выбранное фото (грузим после логина)
 
     var error = mutableStateOf<String?>(null)
     var loading = mutableStateOf(false)
@@ -92,6 +99,22 @@ class NameViewModel(
                 return@launch
             }
 
+            // --- Загрузка аватара (если выбран). Ошибка не блокирует регистрацию ---
+            val pickedUri = avatarUri.value
+            if (pickedUri != null) {
+                runCatching {
+                    val payload = withContext(Dispatchers.IO) {
+                        val resolver: ContentResolver = context.contentResolver
+                        val type = resolver.getType(pickedUri) ?: "image/jpeg"
+                        val bytes = resolver.openInputStream(pickedUri)?.use { it.readBytes() }
+                            ?: error("Не удалось прочитать файл")
+                        Triple(bytes, fileNameFromUri(pickedUri, type), type)
+                    }
+                    val profileRepo = ProfileRepository(TokenManager(context))
+                    profileRepo.uploadAvatar(payload.first, payload.second, payload.third)
+                }
+            }
+
             success.value = true
             loading.value = false
         }
@@ -107,4 +130,15 @@ fun decodeUserId(jwt: String): String? {
     } catch (e: Exception) {
         null
     }
+}
+
+private fun fileNameFromUri(uri: Uri, mimeType: String): String {
+    val ext = when (mimeType) {
+        "image/png" -> "png"
+        "image/webp" -> "webp"
+        else -> "jpg"
+    }
+    val raw = uri.lastPathSegment?.substringAfterLast('/') ?: "avatar"
+    val cleaned = raw.replace("[^A-Za-z0-9_.-]".toRegex(), "_").take(40)
+    return if (cleaned.contains('.')) cleaned else "$cleaned.$ext"
 }

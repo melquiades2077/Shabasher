@@ -28,7 +28,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 userEntity.Email,
                 string.IsNullOrEmpty(userEntity.AboutMe) ? null : userEntity.AboutMe,
                 string.IsNullOrEmpty(userEntity.Telegram) ? null : userEntity.Telegram,
-                AvatarUrlNormalizer.Normalize(userEntity.AvatarUrl),
+                AvatarUrlNormalizer.BuildUrl(userEntity.AvatarObjectKey, userEntity.AvatarUrl),
                 userEntity.CreatedAt,
                 userEntity.Participations?
                     .Select(p => new UserShabashParticipationResponse(

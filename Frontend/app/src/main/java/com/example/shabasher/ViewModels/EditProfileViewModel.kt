@@ -89,7 +89,14 @@ class EditProfileViewModel(
 
     fun uploadAvatar(context: Context, uri: Uri) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isAvatarBusy = true, error = null) }
+            // Оптимистичный превью: сразу показываем локальный URI, пока летит загрузка.
+            _uiState.update {
+                it.copy(
+                    isAvatarBusy = true,
+                    avatarUrl = uri.toString(),
+                    error = null
+                )
+            }
 
             val payload = withContext(Dispatchers.IO) {
                 runCatching {

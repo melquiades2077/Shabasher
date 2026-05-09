@@ -59,7 +59,12 @@ class EditEventViewModel(
     fun uploadAvatar(context: Context, uri: Uri) {
         val eventId = _uiState.value.eventId ?: return
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isAvatarBusy = true, error = null)
+            // Оптимистичный превью: показываем локальный URI пока идёт загрузка.
+            _uiState.value = _uiState.value.copy(
+                isAvatarBusy = true,
+                avatarUrl = uri.toString(),
+                error = null
+            )
 
             val payload = withContext(Dispatchers.IO) {
                 runCatching {

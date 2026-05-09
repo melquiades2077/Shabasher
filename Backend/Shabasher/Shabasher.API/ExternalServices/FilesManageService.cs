@@ -18,10 +18,9 @@ namespace Shabasher.API.Services
             _bucketName = Environment.GetEnvironmentVariable("S3_BUCKET")
                 ?? configuration["S3_BUCKET"]
                 ?? string.Empty;
-            _publicBaseUrl = (Environment.GetEnvironmentVariable("S3_PUBLIC_BASE_URL")
-                ?? configuration["S3_PUBLIC_BASE_URL"]
-                ?? Environment.GetEnvironmentVariable("ENDPOINT")
-                ?? configuration["ENDPOINT"]
+            // Базовый URL приложения (через nginx). Файлы отдаются прокси-эндпоинтом /api/files/{key}.
+            _publicBaseUrl = (Environment.GetEnvironmentVariable("BASE_URL")
+                ?? configuration["BASE_URL"]
                 ?? string.Empty).TrimEnd('/');
         }
 
@@ -53,8 +52,8 @@ namespace Shabasher.API.Services
                 await _s3.PutObjectAsync(request, cancellationToken);
 
                 var url = string.IsNullOrWhiteSpace(_publicBaseUrl)
-                    ? objectKey
-                    : $"{_publicBaseUrl}/{_bucketName}/{objectKey}";
+                    ? $"/api/files/{objectKey}"
+                    : $"{_publicBaseUrl}/api/files/{objectKey}";
 
                 return Result.Success(new FileUploadResult(objectKey, url));
             }

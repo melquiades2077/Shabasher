@@ -1,37 +1,58 @@
 namespace Shabasher.BusinessLogic.Mappings
 {
     /// <summary>
-    /// Превращает сохранённое в БД значение AvatarUrl в публичную ссылку.
-    /// Если в базе уже лежит абсолютный URL (http/https) — возвращает как есть.
-    /// Если только objectKey — склеивает с S3_PUBLIC_BASE_URL/ENDPOINT и именем бакета.
+    /// Возвращает публичную ссылку на аватар по objectKey (или AvatarUrl,
+    /// если в БД лежит уже готовая ссылка).
+    /// Файлы отдаются прокси-эндпоинтом /api/files/{key}, чтобы не зависеть
+    /// от ACL/формата S3-URL'ов провайдера.
     /// </summary>
     public static class AvatarUrlNormalizer
     {
-        public static string? Normalize(string? value)
+        public static string? BuildUrl(string? avatarObjectKey, string? legacyAvatarUrl)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            // Приоритет — objectKey, он гарантированно валиден.
+            if (!string.IsNullOrWhiteSpace(avatarObjectKey))
+                return BuildFromKey(avatarObjectKey.TrimStart('/'));
+
+            // Legacy: до фикса в БД могло остаться значение AvatarUrl без objectKey.
+            if (string.IsNullOrWhiteSpace(legacyAvatarUrl))
                 return null;
 
-            var trimmed = value.Trim();
+            var trimmed = legacyAvatarUrl.Trim();
+
+            // Если уже сохранена ссылка через прокси — отдаём как есть.
+            if (trimmed.Contains("/api/files/", System.StringComparison.OrdinalIgnoreCase))
+                return trimmed;
+
+            // Если в БД лежит абсолютный URL (старый S3-формат) — пытаемся
+            // вытащить objectKey после имени бакета.
             if (trimmed.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase))
             {
-                return trimmed;
+                var bucket = (System.Environment.GetEnvironmentVariable("S3_BUCKET") ?? string.Empty).Trim('/');
+                if (!string.IsNullOrEmpty(bucket))
+                {
+                    var marker = $"/{bucket}/";
+                    var idx = trimmed.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
+                    {
+                        var key = trimmed.Substring(idx + marker.Length);
+                        return BuildFromKey(key.TrimStart('/'));
+                    }
+                }
+                return trimmed; // не угадали структуру — пусть клиент попробует
             }
 
-            var publicBase = (System.Environment.GetEnvironmentVariable("S3_PUBLIC_BASE_URL")
-                ?? System.Environment.GetEnvironmentVariable("ENDPOINT")
-                ?? string.Empty).TrimEnd('/');
+            // Чистый objectKey без http
+            return BuildFromKey(trimmed.TrimStart('/'));
+        }
 
-            var bucket = (System.Environment.GetEnvironmentVariable("S3_BUCKET") ?? string.Empty).Trim('/');
-
-            if (string.IsNullOrEmpty(publicBase))
-                return trimmed;
-
-            var key = trimmed.TrimStart('/');
-            return string.IsNullOrEmpty(bucket)
-                ? $"{publicBase}/{key}"
-                : $"{publicBase}/{bucket}/{key}";
+        private static string BuildFromKey(string key)
+        {
+            var baseUrl = (System.Environment.GetEnvironmentVariable("BASE_URL") ?? string.Empty).TrimEnd('/');
+            return string.IsNullOrEmpty(baseUrl)
+                ? $"/api/files/{key}"
+                : $"{baseUrl}/api/files/{key}";
         }
     }
 }

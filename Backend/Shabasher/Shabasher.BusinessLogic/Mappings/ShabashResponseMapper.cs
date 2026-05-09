@@ -43,7 +43,7 @@ namespace Shabasher.BusinessLogic.Mappings
                 shabashEntity.Name,
                 shabashEntity.Description,
                 shabashEntity.Address,
-                AvatarUrlNormalizer.Normalize(shabashEntity.AvatarUrl),
+                AvatarUrlNormalizer.BuildUrl(shabashEntity.AvatarObjectKey, shabashEntity.AvatarUrl),
                 shabashEntity.Participants
                     .Select(p => new ShabashParticipantResponse(
                         UserResponseMapper.EntityToResponse(p.User),
@@ -63,7 +63,7 @@ namespace Shabasher.BusinessLogic.Mappings
             new ShabashShortResponse(
                 shabashEntity.Id,
                 shabashEntity.Name,
-                AvatarUrlNormalizer.Normalize(shabashEntity.AvatarUrl),
+                AvatarUrlNormalizer.BuildUrl(shabashEntity.AvatarObjectKey, shabashEntity.AvatarUrl),
                 DateOnly.FromDateTime(shabashEntity.StartDate),
                 TimeOnly.FromDateTime(shabashEntity.StartDate),
                 DateTime.UtcNow >= shabashEntity.StartDate
